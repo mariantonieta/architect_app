@@ -52,6 +52,20 @@ export const authService = {
     async getUserById(userId: string) {
         const response = await api.get(`/users/${userId}`);
         return response.data;
+    },
+    async recoverPassword(email: string) {
+        const response = await api.post(`/auth/password-recovery/${email}`);
+        return response.data;
+    },
+    async resetPassword(data: { token: string; new_password: string; confirm_password: string }) {
+        const response = await api.post("/auth/reset-password/", data, {
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+        return response.data;
     }
+
+
 };
 export default api;

@@ -2,28 +2,31 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Login, NotFound, Home, Register } from "./pages";
 import { AUTH_STORAGE } from "./lib/constants";
 import { AuthValidationMiddleware } from "./middleware/auth-validation";
-import GoogleAuthRedirect from "./components/GoogleRedirect";
+import GoogleAuthRedirect from "./components/google-redirect";
+import { GoogleCompleteRegistration } from "./components/google-complete-registration";
+import { ResetPasswordRequest } from "./components/reset-password-request";
+import { ResetPasswordForm } from "./components/reset-password-form";
 
 export function Router() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="auth/google/callback" element={<GoogleAuthRedirect />} />
-        {/* Rutas públicas */}
+        <Route path="auth/google/complete-registration" element={<GoogleCompleteRegistration />} />
+      <Route path="reset-password" element={<ResetPasswordRequest/>} />
+      <Route path="reset-password/form" element={<ResetPasswordForm/>} />
+
         <Route path="login" element={<Login />} />
         <Route path="register" element={<Register />} />
 
-        {/* Rutas protegidas con middleware */}
         <Route
           element={
             <AuthValidationMiddleware to="/login" storageKey={AUTH_STORAGE} />
           }
         >
           <Route index element={<Home />} />
-          {/* Más rutas protegidas aquí */}
         </Route>
 
-        {/* Ruta para cuando no coincide ninguna */}
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>

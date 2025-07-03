@@ -18,7 +18,7 @@ import {
   IconUsers,
 } from "@tabler/icons-react"
 
-import { authService } from "@/services/authServices" // asegúrate de importar tu servicio auth
+import { authService } from "@/services/authServices" 
 
 import { NavDocuments } from "@/components/nav-documents"
 import { NavMain } from "@/components/nav-main"
