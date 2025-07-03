@@ -4,11 +4,12 @@ interface AuthValidationMiddlewareProps {
   to: string;
   storageKey: string;
 }
+
 export function AuthValidationMiddleware({
   to,
   storageKey,
 }: AuthValidationMiddlewareProps) {
-  const token = true || localStorage.getItem(storageKey);
+  const token = localStorage.getItem(storageKey);
 
   if (!token) {
     return <Navigate to={to} replace />;

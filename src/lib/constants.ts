@@ -1,1 +1,1 @@
-export const AUTH_STORAGE = 'auth-app';
+export const AUTH_STORAGE = 'jwtToken';
