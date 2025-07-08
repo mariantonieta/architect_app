@@ -1,29 +1,36 @@
 import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
+import { useNavigate } from "react-router-dom"
+import { useUser } from "@/context/UserContext"
 
 export function SiteHeader() {
+  const { user, logout } = useUser()
+  const navigate = useNavigate()
+
+  function handleLogout() {
+    logout()
+    navigate("/login")
+  }
+
+  const userName = user?.first_name || "Usuario"
+  const userRole = user?.role || "Rol desconocido"
+
   return (
-    <header className="flex h-(--header-height) shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)">
-      <div className="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">
-        <SidebarTrigger className="-ml-1" />
-        <Separator
-          orientation="vertical"
-          className="mx-2 data-[orientation=vertical]:h-4"
-        />
-        <h1 className="text-base font-medium">Documents</h1>
-        <div className="ml-auto flex items-center gap-2">
-          <Button variant="ghost" asChild size="sm" className="hidden sm:flex">
-            <a
-              href="https://github.com/shadcn-ui/ui/tree/main/apps/v4/app/(examples)/dashboard"
-              rel="noopener noreferrer"
-              target="_blank"
-              className="dark:text-foreground"
-            >
-              GitHub
-            </a>
-          </Button>
+    <header className="flex h-auto items-start justify-between gap-4 border-b bg-white px-6 py-4 shadow-sm transition-all">
+      <div className="flex flex-col">
+        <div className="flex items-center gap-2">
+          <SidebarTrigger className="-ml-1" />
+          <h1 className="text-xl font-semibold">
+            Hello <span className="text-primary">{userName}</span>!
+            <span className="ml-2 rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground border">
+              {userRole}
+            </span>
+          </h1>
         </div>
+        <p className="text-sm text-muted-foreground mt-1">Welcome!</p>
+      </div>
+      <div className="ml-auto flex items-center gap-2">
+        <Button variant="outline" onClick={handleLogout}>Logout</Button>
       </div>
     </header>
   )

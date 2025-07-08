@@ -1,5 +1,5 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import { Login, NotFound, Home, Register } from "./pages";
+import { Login, NotFound, Home, Register, Account } from "./pages";
 import { AUTH_STORAGE } from "./lib/constants";
 import { AuthValidationMiddleware } from "./middleware/auth-validation";
 import GoogleAuthRedirect from "./components/google-redirect";
@@ -15,6 +15,7 @@ export function Router() {
         <Route path="auth/google/complete-registration" element={<GoogleCompleteRegistration />} />
       <Route path="reset-password" element={<ResetPasswordRequest/>} />
       <Route path="reset-password/form" element={<ResetPasswordForm/>} />
+          <Route path="/account" element={<Account/>} />
 
         <Route path="login" element={<Login />} />
         <Route path="register" element={<Register />} />

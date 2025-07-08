@@ -1,15 +1,14 @@
-import {
+import { 
   IconCreditCard,
   IconDotsVertical,
   IconLogout,
   IconNotification,
   IconUserCircle,
-} from "@tabler/icons-react";
-
+} from "@tabler/icons-react"
 import {
   Avatar,
   AvatarFallback,
-} from "@/components/ui/avatar";
+} from "@/components/ui/avatar"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,33 +17,31 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu"
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@/components/ui/sidebar";
-import { useNavigate } from "react-router-dom";
+} from "@/components/ui/sidebar"
+import { useNavigate } from "react-router-dom"
+import { useUser } from "@/context/UserContext"
 
-export function NavUser({
-  user,
-}: {
-  user: {
-    name: string;
-    email: string;
-    role: string;
-  };
-}) {
-  const { isMobile } = useSidebar();
-  const navigate = useNavigate();
-   function handleLogout() {
-    localStorage.removeItem("user");
-    
+export function NavUser() {
+  const { user, logout } = useUser()
+  const { isMobile } = useSidebar()
+  const navigate = useNavigate()
 
-    navigate("/login");
+  function handleAccountClick() {
+    navigate("/account")
   }
 
+  function handleLogout() {
+    logout()
+    navigate("/login")
+  }
+
+  if (!user) return null // opcional: evitar render sin usuario
 
   return (
     <SidebarMenu>
@@ -55,22 +52,15 @@ export function NavUser({
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
-       
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{user.name}</span>
-                <span className="text-muted-foreground truncate text-xs">
-                  {user.email}
-                </span>
-              </div>
-               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{user.role}</span>
-                <span className="text-muted-foreground truncate text-xs">
-             
-                </span>
+                <span className="truncate font-semibold mt-2 mb-3 block">{user.role}</span>
+                <span className="truncate font-medium">{user.first_name}</span>
+                <span className="text-muted-foreground truncate text-xs">{user.email}</span>
               </div>
               <IconDotsVertical className="ml-auto size-4" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
+
           <DropdownMenuContent
             className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
             side={isMobile ? "bottom" : "right"}
@@ -80,21 +70,21 @@ export function NavUser({
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarFallback className="rounded-lg">
-                    {user.role[0].toUpperCase()}
+                  <AvatarFallback>
+                    {user.first_name?.[0]?.toUpperCase() || "?"}
                   </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">{user.name}</span>
-                  <span className="text-muted-foreground truncate text-xs">
-                    {user.email}
-                  </span>
+                  <span className="truncate font-medium">{user.first_name}</span>
+                  <span className="text-muted-foreground truncate text-xs">{user.email}</span>
                 </div>
               </div>
             </DropdownMenuLabel>
+
             <DropdownMenuSeparator />
+
             <DropdownMenuGroup>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={handleAccountClick} className="cursor-pointer flex items-center gap-2">
                 <IconUserCircle />
                 Account
               </DropdownMenuItem>
@@ -107,8 +97,10 @@ export function NavUser({
                 Notifications
               </DropdownMenuItem>
             </DropdownMenuGroup>
+
             <DropdownMenuSeparator />
-             <DropdownMenuItem onClick={handleLogout}>
+
+            <DropdownMenuItem onClick={handleLogout}>
               <IconLogout />
               Log out
             </DropdownMenuItem>
@@ -116,5 +108,5 @@ export function NavUser({
         </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>
-  );
+  )
 }

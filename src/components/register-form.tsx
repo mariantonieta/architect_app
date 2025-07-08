@@ -1,10 +1,16 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Building2, Package, Users } from "lucide-react";
-
+import { useForm } from "react-hook-form";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -25,68 +31,41 @@ type RegisterFormData = {
   confirmPassword: string;
   phone?: string;
   address?: string;
-  company: string;
-  entity_type: string;
+  company?: string;
+  entity_type?: string;
   role: "customer" | "supplier" | "architect";
 };
 
 export function RegisterForm({ className, ...props }: React.ComponentProps<"div">) {
   const navigate = useNavigate();
-  
-
-  const [formData, setFormData] = useState<RegisterFormData>({
-    first_name: "",
-    last_name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    phone: "",
-    address: "",
-    company: "",
-    entity_type: "",
-    role: "architect",
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<RegisterFormData>({
+    defaultValues: {
+      role: "architect",
+    },
   });
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+  const role = watch("role");
+  const password = watch("password");
+
+  const onRoleChange = (value: string) => {
+    setValue("role", value as RegisterFormData["role"], { shouldValidate: true });
   };
 
-  const handleRoleChange = (value: RegisterFormData["role"]) => {
-    setFormData((prev) => ({
-      ...prev,
-      role: value,
-      phone: "",
-      address: "",
-      company: "",
-      entity_type: "",
-    }));
-  };
-
-  const validatePasswords = () => {
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match");
-      return false;
-    }
-    return true;
-  };
-
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  const onSubmit = async (data: RegisterFormData) => {
     setError(null);
-
-    if (!validatePasswords()) return;
-
     setLoading(true);
-
     try {
-      const submitData = {
-        ...formData,
-        confirm_password: formData.confirmPassword,
-      };
+      const { confirmPassword, ...rest } = data;
+      const submitData = { ...rest, confirm_password: confirmPassword };
       await authService.register(submitData);
       navigate("/login");
     } catch (err) {
@@ -95,10 +74,10 @@ export function RegisterForm({ className, ...props }: React.ComponentProps<"div"
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   return (
-    <div className={cn("flex justify-center items-center min-h-screen", className)} {...props}>
+    <div className={cn("flex justify-center items-center min-h-screen pt-12", className)} {...props}>
       <div className="w-full max-w-md flex flex-col gap-6">
         <Card>
           <CardHeader className="text-center">
@@ -106,14 +85,13 @@ export function RegisterForm({ className, ...props }: React.ComponentProps<"div"
             <CardDescription>Sign up to get started</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="grid gap-6">
-
+            <form onSubmit={handleSubmit(onSubmit)} className="grid gap-6">
               <div className="grid gap-3">
-                <Label htmlFor="role">Role:</Label>
+                <Label htmlFor="role">Role</Label>
                 <RadioGroup
                   id="role"
-                  value={formData.role}
-                  onValueChange={handleRoleChange}
+                  value={role}
+                  onValueChange={onRoleChange}
                   className="grid grid-cols-2 gap-2"
                   disabled
                 >
@@ -123,7 +101,7 @@ export function RegisterForm({ className, ...props }: React.ComponentProps<"div"
                       htmlFor={`role-${value}`}
                       className="flex items-center gap-2 border rounded-lg p-3 cursor-pointer hover:border-primary data-[state=checked]:border-primary transition-all"
                     >
-                      <RadioGroupItem id={`role-${value}`} value={value} />
+                      <RadioGroupItem id={`role-${value}`} value={value} {...register("role")} />
                       <Icon className="h-4 w-4" />
                       <span>{label}</span>
                     </Label>
@@ -131,70 +109,100 @@ export function RegisterForm({ className, ...props }: React.ComponentProps<"div"
                 </RadioGroup>
               </div>
 
-              {/* Inputs básicos */}
-              {[
-                { id: "first_name", label: "First Name", required: true, type: "text" },
-                { id: "last_name", label: "Last Name", required: true, type: "text" },
-                { id: "email", label: "Email", required: true, type: "email" },
-                { id: "password", label: "Password", required: true, type: "password" },
-                { id: "confirmPassword", label: "Confirm Password", required: true, type: "password" },
-              ].map(({ id, label, required, type }) => (
-                <div key={id} className="grid gap-3">
-                  <Label htmlFor={id}>{label}</Label>
-                  <Input
-                    id={id}
-                    name={id}
-                    type={type}
-                    required={required}
-                    value={formData[id as keyof RegisterFormData] as string}
-                    onChange={handleInputChange}
-                  />
-                </div>
-              ))}
 
-              {/* Campos condicionales */}
-              {["supplier", "customer"].includes(formData.role) && (
+              <div className="grid gap-3">
+                <Label htmlFor="first_name">First Name</Label>
+                <Input
+                  id="first_name"
+                  type="text"
+                  {...register("first_name", { required: "First name is required" })}
+                />
+                {errors.first_name && (
+                  <p className="text-sm text-red-500">{errors.first_name.message}</p>
+                )}
+              </div>
+
+              <div className="grid gap-3">
+                <Label htmlFor="last_name">Last Name</Label>
+                <Input
+                  id="last_name"
+                  type="text"
+                  {...register("last_name", { required: "Last name is required" })}
+                />
+                {errors.last_name && (
+                  <p className="text-sm text-red-500">{errors.last_name.message}</p>
+                )}
+              </div>
+
+              <div className="grid gap-3">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  {...register("email", { required: "Email is required" })}
+                />
+                {errors.email && (
+                  <p className="text-sm text-red-500">{errors.email.message}</p>
+                )}
+              </div>
+
+              <div className="grid gap-3">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  {...register("password", {
+                    required: "Password is required",
+                    minLength: { value: 6, message: "Password must be at least 6 characters" },
+                  })}
+                />
+                {errors.password && (
+                  <p className="text-sm text-red-500">{errors.password.message}</p>
+                )}
+              </div>
+
+              <div className="grid gap-3">
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  {...register("confirmPassword", {
+                    required: "Please confirm your password",
+                    validate: (value) =>
+                      value === password || "Passwords do not match",
+                  })}
+                />
+                {errors.confirmPassword && (
+                  <p className="text-sm text-red-500">{errors.confirmPassword.message}</p>
+                )}
+              </div>
+
+              {["supplier", "customer"].includes(role) && (
                 <>
                   {["phone", "address"].map((field) => (
                     <div key={field} className="grid gap-3">
                       <Label htmlFor={field}>{field.charAt(0).toUpperCase() + field.slice(1)}</Label>
-                      <Input
-                        id={field}
-                        name={field}
-                        type="text"
-                        value={formData[field as keyof RegisterFormData] || ""}
-                        onChange={handleInputChange}
-                      />
+                      <Input id={field} type="text" {...register(field as keyof RegisterFormData)} />
                     </div>
                   ))}
                 </>
               )}
 
-              {formData.role === "architect" && (
+              {role === "architect" && (
                 <div className="grid gap-3">
                   <Label htmlFor="entity_type">Entity Type</Label>
-                  <Input
-                    id="entity_type"
-                    name="entity_type"
-                    type="text"
-                    value={formData.entity_type}
-                    onChange={handleInputChange}
-                  />
+                  <Input id="entity_type" type="text" {...register("entity_type")} />
                 </div>
               )}
 
-              {formData.role === "supplier" && (
+              {role === "supplier" && (
                 <div className="grid gap-3">
                   <Label htmlFor="company">Company</Label>
-                  <Input
-                    id="company"
-                    name="company"
-                    type="text"
-                    value={formData.company}
-                    onChange={handleInputChange}
-                  />
+                  <Input id="company" type="text" {...register("company")} />
                 </div>
               )}
+
+              {error && <p className="text-red-500 text-sm text-center">{error}</p>}
 
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Creating account..." : "Sign Up"}
@@ -207,7 +215,6 @@ export function RegisterForm({ className, ...props }: React.ComponentProps<"div"
                 </a>
               </div>
             </form>
-            
           </CardContent>
         </Card>
 
