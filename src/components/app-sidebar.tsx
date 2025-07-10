@@ -12,8 +12,7 @@ import {
   IconInnerShadowTop,
   IconListDetails,
   IconReport,
-  IconSearch,
-  IconSettings,
+
   IconUsers,
 } from "@tabler/icons-react"
 
@@ -31,7 +30,8 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 
-import { useUser } from "@/context/UserContext"
+// Importa tu hook desde donde lo definiste
+import { useUser } from "@/hooks/useUser"
 
 const data = {
   navMain: [
@@ -42,15 +42,36 @@ const data = {
     { title: "Team", url: "#", icon: IconUsers },
   ],
   navClouds: [
-    { title: "Capture", icon: IconCamera, isActive: true, url: "#", items: [{ title: "Active Proposals", url: "#" }, { title: "Archived", url: "#" }] },
-    { title: "Proposal", icon: IconFileDescription, url: "#", items: [{ title: "Active Proposals", url: "#" }, { title: "Archived", url: "#" }] },
-    { title: "Prompts", icon: IconFileAi, url: "#", items: [{ title: "Active Proposals", url: "#" }, { title: "Archived", url: "#" }] },
+    {
+      title: "Capture",
+      icon: IconCamera,
+      isActive: true,
+      url: "#",
+      items: [
+        { title: "Active Proposals", url: "#" },
+        { title: "Archived", url: "#" },
+      ],
+    },
+    {
+      title: "Proposal",
+      icon: IconFileDescription,
+      url: "#",
+      items: [
+        { title: "Active Proposals", url: "#" },
+        { title: "Archived", url: "#" },
+      ],
+    },
+    {
+      title: "Prompts",
+      icon: IconFileAi,
+      url: "#",
+      items: [
+        { title: "Active Proposals", url: "#" },
+        { title: "Archived", url: "#" },
+      ],
+    },
   ],
-  navSecondary: [
-    { title: "Settings", url: "#", icon: IconSettings },
-    { title: "Get Help", url: "#", icon: IconHelp },
-    { title: "Search", url: "#", icon: IconSearch },
-  ],
+
   documents: [
     { name: "Data Library", url: "#", icon: IconDatabase },
     { name: "Reports", url: "#", icon: IconReport },
@@ -59,19 +80,19 @@ const data = {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { user } = useUser()
+  const { data: user, isLoading, error } = useUser()
 
-  if (!user) return null 
+  if (isLoading) return null 
+  if (error) return null 
+
+  if (!user) return null
 
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              className="data-[slot=sidebar-menu-button]:!p-1.5"
-            >
+            <SidebarMenuButton asChild className="data-[slot=sidebar-menu-button]:!p-1.5">
               <a href="#">
                 <IconInnerShadowTop className="!size-5" />
                 <span className="text-base font-semibold">Architect Page.</span>
@@ -83,10 +104,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <NavMain items={data.navMain} />
         <NavDocuments items={data.documents} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser /> 
+        <NavUser />
       </SidebarFooter>
     </Sidebar>
   )

@@ -13,10 +13,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authService } from "@/services/authServices";
 import { useNavigate } from "react-router-dom";
-import { AUTH_STORAGE } from "@/lib/constants";
-import {jwtDecode} from "jwt-decode";
-import { userService } from "@/services/userService";
-import { useUser, normalizeUser } from "@/context/UserContext"; 
 import { useLoginWithToken } from "@/hooks/useLoginWithToken";
 
 type FormData = {
@@ -28,37 +24,30 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
   const navigate = useNavigate();
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>();
   const [error, setError] = useState<string | null>(null);
-  const { setUser } = useUser(); 
 
-  const params = new URLSearchParams(window.location.search);
-  const token = params.get("access_token");
+  const loginWithToken = useLoginWithToken({
+    onSuccess: () => navigate("/"),
+    onError: () => setError("Invalid credentials"),
+  });
 
-  const { error: googleLoginError } = useLoginWithToken(token);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("access_token");
+
+    if (token) {
+      loginWithToken.mutate(token);
+      params.delete("access_token");
+      const url = window.location.pathname + (params.toString() ? `?${params.toString()}` : "");
+      window.history.replaceState({}, document.title, url);
+    }
+  }, [loginWithToken]);
 
   const onSubmit = async (data: FormData) => {
     setError(null);
-
     try {
       const response = await authService.login(data.email, data.password);
-
-      localStorage.setItem(AUTH_STORAGE, response.access_token);
-
-      const decodedToken: any = jwtDecode(response.access_token);
-      const userId = decodedToken.sub;
-
-      if (!userId) {
-        throw new Error("User ID not found in token");
-      }
-
-      const userData = await userService.getUserById(userId);
-
-    const normalizedUser = normalizeUser(userData);
-
-      localStorage.setItem("user", JSON.stringify(normalizedUser));
-      setUser(normalizedUser); 
-
-      navigate("/");
-    } catch (err: any) {
+      loginWithToken.mutate(response.access_token);
+    } catch (err) {
       console.error(err);
       setError("Invalid credentials");
     }
@@ -78,7 +67,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
                   window.location.href = "http://localhost:8000/auth/google/login";
                 }}
               >
-                Google
+                Sign in with Google
               </Button>
             </CardDescription>
             <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
@@ -87,8 +76,8 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
             <CardTitle className="text-xl">Login</CardTitle>
           </CardHeader>
           <CardContent>
-            {googleLoginError && (
-              <p className="text-red-600 mb-4 text-center">{googleLoginError}</p>
+            {loginWithToken.error && (
+              <p className="text-red-600 mb-4 text-center">Login failed. Please try again.</p>
             )}
             {error && (
               <p className="text-red-600 mb-4 text-center">{error}</p>
@@ -131,8 +120,8 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
                 >
                   Forgot your password?
                 </a>
-                <Button type="submit" className="w-full" disabled={isSubmitting}>
-                  {isSubmitting ? "Logging in..." : "Login"}
+                <Button type="submit" className="w-full" disabled={isSubmitting || loginWithToken.isPending}>
+                  {isSubmitting || loginWithToken.isPending ? "Logging in..." : "Login"}
                 </Button>
               </div>
               <div className="text-center text-sm mt-4">
@@ -148,7 +137,6 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
             </form>
           </CardContent>
         </Card>
-
       </div>
     </div>
   );

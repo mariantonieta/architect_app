@@ -6,6 +6,7 @@ import GoogleAuthRedirect from "./components/google-redirect";
 import { GoogleCompleteRegistration } from "./components/google-complete-registration";
 import { ResetPasswordRequest } from "./components/reset-password-request";
 import { ResetPasswordForm } from "./components/reset-password-form";
+import { Project } from "./pages/project";
 
 export function Router() {
   return (
@@ -16,6 +17,7 @@ export function Router() {
       <Route path="reset-password" element={<ResetPasswordRequest/>} />
       <Route path="reset-password/form" element={<ResetPasswordForm/>} />
           <Route path="/account" element={<Account/>} />
+            <Route path="/projects/:id" element={<Project/>} />
 
         <Route path="login" element={<Login />} />
         <Route path="register" element={<Register />} />
