@@ -67,7 +67,13 @@ export function CreateProject({ children, onCreated }: CreateProjectProps) {
           formData.append("files", file)
         })
       }
-      return projectService.createProject(formData)
+
+      console.log("FormData entries:")
+Array.from(formData.entries()).forEach(([key, value]) => {
+  console.log(key, value)
+})
+return projectService.createProject(formData)
+
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projects"] })
@@ -85,6 +91,7 @@ export function CreateProject({ children, onCreated }: CreateProjectProps) {
   const isLoading = mutation.status === "pending"
   const isError = mutation.status === "error"
   const error = mutation.error as Error | null
+
   function onNextStep(data: ProjectFormData) {
     Object.entries(data).forEach(([key, value]) => {
       setValue(key as keyof ProjectFormData, value)
@@ -97,17 +104,19 @@ export function CreateProject({ children, onCreated }: CreateProjectProps) {
   }
 
   const additionalUsersString = watch("additionalUsersEmails").join(", ")
-const handleSaveWithoutFiles = async () => {
-  setValue("files", [])
-  await new Promise((resolve) => setTimeout(resolve, 0)) 
-  handleSubmit(onSubmit)()
-}
+
+  const handleSaveWithoutFiles = async () => {
+    setValue("files", [])
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    handleSubmit(onSubmit)()
+  }
+
   return (
     <Dialog
       open={open}
       onOpenChange={(val) => {
         setOpen(val)
-        if (!val) setStep(1) 
+        if (!val) setStep(1)
       }}
     >
       <DialogTrigger asChild>{children}</DialogTrigger>
@@ -116,11 +125,12 @@ const handleSaveWithoutFiles = async () => {
           <>
             <DialogHeader>
               <DialogTitle>Create a New Project</DialogTitle>
-              <DialogDescription>Complete the basic information of the project.</DialogDescription>
+              <DialogDescription>
+                Complete the basic information of the project.
+              </DialogDescription>
             </DialogHeader>
 
             <form onSubmit={handleSubmit(onNextStep)} className="space-y-6">
-            
               <FormField label="Project Name" id="name" error={errors.name?.message} required>
                 <Controller
                   control={control}
@@ -230,7 +240,6 @@ const handleSaveWithoutFiles = async () => {
             </DialogHeader>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            
               <FormField label="Project Files" id="files">
                 <Controller
                   control={control}
