@@ -15,6 +15,7 @@ import { useForm, Controller } from "react-hook-form"
 import { useNavigate } from "react-router-dom"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { projectService, type ProjectFormData } from "@/services/projectService"
+import { FileDropzone } from "./file-dropzone"
 
 interface CreateProjectProps {
   children: React.ReactNode
@@ -44,7 +45,9 @@ export function CreateProject({ children, onCreated }: CreateProjectProps) {
       location: "",
       status: "idea",
       additionalUsersEmails: [],
-      files: [],
+      filesBlueprints: [],
+      filesRenders: [],
+      filesReports: [],
       description: "",
     },
   })
@@ -60,20 +63,19 @@ export function CreateProject({ children, onCreated }: CreateProjectProps) {
       if (data.location) formData.append("location", data.location)
       formData.append("status", data.status || "idea")
       if (data.description) formData.append("description", data.description)
-      if (data.additionalUsersEmails && data.additionalUsersEmails.length > 0)
+      if (data.additionalUsersEmails?.length)
         formData.append("additional_users_emails", data.additionalUsersEmails.join(","))
-      if (data.files && data.files.length > 0) {
-        data.files.forEach((file) => {
-          formData.append("files", file)
-        })
-      }
 
-      console.log("FormData entries:")
-Array.from(formData.entries()).forEach(([key, value]) => {
-  console.log(key, value)
+    const allFiles = [
+  ...(data.filesBlueprints || []),
+  ...(data.filesRenders || []),
+  ...(data.filesReports || []),
+]
+allFiles.forEach((file) => {
+  formData.append("files", file)
 })
-return projectService.createProject(formData)
 
+      return projectService.createProject(formData)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projects"] })
@@ -105,11 +107,14 @@ return projectService.createProject(formData)
 
   const additionalUsersString = watch("additionalUsersEmails").join(", ")
 
-  const handleSaveWithoutFiles = async () => {
-    setValue("files", [])
-    await new Promise((resolve) => setTimeout(resolve, 0))
-    handleSubmit(onSubmit)()
-  }
+ const handleSaveWithoutFiles = async () => {
+  setValue("filesBlueprints", [])
+  setValue("filesRenders", [])
+  setValue("filesReports", [])
+  await new Promise((resolve) => setTimeout(resolve, 0))
+  handleSubmit(onSubmit)()
+}
+
 
   return (
     <Dialog
@@ -121,13 +126,11 @@ return projectService.createProject(formData)
     >
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-lg">
-        {step === 1 && (
+        {step === 1 ? (
           <>
             <DialogHeader>
               <DialogTitle>Create a New Project</DialogTitle>
-              <DialogDescription>
-                Complete the basic information of the project.
-              </DialogDescription>
+              <DialogDescription>Complete the basic information of the project.</DialogDescription>
             </DialogHeader>
 
             <form onSubmit={handleSubmit(onNextStep)} className="space-y-6">
@@ -182,9 +185,7 @@ return projectService.createProject(formData)
                       <Input
                         {...field}
                         id="budget"
-                        type="number"
-                        min={0}
-                        step={0.01}
+                        type="text"
                         value={field.value ?? ""}
                         onChange={(e) =>
                           field.onChange(e.target.value === "" ? undefined : parseFloat(e.target.value))
@@ -228,104 +229,110 @@ return projectService.createProject(formData)
               </DialogFooter>
             </form>
           </>
-        )}
-
-        {step === 2 && (
+        ) : (
           <>
-            <DialogHeader>
-              <DialogTitle>Add More Information Now?</DialogTitle>
-              <DialogDescription>
-                You can complete additional project details or upload related files.
-              </DialogDescription>
-            </DialogHeader>
+  <DialogHeader>
+    <DialogTitle>Add More Information</DialogTitle>
+    <DialogDescription>You can upload files and assign additional users.</DialogDescription>
+  </DialogHeader>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              <FormField label="Project Files" id="files">
-                <Controller
-                  control={control}
-                  name="files"
-                  render={({ field }) => (
-                    <Input
-                      id="files"
-                      type="file"
-                      multiple
-                      onChange={(e) => field.onChange(Array.from(e.target.files || []))}
-                    />
-                  )}
-                />
-                {watch("files")?.length > 0 && (
-                  <ul className="text-sm text-gray-500">
-                    {watch("files").map((file, index) => (
-                      <li key={index}>{file.name}</li>
-                    ))}
-                  </ul>
-                )}
-              </FormField>
+  <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+  <FormField label="Blueprint Files" id="filesBlueprints">
+  <Controller
+    control={control}
+    name="filesBlueprints"
+    render={({ field }) => (
+      <FileDropzone
+        files={field.value || []}
+        onFilesAdded={(newFiles) => field.onChange(newFiles)}
+      />
+    )}
+  />
+</FormField>
 
-              <FormField label="Assign Users (emails separated by commas)" id="additionalUsersEmails">
-                <Input
-                  id="additionalUsersEmails"
-                  value={additionalUsersString}
-                  onChange={(e) =>
-                    setValue(
-                      "additionalUsersEmails",
-                      e.target.value
-                        .split(",")
-                        .map((email) => email.trim())
-                        .filter((email) => email.length > 0)
-                    )
-                  }
-                  placeholder="email1@example.com, email2@example.com"
-                />
-              </FormField>
+<FormField label="Render Files" id="filesRenders">
+  <Controller
+    control={control}
+    name="filesRenders"
+    render={({ field }) => (
+      <FileDropzone
+        files={field.value || []}
+        onFilesAdded={(newFiles) => field.onChange(newFiles)}
+      />
+    )}
+  />
+</FormField>
 
-              <FormField label="Initial Project Status" id="status" required>
-                <Controller
-                  control={control}
-                  name="status"
-                  rules={{ required: "Status is required" }}
-                  render={({ field }) => (
-                    <select {...field} id="status" className="w-full border rounded px-2 py-1">
-                      <option value="idea">Idea</option>
-                      <option value="budgeting">Budgeting</option>
-                      <option value="in_progress">In Progress</option>
-                      <option value="finished">Finished</option>
-                    </select>
-                  )}
-                />
-              </FormField>
+<FormField label="Report Files" id="filesReports">
+  <Controller
+    control={control}
+    name="filesReports"
+    render={({ field }) => (
+      <FileDropzone
+        files={field.value || []}
+        onFilesAdded={(newFiles) => field.onChange(newFiles)}
+      />
+    )}
+  />
+</FormField>
 
-              <FormField label="Additional Description" id="description">
-                <Controller
-                  control={control}
-                  name="description"
-                  render={({ field }) => <Input {...field} id="description" />}
-                />
-              </FormField>
+    <FormField label="Assign Users (emails separated by commas)" id="additionalUsersEmails">
+      <Input
+        id="additionalUsersEmails"
+        value={additionalUsersString}
+        onChange={(e) =>
+          setValue(
+            "additionalUsersEmails",
+            e.target.value
+              .split(",")
+              .map((email) => email.trim())
+              .filter((email) => email)
+          )
+        }
+      />
+    </FormField>
 
-              <DialogFooter className="flex space-x-3">
-                <Button type="button" variant="secondary" onClick={() => setStep(1)} disabled={isLoading}>
-                  Back
-                </Button>
+    <FormField label="Initial Project Status" id="status" required>
+      <Controller
+        control={control}
+        name="status"
+        rules={{ required: "Status is required" }}
+        render={({ field }) => (
+          <select {...field} id="status" className="w-full border rounded px-2 py-1">
+            <option value="idea">Idea</option>
+            <option value="budgeting">Budgeting</option>
+            <option value="in_progress">In Progress</option>
+            <option value="finished">Finished</option>
+          </select>
+        )}
+      />
+    </FormField>
 
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleSaveWithoutFiles}
-                  disabled={isLoading}
-                >
-                  Save Without Files
-                </Button>
+    <FormField label="Additional Description" id="description">
+      <Controller
+        control={control}
+        name="description"
+        render={({ field }) => <Input {...field} id="description" />}
+      />
+    </FormField>
 
-                <Button type="submit" disabled={isLoading}>
-                  {isLoading ? "Creating..." : "Create Project"}
-                </Button>
-              </DialogFooter>
-              {isError && (
-                <p className="text-red-600 text-sm mt-2">Error: {error?.message || "Failed to create project"}</p>
-              )}
-            </form>
-          </>
+    <DialogFooter className="flex space-x-3">
+      <Button type="button" variant="secondary" onClick={() => setStep(1)} disabled={isLoading}>
+        Back
+      </Button>
+      <Button type="button" variant="outline" onClick={handleSaveWithoutFiles} disabled={isLoading}>
+        Save Without Files
+      </Button>
+      <Button type="submit" disabled={isLoading}>
+        {isLoading ? "Creating..." : "Create Project"}
+      </Button>
+    </DialogFooter>
+    {isError && (
+      <p className="text-red-600 text-sm mt-2">Error: {error?.message || "Failed to create project"}</p>
+    )}
+  </form>
+</>
+
         )}
       </DialogContent>
     </Dialog>

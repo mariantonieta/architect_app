@@ -10,20 +10,15 @@ import { Projects } from "@/components/project-cards"
 
 export function Home() {
   return (
-    <SidebarProvider>
-      <AppSidebar variant="inset" />
-      <SidebarInset>
-        <div className="flex flex-col px-4 lg:px-6">
-          <SiteHeader />
+ <div className="flex flex-col px-4 lg:px-6">
+      <SiteHeader />
 
-          <div className="@container/main flex flex-1 flex-col space-y-6 pb-6">
-            <SectionCards />
-            <Projects />
-            <ChartAreaInteractive />
-            <DataTable data={data} />
-          </div>
-        </div>
-      </SidebarInset>
-    </SidebarProvider>
+      <div className="@container/main flex flex-1 flex-col space-y-6 pb-6">
+        <SectionCards />
+        <Projects />
+        <ChartAreaInteractive />
+        <DataTable data={data} />
+      </div>
+    </div>   
   )
 }

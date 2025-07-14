@@ -16,7 +16,9 @@ export interface ProjectFormData {
     location?: string;
     status?: "idea" | "budgeting" | "in_progress" | "finished";
     additionalUsersEmails?: string[];
-    files?: File[];
+    filesBlueprints?: File[];
+    filesRenders?: File[];
+    filesReports?: File[];
     description?: string;
     client?: {
         email: string;

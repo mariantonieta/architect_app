@@ -7,6 +7,8 @@ import { GoogleCompleteRegistration } from "./components/google-complete-registr
 import { ResetPasswordRequest } from "./components/reset-password-request";
 import { ResetPasswordForm } from "./components/reset-password-form";
 import { Project } from "./pages/project";
+import { Layout } from "./components/layout";
+
 
 export function Router() {
   return (
@@ -14,11 +16,8 @@ export function Router() {
       <Routes>
         <Route path="auth/google/callback" element={<GoogleAuthRedirect />} />
         <Route path="auth/google/complete-registration" element={<GoogleCompleteRegistration />} />
-      <Route path="reset-password" element={<ResetPasswordRequest/>} />
-      <Route path="reset-password/form" element={<ResetPasswordForm/>} />
-          <Route path="/account" element={<Account/>} />
-            <Route path="/projects/:id" element={<Project/>} />
-
+        <Route path="reset-password" element={<ResetPasswordRequest />} />
+        <Route path="reset-password/form" element={<ResetPasswordForm />} />
         <Route path="login" element={<Login />} />
         <Route path="register" element={<Register />} />
 
@@ -27,7 +26,11 @@ export function Router() {
             <AuthValidationMiddleware to="/login" storageKey={AUTH_STORAGE} />
           }
         >
-          <Route index element={<Home />} />
+          <Route element={<Layout />}>
+            <Route index element={<Home />} />
+            <Route path="/account" element={<Account />} />
+            <Route path="/projects/:id" element={<Project />} />
+          </Route>
         </Route>
 
         <Route path="*" element={<NotFound />} />

@@ -5,15 +5,28 @@ interface AuthValidationMiddlewareProps {
   storageKey: string;
 }
 
+function isTokenExpired(token: string): boolean {
+  try {
+    const payloadBase64 = token.split('.')[1];
+    const payload = JSON.parse(atob(payloadBase64));
+
+    if (!payload.exp) return true;
+
+    const now = Math.floor(Date.now() / 1000)
+    return payload.exp < now;
+  } catch (e) {
+
+    return true;
+  }
+}
+
 export function AuthValidationMiddleware({
   to,
   storageKey,
 }: AuthValidationMiddlewareProps) {
   const token = localStorage.getItem(storageKey);
 
-  if (!token) {
-    return <Navigate to={to} replace />;
-  }
+  const isValid = token && !isTokenExpired(token);
 
-  return <Outlet />;
+  return isValid ? <Outlet /> : <Navigate to={to} replace />;
 }
