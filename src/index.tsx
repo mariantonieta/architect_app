@@ -3,9 +3,24 @@ import index from "./index.html";
 
 const server = serve({
   routes: {
-    // Serve index.html for all unmatched routes.
-    "/*": index,
+    // 👉 Ruta personalizada para el worker
+    "/workers/fragments.worker.js": {
+      async GET() {
+        const workerPath = "node_modules/@thatopen/fragments/dist/worker/worker.mjs";
+        const file = Bun.file(workerPath);
+        if (!(await file.exists())) {
+          return new Response("Worker not found", { status: 404 });
+        }
 
+        return new Response(file, {
+          headers: {
+            "Content-Type": "application/javascript",
+          },
+        });
+      },
+    },
+
+    // 🌐 Tus APIs
     "/api/hello": {
       async GET(req) {
         return Response.json({
@@ -27,6 +42,9 @@ const server = serve({
         message: `Hello, ${name}!`,
       });
     },
+
+    // ⚠️ ¡OJO! Esta línea va al final, para no pisar otras rutas
+    "/*": index,
   },
 
   development: process.env.NODE_ENV !== "production",

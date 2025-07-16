@@ -50,6 +50,7 @@ export function RegisterForm({ className, ...props }: React.ComponentProps<"div"
     },
   });
 
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -67,6 +68,8 @@ export function RegisterForm({ className, ...props }: React.ComponentProps<"div"
       const { confirmPassword, ...rest } = data;
       const submitData = { ...rest, confirm_password: confirmPassword };
       await authService.register(submitData);
+        console.log(JSON.stringify(submitData, null, 2));
+
       navigate("/login");
     } catch (err) {
       setError("Registration failed");

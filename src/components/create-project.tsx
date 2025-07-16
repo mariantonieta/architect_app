@@ -28,6 +28,10 @@ export function CreateProject({ children, onCreated }: CreateProjectProps) {
   const [open, setOpen] = React.useState(false)
   const [step, setStep] = React.useState<1 | 2>(1)
 
+  const [blueprints, setBlueprints] = React.useState<File[]>([])
+  const [renders, setRenders] = React.useState<File[]>([])
+  const [reports, setReports] = React.useState<File[]>([])
+
   const {
     control,
     handleSubmit,
@@ -52,52 +56,60 @@ export function CreateProject({ children, onCreated }: CreateProjectProps) {
     },
   })
 
-  const mutation = useMutation({
-    mutationFn: async (data: ProjectFormData) => {
-      const formData = new FormData()
-      formData.append("name", data.name)
-      if (data.clientEmail) formData.append("client_email", data.clientEmail)
-      formData.append("project_type", data.project_type)
-      if (data.currency) formData.append("currency", data.currency)
-      if (data.budget != null) formData.append("budget", data.budget.toString())
-      if (data.location) formData.append("location", data.location)
-      formData.append("status", data.status || "idea")
-      if (data.description) formData.append("description", data.description)
-      if (data.additionalUsersEmails?.length)
-        formData.append("additional_users_emails", data.additionalUsersEmails.join(","))
+const mutation = useMutation({
+  mutationFn: async (data: ProjectFormData) => {
+    const formData = new FormData()
+    formData.append("name", data.name)
+    if (data.clientEmail) formData.append("client_email", data.clientEmail)
+    formData.append("project_type", data.project_type)
+    if (data.currency) formData.append("currency", data.currency)
+    if (data.budget != null) formData.append("budget", data.budget.toString())
+    if (data.location) formData.append("location", data.location)
+    formData.append("status", data.status || "idea")
+    if (data.description) formData.append("description", data.description)
+    if (data.additionalUsersEmails?.length) {
+      formData.append("additional_users_emails", data.additionalUsersEmails.join(","))
+    }
 
-    const allFiles = [
-  ...(data.filesBlueprints || []),
-  ...(data.filesRenders || []),
-  ...(data.filesReports || []),
-]
-allFiles.forEach((file) => {
-  formData.append("files", file)
+    blueprints?.forEach((file) => {
+       console.log("Adding file:", file.name) 
+      formData.append("filesBlueprints", file)
+    })
+
+    renders?.forEach((file) => {
+             console.log("Adding file:", file.name) 
+      formData.append("filesRenders", file)
+    })
+
+    reports?.forEach((file) => {
+             console.log("Adding file:", file.name) 
+      formData.append("filesReports", file)
+    })
+
+    for (const pair of formData.entries()) {
+      console.log(pair[0] + ": ", pair[1])
+    }
+
+    return projectService.createProject(formData)
+  },
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ["projects"] })
+    reset()
+    setStep(1)
+    setOpen(false)
+    onCreated?.()
+    navigate("/")
+  },
+  onError: (error: any) => {
+    console.error("Error creating project:", error)
+  },
 })
 
-      return projectService.createProject(formData)
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["projects"] })
-      reset()
-      setStep(1)
-      setOpen(false)
-      onCreated?.()
-      navigate("/")
-    },
-    onError: (error: any) => {
-      console.error("Error creating project:", error)
-    },
-  })
-
-  const isLoading = mutation.status === "pending"
+  //const isLoading = mutation.
   const isError = mutation.status === "error"
   const error = mutation.error as Error | null
 
   function onNextStep(data: ProjectFormData) {
-    Object.entries(data).forEach(([key, value]) => {
-      setValue(key as keyof ProjectFormData, value)
-    })
     setStep(2)
   }
 
@@ -107,14 +119,13 @@ allFiles.forEach((file) => {
 
   const additionalUsersString = watch("additionalUsersEmails").join(", ")
 
- const handleSaveWithoutFiles = async () => {
-  setValue("filesBlueprints", [])
-  setValue("filesRenders", [])
-  setValue("filesReports", [])
-  await new Promise((resolve) => setTimeout(resolve, 0))
-  handleSubmit(onSubmit)()
-}
-
+  const handleSaveWithoutFiles = async () => {
+    setValue("filesBlueprints", [])
+    setValue("filesRenders", [])
+    setValue("filesReports", [])
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    handleSubmit(onSubmit)()
+  }
 
   return (
     <Dialog
@@ -220,10 +231,10 @@ allFiles.forEach((file) => {
               </FormField>
 
               <DialogFooter className="flex space-x-3">
-                <Button type="button" variant="secondary" onClick={() => setOpen(false)} disabled={isLoading}>
+                <Button type="button" variant="secondary" onClick={() => setOpen(false)} disabled={mutation.isPending}>
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isLoading}>
+                <Button type="submit" disabled={mutation.isPending}>
                   Continue
                 </Button>
               </DialogFooter>
@@ -231,108 +242,97 @@ allFiles.forEach((file) => {
           </>
         ) : (
           <>
-  <DialogHeader>
-    <DialogTitle>Add More Information</DialogTitle>
-    <DialogDescription>You can upload files and assign additional users.</DialogDescription>
-  </DialogHeader>
+            <DialogHeader>
+              <DialogTitle>Add More Information</DialogTitle>
+              <DialogDescription>You can upload files and assign additional users.</DialogDescription>
+            </DialogHeader>
 
-  <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-  <FormField label="Blueprint Files" id="filesBlueprints">
-  <Controller
-    control={control}
-    name="filesBlueprints"
-    render={({ field }) => (
-      <FileDropzone
-        files={field.value || []}
-        onFilesAdded={(newFiles) => field.onChange(newFiles)}
-      />
-    )}
-  />
-</FormField>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+              <FormField label="Blueprint Files" id="filesBlueprints">
+                <FileDropzone
+                  files={blueprints}
+                  onFilesAdded={(newFiles) => {
+                    setBlueprints(newFiles)
+                    setValue("filesBlueprints", newFiles)
+                  }}
+                />
+              </FormField>
 
-<FormField label="Render Files" id="filesRenders">
-  <Controller
-    control={control}
-    name="filesRenders"
-    render={({ field }) => (
-      <FileDropzone
-        files={field.value || []}
-        onFilesAdded={(newFiles) => field.onChange(newFiles)}
-      />
-    )}
-  />
-</FormField>
+              <FormField label="Render Files" id="filesRenders">
+                <FileDropzone
+                  files={renders}
+                  onFilesAdded={(newFiles) => {
+                    setRenders(newFiles)
+                    setValue("filesRenders", newFiles)
+                  }}
+                />
+              </FormField>
+              <FormField label="Report Files" id="filesReports">
+                <FileDropzone
+                  files={reports}
+                  onFilesAdded={(newFiles) => {
+                    setReports(newFiles)
+                    setValue("filesReports", newFiles)
+                  }}
+                />
+              </FormField>
 
-<FormField label="Report Files" id="filesReports">
-  <Controller
-    control={control}
-    name="filesReports"
-    render={({ field }) => (
-      <FileDropzone
-        files={field.value || []}
-        onFilesAdded={(newFiles) => field.onChange(newFiles)}
-      />
-    )}
-  />
-</FormField>
+              <FormField label="Assign Users (emails separated by commas)" id="additionalUsersEmails">
+                <Input
+                  id="additionalUsersEmails"
+                  value={additionalUsersString}
+                  onChange={(e) =>
+                    setValue(
+                      "additionalUsersEmails",
+                      e.target.value
+                        .split(",")
+                        .map((email) => email.trim())
+                        .filter((email) => email)
+                    )
+                  }
+                />
+              </FormField>
 
-    <FormField label="Assign Users (emails separated by commas)" id="additionalUsersEmails">
-      <Input
-        id="additionalUsersEmails"
-        value={additionalUsersString}
-        onChange={(e) =>
-          setValue(
-            "additionalUsersEmails",
-            e.target.value
-              .split(",")
-              .map((email) => email.trim())
-              .filter((email) => email)
-          )
-        }
-      />
-    </FormField>
+              <FormField label="Initial Project Status" id="status" required>
+                <Controller
+                  control={control}
+                  name="status"
+                  rules={{ required: "Status is required" }}
+                  render={({ field }) => (
+                    <select {...field} id="status" className="w-full border rounded px-2 py-1">
+                      <option value="idea">Idea</option>
+                      <option value="budgeting">Budgeting</option>
+                      <option value="in_progress">In Progress</option>
+                      <option value="finished">Finished</option>
+                    </select>
+                  )}
+                />
+              </FormField>
 
-    <FormField label="Initial Project Status" id="status" required>
-      <Controller
-        control={control}
-        name="status"
-        rules={{ required: "Status is required" }}
-        render={({ field }) => (
-          <select {...field} id="status" className="w-full border rounded px-2 py-1">
-            <option value="idea">Idea</option>
-            <option value="budgeting">Budgeting</option>
-            <option value="in_progress">In Progress</option>
-            <option value="finished">Finished</option>
-          </select>
-        )}
-      />
-    </FormField>
+              <FormField label="Additional Description" id="description">
+                <Controller
+                  control={control}
+                  name="description"
+                  render={({ field }) => <Input {...field} id="description" />}
+                />
+              </FormField>
 
-    <FormField label="Additional Description" id="description">
-      <Controller
-        control={control}
-        name="description"
-        render={({ field }) => <Input {...field} id="description" />}
-      />
-    </FormField>
-
-    <DialogFooter className="flex space-x-3">
-      <Button type="button" variant="secondary" onClick={() => setStep(1)} disabled={isLoading}>
-        Back
-      </Button>
-      <Button type="button" variant="outline" onClick={handleSaveWithoutFiles} disabled={isLoading}>
-        Save Without Files
-      </Button>
-      <Button type="submit" disabled={isLoading}>
-        {isLoading ? "Creating..." : "Create Project"}
-      </Button>
-    </DialogFooter>
-    {isError && (
-      <p className="text-red-600 text-sm mt-2">Error: {error?.message || "Failed to create project"}</p>
-    )}
-  </form>
-</>
-
+              <DialogFooter className="flex space-x-3">
+                <Button type="button" variant="secondary" onClick={() => setStep(1)} disabled={mutation.isPending}>
+                  Back
+                </Button>
+                <Button type="button" variant="outline" onClick={handleSaveWithoutFiles} disabled={mutation.isPending}>
+                  Save Without Files
+                </Button>
+                <Button type="submit" disabled={mutation.isPending}>
+                  {mutation.isPending ? "Creating..." : "Create Project"}
+                </Button>
+              </DialogFooter>
+              {isError && (
+                <p className="text-red-600 text-sm mt-2">Error: {error?.message || "Failed to create project"}</p>
+              )}
+            </form>
+          </>
         )}
       </DialogContent>
     </Dialog>

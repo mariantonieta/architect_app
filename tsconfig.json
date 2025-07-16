@@ -13,7 +13,10 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
-    }
+    },
+
+    "target": "es2015",
+    "downlevelIteration": true
   },
   "include": ["**/*.ts", "**/*.tsx"]
 }

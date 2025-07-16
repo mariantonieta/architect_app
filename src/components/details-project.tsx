@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ArrowLeft, User, MapPin, Calendar, DollarSign, Users, FileText, Building2, Clock } from "lucide-react"
+import { ArrowLeft, User, MapPin, Calendar, DollarSign, Users, Building2, Clock } from "lucide-react"
 import { IconDotsVertical } from "@tabler/icons-react"
 import {
   AlertDialog,
@@ -22,6 +22,7 @@ import {
   AlertDialogAction,
 } from "@/components/ui/alert-dialog"
 import type { AxiosError } from "axios"
+import { IFCViewer } from "./ifc-viewer/ifc-viewer"
 
 export function ProjectDetails() {
   const { id } = useParams<{ id: string }>()
@@ -31,6 +32,7 @@ export function ProjectDetails() {
   const [deleted, setDeleted] = useState(false)
   const [openDeleteModal, setOpenDeleteModal] = useState(false)
   const [activeTab, setActiveTab] = useState("overview")
+  const [selectedFile, setSelectedFile] = useState<string | null>(null);
 
   const deleteMutation = useMutation({
     mutationFn: () => projectService.deleteProject(id!),
@@ -58,7 +60,8 @@ export function ProjectDetails() {
     },
   })
 
-  //console.log("Project loaded:", project)
+  
+  console.log("Project loaded:", project)
 
   if (isLoading)
     return (
@@ -81,7 +84,8 @@ export function ProjectDetails() {
     navigate(`/projects/edit/${id}`)
   }
 
-  const handleDelete = () => deleteMutation.mutate()
+  const handleDelete = () => {deleteMutation.mutate() 
+    setOpenDeleteModal(false)}
 
   const isDeleting = deleteMutation.status === "pending"
 
@@ -171,7 +175,34 @@ export function ProjectDetails() {
               ))}
             </TabsList>
           </div>
+ <TabsContent value="plans">
+  <Card>
+    <CardContent className="p-6">
+      <h2 className="text-lg font-semibold mb-2">Files</h2>
+      {project.files && project.files.length > 0 ? (
+        <div className="mt-4 space-y-2">
+          {project.files.map((file) => (
+            <button
+              key={file.id}
+              onClick={() => setSelectedFile(file.url)} 
+              className="block text-left w-full text-blue-600 hover:underline text-sm"
+            >
+              {file.original_name}
+            </button>
+          ))}
+        </div>
+      ) : (
+        <p className="text-sm text-gray-500">No files uploaded.</p>
+      )}
+    </CardContent>
+  </Card>
 
+  {selectedFile && (
+    <div className="mt-6">
+      <IFCViewer fileUrl={selectedFile} />
+    </div>
+  )}
+</TabsContent>
           <TabsContent value="overview" className="mt-6">
             <div className="space-y-8">
           
@@ -320,36 +351,29 @@ export function ProjectDetails() {
                   </CardContent>
                 </Card>
 
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-gray-100 rounded-lg">
-                        <FileText className="h-5 w-5 text-gray-600" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm text-gray-500">Files</p>
-                        <p className="font-medium text-gray-900">
-                          {project.files && project.files.length > 0 ? `${project.files.length} file(s)` : "No files"}
-                        </p>
-                      </div>
-                    </div>
-                    {project.files && project.files.length > 0 && (
-                      <div className="mt-4 space-y-2">
-                        {project.files.map((file) => (
-                          <a
-                            key={file.id}
-                            href={file.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="block text-blue-600 hover:underline text-sm"
-                          >
-                            {file.original_name}
-                          </a>
-                        ))}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+      
+  <Card>
+  <CardContent className="p-6">
+    <h2 className="text-lg font-semibold mb-2">Files</h2>
+    {project.files && project.files.length > 0 ? (
+      <div className="mt-4 space-y-2">
+        {project.files.map((file) => (
+          <a
+            key={file.id}
+            href={file.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block text-blue-600 hover:underline text-sm"
+          >
+            {file.original_name}
+          </a>
+        ))}
+      </div>
+    ) : (
+      <p className="text-sm text-gray-500">No files uploaded.</p>
+    )}
+  </CardContent>
+</Card>
               </div>
 
               {project.additionalUsersEmails && project.additionalUsersEmails.length > 0 && (
@@ -374,15 +398,18 @@ export function ProjectDetails() {
             </div>
           </TabsContent>
 
-          {tabs.slice(1).map((tab) => (
-            <TabsContent key={tab.id} value={tab.id}>
-              <Card>
-                <CardContent className="p-8 text-center">
-                  <p className="text-gray-500">Content for {tab.label}</p>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          ))}
+        {tabs
+  .filter(tab => tab.id !== "plans")  
+  .slice(1)
+  .map((tab) => (
+    <TabsContent key={tab.id} value={tab.id}>
+      <Card>
+        <CardContent className="p-8 text-center">
+          <p className="text-gray-500">Content for {tab.label}</p>
+        </CardContent>
+      </Card>
+    </TabsContent>
+))}
         </Tabs>
       </div>
 

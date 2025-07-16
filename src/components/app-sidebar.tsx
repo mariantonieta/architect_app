@@ -30,7 +30,6 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 
-// Importa tu hook desde donde lo definiste
 import { useUser } from "@/hooks/useUser"
 
 const data = {
