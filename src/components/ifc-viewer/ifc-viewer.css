@@ -13,17 +13,19 @@
   max-width: 1000px;
   height: 600px;
   border: 1px solid #ccc;
-  background-color: #222; 
+  background-color: #222;
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
+  position: relative;
 }
 
 .viewer canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100% !important;
-  height: 100vh !important;
-
-
+  height: 100% !important;
   display: block;
-  background: transparent !important; 
+  background-color: transparent !important;
 }

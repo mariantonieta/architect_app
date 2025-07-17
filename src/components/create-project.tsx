@@ -18,19 +18,32 @@ import { projectService, type ProjectFormData } from "@/services/projectService"
 import { FileDropzone } from "./file-dropzone"
 
 interface CreateProjectProps {
-  children: React.ReactNode
+  children?: React.ReactNode
   onCreated?: () => void
+  initialData?: ProjectFormData & {
+    existingBlueprints?: File[]
+    existingRenders?: File[]
+    existingReports?: File[]
+    id?: number
+  }
+  open: boolean
+  onOpenChange: (open: boolean) => void
 }
 
-export function CreateProject({ children, onCreated }: CreateProjectProps) {
+export function CreateProject({
+  children,
+  onCreated,
+  initialData,
+  open,
+  onOpenChange,
+}: CreateProjectProps) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const [open, setOpen] = React.useState(false)
   const [step, setStep] = React.useState<1 | 2>(1)
 
-  const [blueprints, setBlueprints] = React.useState<File[]>([])
-  const [renders, setRenders] = React.useState<File[]>([])
-  const [reports, setReports] = React.useState<File[]>([])
+  const [blueprints, setBlueprints] = React.useState<File[]>(initialData?.existingBlueprints || [])
+  const [renders, setRenders] = React.useState<File[]>(initialData?.existingRenders || [])
+  const [reports, setReports] = React.useState<File[]>(initialData?.existingReports || [])
 
   const {
     control,
@@ -41,72 +54,61 @@ export function CreateProject({ children, onCreated }: CreateProjectProps) {
     formState: { errors },
   } = useForm<ProjectFormData>({
     defaultValues: {
-      name: "",
-      clientEmail: "",
-      project_type: "other",
-      currency: "ars",
-      budget: undefined,
-      location: "",
-      status: "idea",
-      additionalUsersEmails: [],
+      name: initialData?.name || "",
+      clientEmail: initialData?.clientEmail || "",
+      project_type: initialData?.project_type || "",
+      currency: initialData?.currency || "ars",
+      budget: initialData?.budget,  
+      location: initialData?.location || "",
+      status: initialData?.status || "idea",
+      additionalUsersEmails: initialData?.additionalUsersEmails || [],
       filesBlueprints: [],
       filesRenders: [],
       filesReports: [],
-      description: "",
+      description: initialData?.description || "",
     },
   })
 
-const mutation = useMutation({
-  mutationFn: async (data: ProjectFormData) => {
-    const formData = new FormData()
-    formData.append("name", data.name)
-    if (data.clientEmail) formData.append("client_email", data.clientEmail)
-    formData.append("project_type", data.project_type)
-    if (data.currency) formData.append("currency", data.currency)
-    if (data.budget != null) formData.append("budget", data.budget.toString())
-    if (data.location) formData.append("location", data.location)
-    formData.append("status", data.status || "idea")
-    if (data.description) formData.append("description", data.description)
-    if (data.additionalUsersEmails?.length) {
-      formData.append("additional_users_emails", data.additionalUsersEmails.join(","))
-    }
+  const mutation = useMutation({
+    mutationFn: async (data: ProjectFormData) => {
+      const formData = new FormData()
+      formData.append("name", data.name)
+      if (data.clientEmail) formData.append("client_email", data.clientEmail)
+      formData.append("project_type", data.project_type)
+      if (data.currency) formData.append("currency", data.currency)
+      if (data.budget != null) formData.append("budget", data.budget.toString())
+      if (data.location) formData.append("location", data.location)
+      formData.append("status", data.status || "idea")
+      if (data.description) formData.append("description", data.description)
+      if (data.additionalUsersEmails?.length) {
+        formData.append("additional_users_emails", data.additionalUsersEmails.join(","))
+      }
 
-    blueprints?.forEach((file) => {
-       console.log("Adding file:", file.name) 
-      formData.append("filesBlueprints", file)
-    })
+      blueprints.forEach((file) => formData.append("filesBlueprints", file))
+      renders.forEach((file) => formData.append("filesRenders", file))
+      reports.forEach((file) => formData.append("filesReports", file))
+if (initialData?.id) {
+  formData.append("id", initialData.id.toString());
+  return projectService.updateProject(initialData.id.toString(), formData);
+} else {
+  return projectService.createProject(formData);
+}
 
-    renders?.forEach((file) => {
-             console.log("Adding file:", file.name) 
-      formData.append("filesRenders", file)
-    })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["projects"] })
+      reset()
+      setStep(1)
+      onOpenChange(false)
+      onCreated?.()
+      navigate("/")
+    },
+    onError: (error: any) => {
+      console.error("Error saving project:", error)
+    },
+  })
 
-    reports?.forEach((file) => {
-             console.log("Adding file:", file.name) 
-      formData.append("filesReports", file)
-    })
-
-    for (const pair of formData.entries()) {
-      console.log(pair[0] + ": ", pair[1])
-    }
-
-    return projectService.createProject(formData)
-  },
-  onSuccess: () => {
-    queryClient.invalidateQueries({ queryKey: ["projects"] })
-    reset()
-    setStep(1)
-    setOpen(false)
-    onCreated?.()
-    navigate("/")
-  },
-  onError: (error: any) => {
-    console.error("Error creating project:", error)
-  },
-})
-
-  //const isLoading = mutation.
-  const isError = mutation.status === "error"
+  const isError = mutation.isError
   const error = mutation.error as Error | null
 
   function onNextStep(data: ProjectFormData) {
@@ -131,8 +133,14 @@ const mutation = useMutation({
     <Dialog
       open={open}
       onOpenChange={(val) => {
-        setOpen(val)
+        onOpenChange(val)
         if (!val) setStep(1)
+        if (val && initialData) {
+          reset(initialData)
+          setBlueprints(initialData.existingBlueprints || [])
+          setRenders(initialData.existingRenders || [])
+          setReports(initialData.existingReports || [])
+        }
       }}
     >
       <DialogTrigger asChild>{children}</DialogTrigger>
@@ -140,7 +148,7 @@ const mutation = useMutation({
         {step === 1 ? (
           <>
             <DialogHeader>
-              <DialogTitle>Create a New Project</DialogTitle>
+              <DialogTitle>{initialData ? "Edit Project" : "Create a New Project"}</DialogTitle>
               <DialogDescription>Complete the basic information of the project.</DialogDescription>
             </DialogHeader>
 
@@ -150,7 +158,8 @@ const mutation = useMutation({
                   control={control}
                   name="name"
                   rules={{ required: "Project name is required" }}
-                  render={({ field }) => <Input {...field} id="name" autoFocus />}
+                  render={({ field }) => <Input {...field} id="name" autoFocus placeholder="Example: The Oaks Family House" />}
+                 
                 />
               </FormField>
 
@@ -164,7 +173,7 @@ const mutation = useMutation({
                       message: "Invalid email address",
                     },
                   }}
-                  render={({ field }) => <Input {...field} id="clientEmail" type="email" />}
+                  render={({ field }) => <Input {...field} id="clientEmail" type="email" placeholder="Client's email" />}
                 />
               </FormField>
 
@@ -175,6 +184,9 @@ const mutation = useMutation({
                   rules={{ required: "Project type is required" }}
                   render={({ field }) => (
                     <select {...field} id="project_type" className="w-full border rounded px-2 py-1">
+                         <option value="" disabled>
+          Select project type
+        </option>
                       <option value="single_family_home">Single Family Home</option>
                       <option value="residential_building">Residential Building</option>
                       <option value="commercial_building">Commercial Building</option>
@@ -195,11 +207,13 @@ const mutation = useMutation({
                     render={({ field }) => (
                       <Input
                         {...field}
+                        placeholder="0"
                         id="budget"
                         type="text"
                         value={field.value ?? ""}
                         onChange={(e) =>
                           field.onChange(e.target.value === "" ? undefined : parseFloat(e.target.value))
+                          
                         }
                       />
                     )}
@@ -226,12 +240,12 @@ const mutation = useMutation({
                   control={control}
                   name="location"
                   rules={{ required: "Location is required" }}
-                  render={({ field }) => <Input {...field} id="location" />}
+                  render={({ field }) => <Input {...field} id="location" placeholder="Addres or location"  />}
                 />
               </FormField>
 
               <DialogFooter className="flex space-x-3">
-                <Button type="button" variant="secondary" onClick={() => setOpen(false)} disabled={mutation.isPending}>
+                <Button type="button" variant="secondary" onClick={() => onOpenChange(false)} disabled={mutation.isPending}>
                   Cancel
                 </Button>
                 <Button type="submit" disabled={mutation.isPending}>
@@ -267,6 +281,7 @@ const mutation = useMutation({
                   }}
                 />
               </FormField>
+
               <FormField label="Report Files" id="filesReports">
                 <FileDropzone
                   files={reports}
@@ -325,11 +340,14 @@ const mutation = useMutation({
                   Save Without Files
                 </Button>
                 <Button type="submit" disabled={mutation.isPending}>
-                  {mutation.isPending ? "Creating..." : "Create Project"}
+                  {mutation.isPending ? "Saving..." : initialData ? "Save Changes" : "Create Project"}
                 </Button>
               </DialogFooter>
+
               {isError && (
-                <p className="text-red-600 text-sm mt-2">Error: {error?.message || "Failed to create project"}</p>
+                <p className="text-red-600 text-sm mt-2">
+                  Error: {error?.message || "Failed to save project"}
+                </p>
               )}
             </form>
           </>

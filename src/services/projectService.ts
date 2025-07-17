@@ -4,6 +4,7 @@ export interface ProjectFormData {
     name: string;
     clientEmail?: string;
     project_type:
+    ""
     | "single_family_home"
     | "residential_building"
     | "commercial_building"
@@ -71,7 +72,7 @@ export const projectService = {
         return response.data;
     },
 
-    async updateProject(projectId: string, data: Partial<ProjectFormData>) {
+    async updateProject(projectId: string, data: Partial<FormData>) {
         const response = await api.patch(`/projects/${projectId}`, data);
         return response.data;
     },

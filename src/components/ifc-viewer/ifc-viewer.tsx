@@ -3,7 +3,8 @@ import * as OBC from "@thatopen/components";
 import * as THREE from "three";
 import Stats from "stats.js";
 import * as OBCF from "@thatopen/components-front";
-import "./ifc-viewer.css"; type IFCViewerProps = {
+import "./ifc-viewer.css"; 
+type IFCViewerProps = {
   fileUrl?: string | null;
 };
 
@@ -105,16 +106,8 @@ export function IFCViewer({ fileUrl }: IFCViewerProps) {
   }, [fileUrl, loader, components, world]);
 
   return (
-    <div>
-      <div
-        ref={containerRef}
-        style={{
-          width: "100%",
-          height: "600px",
-          border: "1px solid #ccc",
-          backgroundColor: "#222",
-        }}
-      />
-    </div>
+    <div className="container">
+    <div ref={containerRef} className="viewer" />
+  </div>
   );
 }
