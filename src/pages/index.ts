@@ -2,4 +2,8 @@ export * from "./home";
 export * from "./not-found";
 export * from "./login";
 export * from "./register";
-export * from "./user"
+export * from "./user";
+export * from "./role-dashboard";
+export * from "./architect";
+export * from "./customer";
+export * from "./supplier";

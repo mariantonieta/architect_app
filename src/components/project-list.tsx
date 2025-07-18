@@ -8,7 +8,7 @@ import type { Project } from "@/services/projectService"
 import { useQuery } from "@tanstack/react-query"
 import { useNavigate } from "react-router-dom"
 
-export function Projects() {
+export function ProjectsList() {
   const navigate = useNavigate()
 
   const {

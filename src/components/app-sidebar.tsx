@@ -1,4 +1,5 @@
 import * as React from "react"
+import { Link } from "react-router-dom"
 import {
   IconCamera,
   IconChartBar,
@@ -34,48 +35,52 @@ import { useUser } from "@/hooks/useUser"
 
 const data = {
   navMain: [
-    { title: "Dashboard", url: "/dashboard", icon: IconDashboard },
-    { title: "Lifecycle", url: "#", icon: IconListDetails },
-    { title: "Analytics", url: "#", icon: IconChartBar },
-    { title: "Projects", url: "#", icon: IconFolder },
-    { title: "Team", url: "#", icon: IconUsers },
+    { title: "Dashboard", url: "/", icon: IconDashboard },
+    // { title: "Lifecycle", url: "/lifecycle", icon: IconListDetails },
+    // { title: "Analytics", url: "/analytics", icon: IconChartBar },
+    { title: "Projects", url: "/projects", icon: IconFolder },
+    // { title: "Team", url: "/team", icon: IconUsers },
   ],
-  navClouds: [
-    {
-      title: "Capture",
-      icon: IconCamera,
-      isActive: true,
-      url: "#",
-      items: [
-        { title: "Active Proposals", url: "#" },
-        { title: "Archived", url: "#" },
-      ],
-    },
-    {
-      title: "Proposal",
-      icon: IconFileDescription,
-      url: "#",
-      items: [
-        { title: "Active Proposals", url: "#" },
-        { title: "Archived", url: "#" },
-      ],
-    },
-    {
-      title: "Prompts",
-      icon: IconFileAi,
-      url: "#",
-      items: [
-        { title: "Active Proposals", url: "#" },
-        { title: "Archived", url: "#" },
-      ],
-    },
-  ],
+  // navClouds: [
+  //   {
+  //     title: "Capture",
+  //     icon: IconCamera,
+  //     isActive: true,
+  //     url: "#",
+  //     items: [
+  //       { title: "Active Proposals", url: "#" },
+  //       { title: "Archived", url: "#" },
+  //     ],
+  //   },
+  //   {
+  //     title: "Proposal",
+  //     icon: IconFileDescription,
+  //     url: "#",
+  //     items: [
+  //       { title: "Active Proposals", url: "#" },
+  //       { title: "Archived", url: "#" },
+  //     ],
+  //   },
+  //   {
+  //     title: "Prompts",
+  //     icon: IconFileAi,
+  //     url: "#",
+  //     items: [
+  //       { title: "Active Proposals", url: "#" },
+  //       { title: "Archived", url: "#" },
+  //     ],
+  //   },
+  // ],
 
-  documents: [
-    { name: "Data Library", url: "#", icon: IconDatabase },
-    { name: "Reports", url: "#", icon: IconReport },
-    { name: "Word Assistant", url: "#", icon: IconFileWord },
-  ],
+  // documents: [
+  //   { name: "Data Library", url: "#", icon: IconDatabase },
+  //   { name: "Reports", url: "#", icon: IconReport },
+  //   { name: "Word Assistant", url: "#", icon: IconFileWord },
+  //   { name: "Word Assistant", url: "#", icon: IconFileWord },
+  //   { name: "Word Assistant", url: "#", icon: IconFileWord },
+  //   { name: "Word Assistant", url: "#", icon: IconFileWord },
+  //   { name: "Word Assistant", url: "#", icon: IconFileWord },
+  // ],
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -92,17 +97,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild className="data-[slot=sidebar-menu-button]:!p-1.5">
-              <a href="#">
+              <Link to="/">
                 <IconInnerShadowTop className="!size-5" />
-                <span className="text-base font-semibold">Architect Page.</span>
-              </a>
+                <span className="text-base font-semibold">Propus App</span>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        <NavDocuments items={data.documents} />
+        {/* <NavDocuments items={data.documents} /> */}
       </SidebarContent>
       <SidebarFooter>
         <NavUser />

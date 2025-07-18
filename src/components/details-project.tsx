@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"
+import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { projectService } from "@/services/projectService"
@@ -6,9 +6,8 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { format } from "date-fns" 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ArrowLeft, User, MapPin, Calendar, DollarSign, Users, Building2 } from "lucide-react"
+import { User, MapPin, Calendar, DollarSign, Users, Building2 } from "lucide-react"
 import { IconDotsVertical } from "@tabler/icons-react"
 import {
   AlertDialog,

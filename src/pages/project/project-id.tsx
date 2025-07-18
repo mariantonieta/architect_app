@@ -1,6 +1,6 @@
 import { ProjectDetails } from "@/components/details-project";
 
 
-export function Project() {
+export function ProjectId() {
   return <ProjectDetails/>;
 }
