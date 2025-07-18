@@ -1,6 +1,6 @@
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 
-export function CustomerDashboard() {
+export function HomeCustomer() {
   const { user } = useCurrentUser();
 
   return (

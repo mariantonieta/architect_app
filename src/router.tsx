@@ -4,11 +4,7 @@ import {
   NotFound, 
   Register, 
   Account, 
-  RoleDashboard,
-  ArchitectDashboard,
-  CustomerDashboard,
-  SupplierDashboard
-} from "./pages";
+  RoleDashboard} from "./pages";
 import { AUTH_STORAGE } from "./lib/constants";
 import { AuthValidationMiddleware } from "./middleware/auth-validation";
 import { RoleBasedAccess } from "./middleware/role-based-access";
