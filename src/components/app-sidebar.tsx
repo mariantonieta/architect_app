@@ -34,7 +34,7 @@ import { useUser } from "@/hooks/useUser"
 
 const data = {
   navMain: [
-    { title: "Dashboard", url: "#", icon: IconDashboard },
+    { title: "Dashboard", url: "/dashboard", icon: IconDashboard },
     { title: "Lifecycle", url: "#", icon: IconListDetails },
     { title: "Analytics", url: "#", icon: IconChartBar },
     { title: "Projects", url: "#", icon: IconFolder },

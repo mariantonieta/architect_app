@@ -17,7 +17,7 @@ export interface ProjectFormData {
     location?: string;
     status?: "idea" | "budgeting" | "in_progress" | "finished";
     additionalUsersEmails?: string[];
-    filesBlueprints?: File[];
+    filesBimModels?: File[];
     filesRenders?: File[];
     filesReports?: File[];
     description?: string;
@@ -33,6 +33,8 @@ export interface ProjectFile {
     filename: string;
     original_name: string;
     url: string;
+    file_type: "bim_model" | "renders" | "material_takeoff" | "reports" | "blueprints";
+
 }
 
 export interface Project {

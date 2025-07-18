@@ -37,11 +37,12 @@ export function CreateProject({
   open,
   onOpenChange,
 }: CreateProjectProps) {
+    console.log("Initial data on open:", initialData);
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [step, setStep] = React.useState<1 | 2>(1)
 
-  const [blueprints, setBlueprints] = React.useState<File[]>(initialData?.existingBlueprints || [])
+  const [bimFiles, setBimFiles] = React.useState<File[]>(initialData?.existingBlueprints || [])
   const [renders, setRenders] = React.useState<File[]>(initialData?.existingRenders || [])
   const [reports, setReports] = React.useState<File[]>(initialData?.existingReports || [])
 
@@ -51,6 +52,8 @@ export function CreateProject({
     reset,
     watch,
     setValue,
+    setError,
+    clearErrors,
     formState: { errors },
   } = useForm<ProjectFormData>({
     defaultValues: {
@@ -58,13 +61,10 @@ export function CreateProject({
       clientEmail: initialData?.clientEmail || "",
       project_type: initialData?.project_type || "",
       currency: initialData?.currency || "ars",
-      budget: initialData?.budget,  
+      budget: initialData?.budget,
       location: initialData?.location || "",
       status: initialData?.status || "idea",
       additionalUsersEmails: initialData?.additionalUsersEmails || [],
-      filesBlueprints: [],
-      filesRenders: [],
-      filesReports: [],
       description: initialData?.description || "",
     },
   })
@@ -84,16 +84,16 @@ export function CreateProject({
         formData.append("additional_users_emails", data.additionalUsersEmails.join(","))
       }
 
-      blueprints.forEach((file) => formData.append("filesBlueprints", file))
+      bimFiles.forEach((file) => formData.append("filesBimModels", file))
       renders.forEach((file) => formData.append("filesRenders", file))
       reports.forEach((file) => formData.append("filesReports", file))
-if (initialData?.id) {
-  formData.append("id", initialData.id.toString());
-  return projectService.updateProject(initialData.id.toString(), formData);
-} else {
-  return projectService.createProject(formData);
-}
 
+      if (initialData?.id) {
+        formData.append("id", initialData.id.toString())
+        return projectService.updateProject(initialData.id.toString(), formData)
+      } else {
+        return projectService.createProject(formData)
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projects"] })
@@ -111,20 +111,15 @@ if (initialData?.id) {
   const isError = mutation.isError
   const error = mutation.error as Error | null
 
-  function onNextStep(data: ProjectFormData) {
-    setStep(2)
-  }
-
-  function onSubmit(data: ProjectFormData) {
-    mutation.mutate(data)
-  }
+  const onNextStep = (data: ProjectFormData) => setStep(2)
+  const onSubmit = (data: ProjectFormData) => mutation.mutate(data)
 
   const additionalUsersString = watch("additionalUsersEmails").join(", ")
 
   const handleSaveWithoutFiles = async () => {
-    setValue("filesBlueprints", [])
-    setValue("filesRenders", [])
-    setValue("filesReports", [])
+    setBimFiles([])
+    setRenders([])
+    setReports([])
     await new Promise((resolve) => setTimeout(resolve, 0))
     handleSubmit(onSubmit)()
   }
@@ -133,11 +128,13 @@ if (initialData?.id) {
     <Dialog
       open={open}
       onOpenChange={(val) => {
+               console.log("Initial data on open:", initialData) 
+       
         onOpenChange(val)
         if (!val) setStep(1)
         if (val && initialData) {
           reset(initialData)
-          setBlueprints(initialData.existingBlueprints || [])
+          setBimFiles(initialData.existingBlueprints || [])
           setRenders(initialData.existingRenders || [])
           setReports(initialData.existingReports || [])
         }
@@ -149,7 +146,7 @@ if (initialData?.id) {
           <>
             <DialogHeader>
               <DialogTitle>{initialData ? "Edit Project" : "Create a New Project"}</DialogTitle>
-              <DialogDescription>Complete the basic information of the project.</DialogDescription>
+              <DialogDescription>Complete the basic project information.</DialogDescription>
             </DialogHeader>
 
             <form onSubmit={handleSubmit(onNextStep)} className="space-y-6">
@@ -158,8 +155,9 @@ if (initialData?.id) {
                   control={control}
                   name="name"
                   rules={{ required: "Project name is required" }}
-                  render={({ field }) => <Input {...field} id="name" autoFocus placeholder="Example: The Oaks Family House" />}
-                 
+                  render={({ field }) => (
+                    <Input {...field} id="name" autoFocus placeholder="Example: The Oaks Family House" />
+                  )}
                 />
               </FormField>
 
@@ -173,7 +171,9 @@ if (initialData?.id) {
                       message: "Invalid email address",
                     },
                   }}
-                  render={({ field }) => <Input {...field} id="clientEmail" type="email" placeholder="Client's email" />}
+                  render={({ field }) => (
+                    <Input {...field} id="clientEmail" type="email" placeholder="Client's email" />
+                  )}
                 />
               </FormField>
 
@@ -184,9 +184,7 @@ if (initialData?.id) {
                   rules={{ required: "Project type is required" }}
                   render={({ field }) => (
                     <select {...field} id="project_type" className="w-full border rounded px-2 py-1">
-                         <option value="" disabled>
-          Select project type
-        </option>
+                      <option value="" disabled>Select project type</option>
                       <option value="single_family_home">Single Family Home</option>
                       <option value="residential_building">Residential Building</option>
                       <option value="commercial_building">Commercial Building</option>
@@ -213,7 +211,6 @@ if (initialData?.id) {
                         value={field.value ?? ""}
                         onChange={(e) =>
                           field.onChange(e.target.value === "" ? undefined : parseFloat(e.target.value))
-                          
                         }
                       />
                     )}
@@ -240,7 +237,9 @@ if (initialData?.id) {
                   control={control}
                   name="location"
                   rules={{ required: "Location is required" }}
-                  render={({ field }) => <Input {...field} id="location" placeholder="Addres or location"  />}
+                  render={({ field }) => (
+                    <Input {...field} id="location" placeholder="Address or location" />
+                  )}
                 />
               </FormField>
 
@@ -262,32 +261,62 @@ if (initialData?.id) {
             </DialogHeader>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              <FormField label="Blueprint Files" id="filesBlueprints">
+              <FormField label="BIM Models (IFC, RVT)" id="filesBimModels" error={errors.filesBimModels?.message}>
                 <FileDropzone
-                  files={blueprints}
+                  files={bimFiles}
+                  accept={[".ifc", ".rvt"]}
                   onFilesAdded={(newFiles) => {
-                    setBlueprints(newFiles)
-                    setValue("filesBlueprints", newFiles)
+                    setBimFiles(newFiles)
+                    clearErrors("filesBimModels")
+                  }}
+                  onFileRemove={(fileToRemove) =>
+                    setBimFiles((prev) => prev.filter((f) => f !== fileToRemove))
+                  }
+                  onInvalidFiles={(invalid) => {
+                    setError("filesBimModels", {
+                      type: "manual",
+                      message: `Invalid BIM file(s): ${invalid.map((f) => f.name).join(", ")}. Allowed: .ifc, .rvt`,
+                    })
                   }}
                 />
               </FormField>
 
-              <FormField label="Render Files" id="filesRenders">
+              <FormField label="Plans (PDF, JPG)" id="filesRenders" error={errors.filesRenders?.message}>
                 <FileDropzone
                   files={renders}
+                  accept={[".jpg", ".jpeg", ".png", ".pdf"]}
                   onFilesAdded={(newFiles) => {
                     setRenders(newFiles)
-                    setValue("filesRenders", newFiles)
+                    clearErrors("filesRenders")
+                  }}
+                  onFileRemove={(fileToRemove) =>
+                    setRenders((prev) => prev.filter((f) => f !== fileToRemove))
+                  }
+                  onInvalidFiles={(invalid) => {
+                    setError("filesRenders", {
+                      type: "manual",
+                      message: `Invalid render file(s): ${invalid.map((f) => f.name).join(", ")}. Allowed: JPG, PNG, PDF`,
+                    })
                   }}
                 />
               </FormField>
 
-              <FormField label="Report Files" id="filesReports">
+              <FormField label="Render Files (JPG, PNG, PDF)" id="filesReports" error={errors.filesReports?.message}>
                 <FileDropzone
                   files={reports}
+                  accept={[".pdf", ".jpg", ".jpeg"]}
                   onFilesAdded={(newFiles) => {
                     setReports(newFiles)
-                    setValue("filesReports", newFiles)
+                    clearErrors("filesReports")
+                  }}
+                  onFileRemove={(fileToRemove) =>
+                    setReports((prev) => prev.filter((f) => f !== fileToRemove))
+                  }
+                  onInvalidFiles={(invalid) => {
+                    setError("filesReports", {
+                      type: "manual",
+                      message: `Invalid report file(s): ${invalid.map((f) => f.name).join(", ")}. Allowed: PDF, JPG`,
+                    })
                   }}
                 />
               </FormField>

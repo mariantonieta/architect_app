@@ -13,7 +13,7 @@ export function IFCViewer({ fileUrl }: IFCViewerProps) {
   const [loader, setLoader] = useState<OBC.IfcLoader | null>(null);
   const [world, setWorld] = useState<OBC.SimpleWorld | null>(null);
   const [components, setComponents] = useState<OBC.Components | null>(null);
-
+   const [currentModel, setCurrentModel] = useState<THREE.Object3D | null>(null);
   useEffect(() => {
     async function init() {
       const c = new OBC.Components();
@@ -78,6 +78,16 @@ export function IFCViewer({ fileUrl }: IFCViewerProps) {
       if (!fileUrl || !loader || !components || !world) return;
 
       try {
+        if(currentModel){
+          world.scene.three.remove(currentModel)
+          currentModel.traverse((child) =>{
+            if((child as any).geometry) (child as any).geometry.dispose();
+            if((child as any).material){
+              const materials = Array.isArray((child as any).material) ? (child as any).material : [(child as any).material];
+              materials.forEach((m) => m.dispose());
+            }
+          })
+        }
         const response = await fetch(fileUrl);
         const arrayBuffer = await response.arrayBuffer();
         const buffer = new Uint8Array(arrayBuffer);

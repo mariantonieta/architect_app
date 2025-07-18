@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { format } from "date-fns" 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ArrowLeft, User, MapPin, Calendar, DollarSign, Users, Building2 } from "lucide-react"
 import { IconDotsVertical } from "@tabler/icons-react"
@@ -39,6 +39,15 @@ export function ProjectDetails() {
     name: "",
     clientEmail: "",
     budget: "",
+    project_type: "",
+  currency: "ars",
+  status: "idea",
+  location: "",
+  additionalUsersEmails: [],
+  description: "",
+  filesReports: [],
+  filesRenders: [],
+  filesBimModels: [],
   })
 
   const deleteMutation = useMutation({
@@ -63,13 +72,23 @@ export function ProjectDetails() {
       return !(axiosError.response?.status === 404)
     },
   })
+  console.log("Project data:", project)
 
   useEffect(() => {
     if (project) {
       setEditForm({
-        name: project.name || "",
-        clientEmail: project.client?.email || "",
-        budget: project.budget?.toString() || "",
+       name: project.name || "",
+      clientEmail: project.client?.email || "",
+      budget: project.budget || 0,
+      project_type: project.type || "",
+      currency: project.currency || "ars",
+      status: project.status || "idea",
+      location: project.location || "",
+      additionalUsersEmails: project.additional_users_emails || [],
+      description: project.description || "",
+      filesReports: project.files?.filter(f => f.original_name.match(/\.(pdf)$/i)) || [],
+      filesRenders: project.files?.filter(f => f.original_name.match(/\.(jpe?g|png)$/i)) || [],
+      filesBimModels: project.files?.filter(f => f.original_name.match(/\.ifc$/i)) || [],
       })
     }
   }, [project])
@@ -101,8 +120,15 @@ export function ProjectDetails() {
   }
 
   const isDeleting = deleteMutation.isPending
-
-
+  const planFiles = project.files?.filter(file =>
+  file.original_name.match(/\.(pdf|jpe?g)$/i)
+) || []
+const bimFiles = project.files?.filter(file =>
+  file.original_name.match(/\.ifc$/i)
+) || []
+const formattedCreateDate = project?.create_date
+  ? new Date(project.create_date).toLocaleDateString()
+  : "Not available"
 
 
   const tabs = [
@@ -122,10 +148,10 @@ export function ProjectDetails() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex items-center justify-between">
            
-            <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
+            {/* <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
               <ArrowLeft className="h-4 w-4 mr-1 sm:mr-2" />
               <span className="hidden sm:inline">Back</span>
-            </Button>
+            </Button> */}
 
             <div className="flex items-center gap-2">
               <Badge
@@ -198,22 +224,32 @@ export function ProjectDetails() {
           <TabsContent value="plans">
             <Card>
               <CardContent className="p-6">
-                <h2 className="text-lg font-semibold mb-2">Files</h2>
-                {project.files && project.files.length > 0 ? (
-                  <div className="mt-4 space-y-2">
-                    {project.files.map((file) => (
-                      <button
-                        key={file.id}
-                        onClick={() => setSelectedFile(file.url)}
-                        className="block text-left w-full text-blue-600 hover:underline text-sm"
-                      >
-                        {file.original_name}
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-500">No files uploaded.</p>
-                )}
+                <h2 className="text-lg font-semibold mb-2">Plans</h2>
+                {planFiles.length > 0 ? (
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    {planFiles.map((file) => (
+      <div key={file.id} className="border rounded p-2">
+        {file.original_name.match(/\.pdf$/i) ? (
+          <iframe
+            src={file.url}
+            className="w-full h-64"
+            title={file.original_name}
+          />
+        ) : (
+          <img
+            src={file.url}
+            alt={file.original_name}
+            className="w-full h-64 object-contain"
+          />
+        )}
+        <p className="text-xs mt-1 truncate">{file.original_name}</p>
+      </div>
+    ))}
+  </div>
+) : (
+  <p className="text-sm text-gray-500">No plan files uploaded.</p>
+)}
+
               </CardContent>
             </Card>
 
@@ -291,7 +327,7 @@ export function ProjectDetails() {
                       <div>
                         <p className="text-xs sm:text-sm text-gray-500">Start Date</p>
                         <p className="font-medium text-sm sm:text-base text-gray-900">
-                          {project.start_date || "N/A"}
+                         {formattedCreateDate}
                         </p>
                       </div>
                     </div>
@@ -331,7 +367,16 @@ export function ProjectDetails() {
                     </div>
                   </CardContent>
                 </Card>
+                <Card className="sm:col-span-2 lg:col-span-3">
+        <CardContent className="p-4 sm:p-6">
+          <p className="text-xs sm:text-sm text-gray-500 mb-1">Description</p>
+          <p className="text-sm sm:text-base text-gray-900 whitespace-pre-line">
+            {project.description || "No description provided."}
+          </p>
+        </CardContent>
+      </Card>
               </div>
+
 
           
               <div>
@@ -349,12 +394,19 @@ export function ProjectDetails() {
           </TabsContent>
 
           <TabsContent value="3d-model" className="mt-6">
-            {project.files && project.files.length > 0 ? (
-              <IFCViewer fileUrl={project.files[0].url} />
-            ) : (
-              <p>No 3D model available.</p>
-            )}
-          </TabsContent>
+              {bimFiles.length > 0 ? (
+    <div className="space-y-6">
+      {bimFiles.map((file) => (
+        <div key={file.id}>
+          <p className="text-sm font-medium mb-2">{file.original_name}</p>
+          <IFCViewer fileUrl={file.url} />
+        </div>
+      ))}
+    </div>
+  ) : (
+    <p className="text-sm text-gray-500">No 3D models available.</p>
+  )}
+           </TabsContent>
 
           <TabsContent value="materials" className="mt-6">
       
@@ -403,20 +455,25 @@ export function ProjectDetails() {
      {editOpen && (
 
 <CreateProject
-    initialData={{
-      name: project.name || "",
-      clientEmail: project.client?.email || "",
-      budget: project.budget || 0,
-      project_type: project.type || "",
-      currency: project.currency || "ars",
-      status: project.status || "idea",
-      location: project.location || "",
-      additionalUsersEmails: project.additional_users_emails || [],
-      description: project.description || "",
-    }}
-    open={editOpen}
-    onOpenChange={setEditOpen}
-  />
+  initialData={{
+    name: project.name || "",
+    clientEmail: project.client?.email || "",
+    budget: project.budget || 0,
+    project_type: project.project_type || "",
+    currency: project.currency || "ars",
+    status: project.status || "idea",
+    location: project.location || "",
+    additionalUsersEmails: project.additional_users_emails || [],
+    description: project.description || "",
+
+    filesReports: project.files?.filter(f => f.original_name.match(/\.(pdf)$/i)) || [],
+    filesRenders: project.files?.filter(f => f.original_name.match(/\.(jpe?g|png)$/i)) || [],
+    filesBimModels: project.files?.filter(f => f.original_name.match(/\.ifc$/i)) || [],
+  }}
+  open={editOpen}
+  onOpenChange={setEditOpen}
+/>
+
 )}
     </div>
   )

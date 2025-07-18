@@ -11,7 +11,7 @@ import { Projects } from "@/components/project-cards"
 export function Home() {
   return (
  <div className="flex flex-col px-4 lg:px-6">
-      <SiteHeader />
+  
 
       <div className="@container/main flex flex-1 flex-col space-y-6 pb-6">
         <SectionCards />

@@ -27,7 +27,7 @@ export function Router() {
           }
         >
           <Route element={<Layout />}>
-            <Route index element={<Home />} />
+            <Route path="/dashboard" element={<Home />} />
             <Route path="/account" element={<Account />} />
             <Route path="/projects/:id" element={<Project />} />
           </Route>

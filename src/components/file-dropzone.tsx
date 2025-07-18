@@ -1,17 +1,39 @@
 import { useDropzone } from "react-dropzone"
+import { X } from "lucide-react"
 
 interface FileDropzoneProps {
   files: File[]
   onFilesAdded: (files: File[]) => void
+  onFileRemove: (fileToRemove: File) => void
+  accept?: string[]
+  onInvalidFiles?: (files: File[]) => void
 }
 
-export function FileDropzone({ files, onFilesAdded }: FileDropzoneProps) {
+export function FileDropzone({
+  files,
+  onFilesAdded,
+  onFileRemove,
+  accept = [],
+  onInvalidFiles,
+}: FileDropzoneProps) {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop: (acceptedFiles) => {
-      onFilesAdded([...files, ...acceptedFiles])
+      const [valid, invalid] = partitionFiles(acceptedFiles, accept)
+
+      if (valid.length > 0) {
+        onFilesAdded([...files, ...valid])
+      }
+
+      if (invalid.length > 0 && onInvalidFiles) {
+        onInvalidFiles(invalid)
+      }
     },
     multiple: true,
   })
+   const handleRemove = (file: File) => {
+    onFileRemove(file)
+  }
+
 
   return (
     <div
@@ -29,10 +51,44 @@ export function FileDropzone({ files, onFilesAdded }: FileDropzoneProps) {
       {files.length > 0 && (
         <ul className="text-sm text-gray-500 mt-2">
           {files.map((file, idx) => (
-            <li key={idx}>{file.name}</li>
+             <li
+              key={idx}
+              className="flex justify-between items-center border px-2 py-1 rounded bg-gray-100"
+            >
+              <span className="truncate">{file.name}</span>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleRemove(file)
+                }}
+                className="text-red-500 hover:text-red-700"
+              >
+                <X size={16} />
+              </button>
+            </li>
           ))}
         </ul>
       )}
     </div>
   )
+}
+function partitionFiles(files: File[], allowedExts: string[]): [File[], File[]] {
+  if (allowedExts.length === 0) return [files, []]
+
+  const lowerExts = allowedExts.map((ext) => ext.toLowerCase())
+
+  const valid: File[] = []
+  const invalid: File[] = []
+
+  for (const file of files) {
+    const ext = "." + file.name.split(".").pop()?.toLowerCase()
+    if (lowerExts.includes(ext)) {
+      valid.push(file)
+    } else {
+      invalid.push(file)
+    }
+  }
+
+  return [valid, invalid]
 }
