@@ -1,10 +1,16 @@
 import { useDropzone } from "react-dropzone"
 import { X } from "lucide-react"
 
+export interface ExistingFile {
+  id: string;
+  original_name: string;
+  url: string;
+}
+
 interface FileDropzoneProps {
-  files: File[]
+  files: (File | ExistingFile)[]
   onFilesAdded: (files: File[]) => void
-  onFileRemove: (fileToRemove: File) => void
+  onFileRemove: (fileToRemove: File | ExistingFile) => void
   accept?: string[]
   onInvalidFiles?: (files: File[]) => void
 }
@@ -21,7 +27,7 @@ export function FileDropzone({
       const [valid, invalid] = partitionFiles(acceptedFiles, accept)
 
       if (valid.length > 0) {
-        onFilesAdded([...files, ...valid])
+        onFilesAdded(valid)
       }
 
       if (invalid.length > 0 && onInvalidFiles) {
@@ -30,10 +36,10 @@ export function FileDropzone({
     },
     multiple: true,
   })
-   const handleRemove = (file: File) => {
+
+  const handleRemove = (file: File | ExistingFile) => {
     onFileRemove(file)
   }
-
 
   return (
     <div
@@ -48,31 +54,38 @@ export function FileDropzone({
       ) : (
         <p>Drag & drop files here, or click to select files</p>
       )}
+
       {files.length > 0 && (
         <ul className="text-sm text-gray-500 mt-2">
-          {files.map((file, idx) => (
-             <li
-              key={idx}
-              className="flex justify-between items-center border px-2 py-1 rounded bg-gray-100"
-            >
-              <span className="truncate">{file.name}</span>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  handleRemove(file)
-                }}
-                className="text-red-500 hover:text-red-700"
+          {files.map((file, idx) => {
+            // Para mostrar nombre correcto según el tipo
+            const fileName = "id" in file ? file.original_name : file.name
+
+            return (
+              <li
+                key={"id" in file ? file.id : file.name + idx}
+                className="flex justify-between items-center border px-2 py-1 rounded bg-gray-100"
               >
-                <X size={16} />
-              </button>
-            </li>
-          ))}
+                <span className="truncate">{fileName}</span>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleRemove(file)
+                  }}
+                  className="text-red-500 hover:text-red-700"
+                >
+                  <X size={16} />
+                </button>
+              </li>
+            )
+          })}
         </ul>
       )}
     </div>
   )
 }
+
 function partitionFiles(files: File[], allowedExts: string[]): [File[], File[]] {
   if (allowedExts.length === 0) return [files, []]
 

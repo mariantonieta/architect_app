@@ -7,7 +7,7 @@ import { Building2, MapPin, LinkIcon, Users, Calendar, Eye, User } from "lucide-
 import type { Project } from "@/services/projectService"
 import { useQuery } from "@tanstack/react-query"
 import { useNavigate } from "react-router-dom"
-
+import { useProjects } from "@/hooks/useProject"
 export function ProjectsList() {
   const navigate = useNavigate()
 
@@ -15,42 +15,33 @@ export function ProjectsList() {
     data: projects = [],
     isLoading,
     isError,
-  } = useQuery<Project[], Error>({
-    queryKey: ["projects"],
-    queryFn: projectService.listProjects,
-  })
+  } = useProjects();
 
   if (isLoading) return <p className="px-4 text-muted-foreground">Loading projects...</p>
   if (isError) return <p className="px-4 text-red-600">Failed to load projects.</p>
   if (projects.length === 0) return <p className="px-4 text-muted-foreground">No projects found.</p>
 
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "en_desarrollo":
-      case "in_progress":
-        return "bg-blue-100 text-blue-800"
-      case "completado":
-      case "completed":
-        return "bg-green-100 text-green-800"
-      case "pausado":
-      case "paused":
-        return "bg-yellow-100 text-yellow-800"
-      default:
-        return "bg-gray-100 text-gray-800"
-    }
+const getStatusColor = (status: string) => {
+  switch (status.toLowerCase()) {
+    case "in_progress":
+      return "bg-blue-100 text-blue-800";
+    case "completed":
+      return "bg-green-100 text-green-800";
+    case "paused":
+      return "bg-yellow-100 text-yellow-800";
+    default:
+      return "bg-gray-100 text-gray-800";
   }
+};
 
-  const formatStatus = (status: string) => {
-    const statusMap: { [key: string]: string } = {
-      en_desarrollo: "In Progress",
-      in_progress: "In Progress",
-      completado: "Completed",
-      completed: "Completed",
-      pausado: "Paused",
-      paused: "Paused",
-    }
-    return statusMap[status.toLowerCase()] || status.replace(/_/g, " ")
-  }
+const formatStatus = (status: string) => {
+  const statusMap: { [key: string]: string } = {
+    in_progress: "In Progress",
+    completed: "Completed",
+    paused: "Paused",
+  };
+  return statusMap[status.toLowerCase()] || status.replace(/_/g, " ");
+};
 
   const formatProjectType = (type: string) => {
     const typeMap: { [key: string]: string } = {

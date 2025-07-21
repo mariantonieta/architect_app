@@ -2,12 +2,12 @@ import { Outlet } from "react-router-dom";
 import { AppSidebar } from "./app-sidebar";
 import { SidebarProvider, SidebarInset } from "./ui/sidebar";
 import { SiteHeader } from "./site-header";
-import { CreateProject } from "./create-project";
-import { useCreateProjectModal } from "@/hooks/useCreateProjectModal";
+import { useProjectModal } from "@/hooks/useFormProjectModal";
 import { useRolePermissions } from "@/middleware/role-based-access";
+import { CreateProject } from "./form-project";
 
 export function Layout() {
-  const { isOpen, closeModal, initialData } = useCreateProjectModal();
+  const { open, closeModal, initialData } = useProjectModal();
   const { isArchitect } = useRolePermissions();
   
   return (
@@ -22,7 +22,7 @@ export function Layout() {
             {/* Solo mostrar el modal de crear proyecto para arquitectos */}
             {isArchitect && (
               <CreateProject 
-                open={isOpen} 
+                open={open} 
                 onOpenChange={closeModal} 
                 initialData={initialData}
               />

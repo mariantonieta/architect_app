@@ -1,13 +1,10 @@
 import * as React from "react"
 import { Link } from "react-router-dom"
 import {
-  IconCamera,
-  IconChartBar,
+  
   IconDashboard,
-  IconDatabase,
-  IconFileAi,
-  IconFileDescription,
-  IconFileWord,
+  IconHome,
+  IconCalendar,
   IconFolder,
   IconHelp,
   IconInnerShadowTop,
@@ -17,9 +14,7 @@ import {
   IconUsers,
 } from "@tabler/icons-react"
 
-import { NavDocuments } from "@/components/nav-documents"
 import { NavMain } from "@/components/nav-main"
-import { NavSecondary } from "@/components/nav-secondary"
 import { NavUser } from "@/components/nav-user"
 import {
   Sidebar,
@@ -33,63 +28,35 @@ import {
 
 import { useUser } from "@/hooks/useUser"
 
-const data = {
-  navMain: [
-    { title: "Dashboard", url: "/", icon: IconDashboard },
-    // { title: "Lifecycle", url: "/lifecycle", icon: IconListDetails },
-    // { title: "Analytics", url: "/analytics", icon: IconChartBar },
-    { title: "Projects", url: "/projects", icon: IconFolder },
-    // { title: "Team", url: "/team", icon: IconUsers },
-  ],
-  // navClouds: [
-  //   {
-  //     title: "Capture",
-  //     icon: IconCamera,
-  //     isActive: true,
-  //     url: "#",
-  //     items: [
-  //       { title: "Active Proposals", url: "#" },
-  //       { title: "Archived", url: "#" },
-  //     ],
-  //   },
-  //   {
-  //     title: "Proposal",
-  //     icon: IconFileDescription,
-  //     url: "#",
-  //     items: [
-  //       { title: "Active Proposals", url: "#" },
-  //       { title: "Archived", url: "#" },
-  //     ],
-  //   },
-  //   {
-  //     title: "Prompts",
-  //     icon: IconFileAi,
-  //     url: "#",
-  //     items: [
-  //       { title: "Active Proposals", url: "#" },
-  //       { title: "Archived", url: "#" },
-  //     ],
-  //   },
-  // ],
-
-  // documents: [
-  //   { name: "Data Library", url: "#", icon: IconDatabase },
-  //   { name: "Reports", url: "#", icon: IconReport },
-  //   { name: "Word Assistant", url: "#", icon: IconFileWord },
-  //   { name: "Word Assistant", url: "#", icon: IconFileWord },
-  //   { name: "Word Assistant", url: "#", icon: IconFileWord },
-  //   { name: "Word Assistant", url: "#", icon: IconFileWord },
-  //   { name: "Word Assistant", url: "#", icon: IconFileWord },
-  // ],
-}
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { data: user, isLoading, error } = useUser()
+  const { data: user, isLoading, error } = useUser();
 
-  if (isLoading) return null 
-  if (error) return null 
+  if (isLoading || error || !user) return null;
 
-  if (!user) return null
+  const allItems = {
+    dashboard: { title: "Dashboard", url: "/", icon: IconHome },
+    projects: { title: "Projects", url: "/projects", icon: IconFolder },
+    agenda: { title: "Supplier's Agenda", url: "/suppliers-agenda", icon: IconCalendar },
+    budgets: { title: "Budgets", url: "/supplier-budgets", icon: IconReport },
+    relations: { title: "Relations", url: "/supplier/relations", icon: IconUsers },
+  };
+  let navMain = [];
+
+  switch (user.role) {
+    case "supplier":
+      navMain = [allItems.dashboard, allItems.budgets, allItems.relations];
+      break;
+    case "customer":
+      navMain = [allItems.projects];
+      break;
+    case "architect":
+      navMain = [allItems.dashboard, allItems.projects, allItems.agenda];
+      break;
+      // Add more roles as needed
+    default:
+      navMain = []; 
+  }
 
   return (
     <Sidebar collapsible="offcanvas" {...props}>
@@ -106,12 +73,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        {/* <NavDocuments items={data.documents} /> */}
+        <NavMain items={navMain} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser />
       </SidebarFooter>
     </Sidebar>
-  )
+  );
 }

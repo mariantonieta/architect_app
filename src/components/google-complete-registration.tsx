@@ -158,7 +158,7 @@ export function GoogleCompleteRegistration({ className, ...props }: React.Compon
                   value={role}
                   onValueChange={(val) => setValue("role", val as RoleType)}
                   className="grid grid-cols-3 gap-2"
-                  disabled
+                  
                 >
                   {userTypes.map(({ label, value, icon: Icon }) => (
                     <Label

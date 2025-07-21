@@ -1,9 +1,11 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Building2, Package, Users } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import {jwtDecode} from "jwt-decode"; 
+
 import {
   Card,
   CardContent,
@@ -36,8 +38,17 @@ type RegisterFormData = {
   role: "customer" | "supplier" | "architect";
 };
 
+type JwtPayload = {
+  sub: string;
+  role: string;
+  exp: number;
+};
+
 export function RegisterForm({ className, ...props }: React.ComponentProps<"div">) {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const [decodedRole, setDecodedRole] = useState<RegisterFormData["role"] | null>(null);
+
   const {
     register,
     handleSubmit,
@@ -50,15 +61,37 @@ export function RegisterForm({ className, ...props }: React.ComponentProps<"div"
     },
   });
 
+  useEffect(() => {
+    const token = searchParams.get("token");
+    if (token) {
+      try {
+        const decoded = jwtDecode<JwtPayload>(token);
+        console.log("Token decodificado:", decoded); 
+        if (decoded.role) {
+          const roleValue = decoded.role as RegisterFormData["role"];
+          setValue("role", roleValue, { shouldValidate: true });
+          setDecodedRole(roleValue);
+        }
+      } catch (error) {
+        console.error("Invalid token", error);
+           setDecodedRole("architect");
+      }
+    }
+  }, [searchParams, setValue]);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const role = watch("role");
+  const selectedRole = decodedRole ?? role;
+
   const password = watch("password");
 
   const onRoleChange = (value: string) => {
-    setValue("role", value as RegisterFormData["role"], { shouldValidate: true });
+
+    if (!decodedRole) {
+      setValue("role", value as RegisterFormData["role"], { shouldValidate: true });
+    }
   };
 
   const onSubmit = async (data: RegisterFormData) => {
@@ -68,8 +101,7 @@ export function RegisterForm({ className, ...props }: React.ComponentProps<"div"
       const { confirmPassword, ...rest } = data;
       const submitData = { ...rest, confirm_password: confirmPassword };
       await authService.register(submitData);
-        console.log(JSON.stringify(submitData, null, 2));
-
+      console.log(JSON.stringify(submitData, null, 2));
       navigate("/login");
     } catch (err) {
       setError("Registration failed");
@@ -93,10 +125,9 @@ export function RegisterForm({ className, ...props }: React.ComponentProps<"div"
                 <Label htmlFor="role">Role</Label>
                 <RadioGroup
                   id="role"
-                  value={role}
+                  value={selectedRole}
                   onValueChange={onRoleChange}
                   className="grid grid-cols-2 gap-2"
-                  disabled
                 >
                   {userTypes.map(({ label, value, icon: Icon }) => (
                     <Label
@@ -104,14 +135,18 @@ export function RegisterForm({ className, ...props }: React.ComponentProps<"div"
                       htmlFor={`role-${value}`}
                       className="flex items-center gap-2 border rounded-lg p-3 cursor-pointer hover:border-primary data-[state=checked]:border-primary transition-all"
                     >
-                      <RadioGroupItem id={`role-${value}`} value={value} {...register("role")} />
+                      <RadioGroupItem
+                        id={`role-${value}`}
+                        value={value}
+                        {...register("role")}
+                        disabled={decodedRole !== null && decodedRole !== value}
+                      />
                       <Icon className="h-4 w-4" />
                       <span>{label}</span>
                     </Label>
                   ))}
                 </RadioGroup>
               </div>
-
 
               <div className="grid gap-3">
                 <Label htmlFor="first_name">First Name</Label>
@@ -171,8 +206,7 @@ export function RegisterForm({ className, ...props }: React.ComponentProps<"div"
                   type="password"
                   {...register("confirmPassword", {
                     required: "Please confirm your password",
-                    validate: (value) =>
-                      value === password || "Passwords do not match",
+                    validate: (value) => value === password || "Passwords do not match",
                   })}
                 />
                 {errors.confirmPassword && (
@@ -180,32 +214,36 @@ export function RegisterForm({ className, ...props }: React.ComponentProps<"div"
                 )}
               </div>
 
-              {["supplier", "customer"].includes(role) && (
+              {["supplier", "customer"].includes(selectedRole) && (
                 <>
                   {["phone", "address"].map((field) => (
                     <div key={field} className="grid gap-3">
-                      <Label htmlFor={field}>{field.charAt(0).toUpperCase() + field.slice(1)}</Label>
+                      <Label htmlFor={field}>
+                        {field.charAt(0).toUpperCase() + field.slice(1)}
+                      </Label>
                       <Input id={field} type="text" {...register(field as keyof RegisterFormData)} />
                     </div>
                   ))}
                 </>
               )}
 
-              {role === "architect" && (
+              {selectedRole === "architect" && (
                 <div className="grid gap-3">
                   <Label htmlFor="entity_type">Entity Type</Label>
                   <Input id="entity_type" type="text" {...register("entity_type")} />
                 </div>
               )}
 
-              {role === "supplier" && (
+              {selectedRole === "supplier" && (
                 <div className="grid gap-3">
                   <Label htmlFor="company">Company</Label>
                   <Input id="company" type="text" {...register("company")} />
                 </div>
               )}
 
-              {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+              {error && (
+                <p className="text-red-500 text-sm text-center">{error}</p>
+              )}
 
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Creating account..." : "Sign Up"}

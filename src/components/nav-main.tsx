@@ -10,8 +10,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { CreateProject } from "./create-project";
-import { useCreateProjectModal } from "@/hooks/useCreateProjectModal";
+import { CreateProject } from "./form-project";
+import { useProjectModal } from "@/hooks/useFormProjectModal";
 import { useRolePermissions } from "@/middleware/role-based-access";
 
 export function NavMain({
@@ -25,7 +25,7 @@ export function NavMain({
 }) {
 
   const location = useLocation(); // Hook para obtener la ubicación actual
-  const { openModal } = useCreateProjectModal(); // Hook para controlar el modal
+  const { openModal } = useProjectModal(); // Hook para controlar el modal
   const { isArchitect } = useRolePermissions(); // Hook para verificar el rol
 
   return (

@@ -1,5 +1,5 @@
-import { AccountUser } from "@/components/account-user";
+import { UserInfo} from "@/components/user-info";
 
 export function Account() {
-  return <AccountUser/>;
+  return <UserInfo />;
 }

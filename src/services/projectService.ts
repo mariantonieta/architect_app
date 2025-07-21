@@ -2,7 +2,7 @@ import api from "./api";
 
 export interface ProjectFormData {
     name: string;
-    clientEmail?: string;
+    customerEmail?: string;
     project_type:
     ""
     | "single_family_home"
@@ -21,9 +21,13 @@ export interface ProjectFormData {
     filesRenders?: File[];
     filesReports?: File[];
     description?: string;
-    client?: {
+    customer?: {
         email: string;
     };
+    supplierEmail?: string;
+    supplier?: {
+        email: string
+    }
     create_date?: string;
     update_date?: string;
 }
@@ -40,7 +44,8 @@ export interface ProjectFile {
 export interface Project {
     id: string;
     name: string;
-    clientEmail?: string;
+    customerEmail?: string;
+    supplierEmail?: string;
     project_type:
     | "single_family_home"
     | "residential_building"
@@ -56,7 +61,7 @@ export interface Project {
     additionalUsersEmails?: string[];
     files?: ProjectFile[];
     description?: string;
-    client?: {
+    customer?: {
         email: string;
     };
     create_date?: string;
@@ -74,10 +79,15 @@ export const projectService = {
         return response.data;
     },
 
-    async updateProject(projectId: string, data: Partial<FormData>) {
-        const response = await api.patch(`/projects/${projectId}`, data);
+    async updateProject(projectId: string, data: FormData) {
+        const response = await api.patch(`/projects/${projectId}`, data, {
+            headers: {
+                "Content-Type": "multipart/form-data",
+            },
+        });
         return response.data;
     },
+
 
     async deleteProject(projectId: string) {
         const response = await api.delete(`/projects/${projectId}`);

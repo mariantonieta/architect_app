@@ -1,13 +1,11 @@
-import { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { projectService } from "@/services/projectService"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
+import { useProject} from "@/hooks/useProject" 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { User, MapPin, Calendar, DollarSign, Users, Building2 } from "lucide-react"
+import { ArrowLeft, User, MapPin, Calendar, DollarSign, Users, Building2 } from "lucide-react"
 import { IconDotsVertical } from "@tabler/icons-react"
 import {
   AlertDialog,
@@ -19,75 +17,60 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from "@/components/ui/alert-dialog"
-import type { AxiosError } from "axios"
 import { IFCViewer } from "./ifc-viewer/ifc-viewer"
-import { CreateProject } from "./create-project"
+import { CreateProject } from "./form-project"
 
 export function ProjectDetails() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
 
+  const {
+    project,
+    isLoading,
+    isError,
+    deleteProject,
+    isDeleting,
+    updateProject,
+  } = useProject(id)
   const [menuOpen, setMenuOpen] = useState(false)
   const [deleted, setDeleted] = useState(false)
   const [openDeleteModal, setOpenDeleteModal] = useState(false)
   const [activeTab, setActiveTab] = useState("overview")
   const [selectedFile, setSelectedFile] = useState<string | null>(null)
   const [editOpen, setEditOpen] = useState(false)
+ 
   const [editForm, setEditForm] = useState({
     name: "",
-    clientEmail: "",
+    customerEmail: "",
     budget: "",
-    project_type: "",
-  currency: "ars",
-  status: "idea",
-  location: "",
-  additionalUsersEmails: [],
-  description: "",
-  filesReports: [],
-  filesRenders: [],
-  filesBimModels: [],
+    
   })
 
-  const deleteMutation = useMutation({
-    mutationFn: () => projectService.deleteProject(id!),
-    onSuccess: async () => {
-      setDeleted(true)
-      await queryClient.cancelQueries({ queryKey: ["projects", id] })
-      queryClient.removeQueries({ queryKey: ["projects", id] })
-      queryClient.invalidateQueries({ queryKey: ["projects"] })
-      navigate("/")
-    },
-    onError: () => console.error("Error deleting project"),
-  })
+   useEffect(() => {
+    if (project) {
+      setEditForm({
+        name: project.name || "",
+        customerEmail: project.customer?.email || "",
+        budget: project.budget?.toString() || "",
+      })
+    }
+  }, [project])
 
+  const handleDelete = async () => {
+    await deleteProject(id!)
+    setOpenDeleteModal(false)
+    navigate("/projects")
+  }
   
-  const { data: project, isLoading, isError } = useQuery({
-    queryKey: ["projects", id],
-    queryFn: () => projectService.getProjectById(id!),
-    enabled: !!id && !deleted,
-    retry(_, error) {
-      const axiosError = error as AxiosError
-      return !(axiosError.response?.status === 404)
-    },
-  })
-  console.log("Project data:", project)
+ 
+  
 
   useEffect(() => {
     if (project) {
       setEditForm({
-       name: project.name || "",
-      clientEmail: project.client?.email || "",
-      budget: project.budget || 0,
-      project_type: project.type || "",
-      currency: project.currency || "ars",
-      status: project.status || "idea",
-      location: project.location || "",
-      additionalUsersEmails: project.additional_users_emails || [],
-      description: project.description || "",
-      filesReports: project.files?.filter(f => f.original_name.match(/\.(pdf)$/i)) || [],
-      filesRenders: project.files?.filter(f => f.original_name.match(/\.(jpe?g|png)$/i)) || [],
-      filesBimModels: project.files?.filter(f => f.original_name.match(/\.ifc$/i)) || [],
+        name: project.name || "",
+        customerEmail: project.customer?.email || "",
+        budget: project.budget?.toString() || "",
       })
     }
   }, [project])
@@ -112,13 +95,6 @@ export function ProjectDetails() {
     setMenuOpen(false)
     setEditOpen(true)
   }
-
-  const handleDelete = () => {
-    deleteMutation.mutate()
-    setOpenDeleteModal(false)
-  }
-
-  const isDeleting = deleteMutation.isPending
   const planFiles = project.files?.filter(file =>
   file.original_name.match(/\.(pdf|jpe?g)$/i)
 ) || []
@@ -147,10 +123,10 @@ const formattedCreateDate = project?.create_date
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex items-center justify-between">
            
-            {/* <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
+            <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
               <ArrowLeft className="h-4 w-4 mr-1 sm:mr-2" />
               <span className="hidden sm:inline">Back</span>
-            </Button> */}
+            </Button>
 
             <div className="flex items-center gap-2">
               <Badge
@@ -201,7 +177,7 @@ const formattedCreateDate = project?.create_date
         <div className="mb-4 sm:mb-6">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{project.name}</h1>
           <p className="text-sm sm:text-base text-gray-600">
-            {project.client?.email || "No client assigned"}
+            {project.customer?.email || "No client assigned"}
           </p>
         </div>
 
@@ -275,7 +251,7 @@ const formattedCreateDate = project?.create_date
                       <div className="min-w-0 flex-1">
                         <p className="text-xs sm:text-sm text-gray-500">Client</p>
                         <p className="font-medium text-sm sm:text-base text-gray-900 truncate">
-                          {project.client?.email || "Not assigned"}
+                          {project.customer?.email || "Not assigned"}
                         </p>
                       </div>
                     </div>
@@ -309,7 +285,7 @@ const formattedCreateDate = project?.create_date
                       <div>
                         <p className="text-xs sm:text-sm text-gray-500">Project Type</p>
                         <p className="font-medium text-sm sm:text-base text-gray-900">
-                          {project.type}
+                          {project.project_type}
                         </p>
                       </div>
                     </div>
@@ -360,7 +336,7 @@ const formattedCreateDate = project?.create_date
                       <div>
                         <p className="text-xs sm:text-sm text-gray-500">Team Size</p>
                         <p className="font-medium text-sm sm:text-base text-gray-900">
-                          {project.team_size || 0}
+                          {project.additionalUsersEmails|| 0}
                         </p>
                       </div>
                     </div>
@@ -379,15 +355,8 @@ const formattedCreateDate = project?.create_date
 
           
               <div>
-                <p className="mb-1 text-sm font-medium text-gray-700">
-                  Progress: {project.progress}% ({project.status.replace(/_/g, " ")})
-                </p>
-                <Progress
-                  value={project.progress}
-                  className="h-3 rounded-lg"
-                  max={100}
-                  aria-label="Project progress"
-                />
+             
+              
               </div>
             </div>
           </TabsContent>
@@ -451,29 +420,39 @@ const formattedCreateDate = project?.create_date
       </AlertDialog>
 
 
-     {editOpen && (
 
-<CreateProject
-  initialData={{
-    name: project.name || "",
-    clientEmail: project.client?.email || "",
-    budget: project.budget || 0,
-    project_type: project.project_type || "",
-    currency: project.currency || "ars",
-    status: project.status || "idea",
-    location: project.location || "",
-    additionalUsersEmails: project.additional_users_emails || [],
-    description: project.description || "",
+{editOpen && (
 
-    filesReports: project.files?.filter(f => f.original_name.match(/\.(pdf)$/i)) || [],
-    filesRenders: project.files?.filter(f => f.original_name.match(/\.(jpe?g|png)$/i)) || [],
-    filesBimModels: project.files?.filter(f => f.original_name.match(/\.ifc$/i)) || [],
-  }}
-  open={editOpen}
-  onOpenChange={setEditOpen}
-/>
 
+  <CreateProject
+    initialData={{
+      
+      id: project.id,
+      name: project.name,
+      customerEmail: project.customer?.email,
+      budget: project.budget,
+      project_type: project.project_type,
+      currency: project.currency,
+      status: project.status,
+      location: project.location,
+      additionalUsersEmails: project.additionalUsersEmails,
+      description: project.description,
+      // Aquí vienen los archivos existentes:
+      existingBlueprints: project.files
+        ?.filter(f => f.file_type === "bim_model")
+        .map(f => ({ id: f.id, url: f.url, original_name: f.original_name })),
+      existingRenders: project.files
+        ?.filter(f => f.file_type === "renders")
+        .map(f => ({ id: f.id, url: f.url, original_name: f.original_name })),
+      existingReports: project.files
+        ?.filter(f => f.file_type === "reports")
+        .map(f => ({ id: f.id, url: f.url, original_name: f.original_name })),
+    }}
+    open={editOpen}
+    onOpenChange={setEditOpen}
+  />
 )}
+
     </div>
   )
 }

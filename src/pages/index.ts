@@ -5,4 +5,4 @@ export * from "./register";
 export * from "./user";
 export * from "./home";
 
-export * from "./supplier";
+export * from "./home/supplier";

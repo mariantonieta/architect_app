@@ -2,6 +2,7 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "allowJs": true,
+    "esModuleInterop": true,
 
     // Bundler mode
     "moduleResolution": "bundler",

@@ -3,7 +3,7 @@ import index from "./index.html";
 
 const server = serve({
   routes: {
-    // 👉 Ruta personalizada para el worker
+    
     "/workers/fragments.worker.js": {
       async GET() {
         const workerPath = "node_modules/@thatopen/fragments/dist/worker/worker.mjs";

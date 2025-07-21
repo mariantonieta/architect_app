@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 import { useUser } from "@/hooks/useUser";
-import { normalizeUser } from "@/types/user";
 
 type FormData = {
   first_name: string;
@@ -22,7 +21,7 @@ type FormData = {
   entity_type?: string;
 };
 
-export function AccountUser() {
+export function UserInfo() {
   const navigate = useNavigate();
 
   const {
@@ -49,6 +48,9 @@ export function AccountUser() {
       last_name: "",
       email: "",
       entity_type: "",
+      company: "",
+      phone: "",
+      address: "",
     },
   });
 
@@ -62,13 +64,15 @@ export function AccountUser() {
         first_name: user.first_name,
         last_name: user.last_name,
         email: user.email,
-        entity_type: user.entity_type,
+        entity_type: user.entity_type || "",
+        company: user.company || "",
+        phone: user.phone || "",
+        address: user.address || "",
       });
     }
   }, [user, isLoading, navigate, reset]);
 
   useEffect(() => {
-    // Manejar estado y mensajes después de updateUser o deleteUser
     if (updateUserStatus === "success") {
       setSuccessMsg("Profile updated successfully");
       setError(null);
@@ -107,8 +111,7 @@ export function AccountUser() {
   }
 
   if (isLoading || !user) return <p>Loading...</p>;
-const loading = updateUserStatus === "pending" || deleteUserStatus === "pending";
-
+  const loading = updateUserStatus === "pending" || deleteUserStatus === "pending";
 
   return (
     <div className="max-w-lg mx-auto p-4">
@@ -123,11 +126,6 @@ const loading = updateUserStatus === "pending" || deleteUserStatus === "pending"
             <div>
               <CardTitle className="text-lg font-bold">{user.first_name}</CardTitle>
               <p className="text-sm text-muted-foreground">{user.email}</p>
-              {user.entity_type && (
-                <p className="text-sm text-muted-foreground">
-                  Entity Type: {user.entity_type}
-                </p>
-              )}
             </div>
           </div>
         </CardHeader>
@@ -152,11 +150,30 @@ const loading = updateUserStatus === "pending" || deleteUserStatus === "pending"
               <Input id="email" type="email" value={user.email} disabled readOnly />
             </div>
 
+            {/* Si es architect, mostrar entity_type */}
             {user.role === "architect" && (
               <div className="grid gap-1">
                 <Label htmlFor="entity_type">Entity Type</Label>
                 <Input id="entity_type" {...register("entity_type")} disabled={loading} />
               </div>
+            )}
+
+            {/* Si es supplier, mostrar company, phone y address */}
+            {user.role === "supplier" && (
+              <>
+                <div className="grid gap-1">
+                  <Label htmlFor="company">Company</Label>
+                  <Input id="company" {...register("company")} disabled={loading} />
+                </div>
+                <div className="grid gap-1">
+                  <Label htmlFor="phone">Phone</Label>
+                  <Input id="phone" {...register("phone")} disabled={loading} />
+                </div>
+                <div className="grid gap-1">
+                  <Label htmlFor="address">Address</Label>
+                  <Input id="address" {...register("address")} disabled={loading} />
+                </div>
+              </>
             )}
 
             {showPassword ? (
