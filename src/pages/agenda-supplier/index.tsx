@@ -1,6 +1,8 @@
 import { Button } from "@/components/ui/button"
 import { SupplierCard } from "@/components/supplier-card"
 import { Plus } from "lucide-react"
+import { InviteSupplierModal } from "@/components/invite-supplier-modal"
+import { useSupplierInvitations } from "@/hooks/useInvite"
 
 const suppliers = [
   {
@@ -31,43 +33,54 @@ const suppliers = [
     status: "Pending" as const,
   },
 ]
-
 export default function SupplierAgenda() {
+  const { data: invitations, isLoading, isError } = useSupplierInvitations();
+
+  if (isLoading) return <div className="p-6">Loading suppliers...</div>;
+  if (isError) return <div className="p-6 text-red-500">Error loading suppliers</div>;
+
   return (
     <div className="flex h-screen bg-gray-50">
-
-
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="bg-white border-b border-gray-200 px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Supplier Agenda</h1>
-              <p className="text-sm text-gray-600 mt-1">Manage your contacts and appointments with suppliers</p>
+              <p className="text-sm text-gray-600 mt-1">
+                Manage your contacts and appointments with suppliers
+              </p>
             </div>
-            <Button className="bg-gray-800 hover:bg-gray-700 text-white">
-              <Plus className="h-4 w-4 mr-2" />
-              New Supplier
-            </Button>
+            <InviteSupplierModal>
+              <Button className="bg-gray-800 hover:bg-gray-700 text-white">
+                <Plus className="h-4 w-4 mr-2" />
+                New Supplier
+              </Button>
+            </InviteSupplierModal>
           </div>
         </header>
 
         <main className="flex-1 overflow-auto p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {suppliers.map((supplier, index) => (
+            {invitations?.map((inv, index) => (
               <SupplierCard
                 key={index}
-                name={supplier.name}
-                category={supplier.category}
-                location={supplier.location}
-                phone={supplier.phone}
-                email={supplier.email}
-                nextAppointment={supplier.nextAppointment}
-                status={supplier.status}
+                id={inv.id} 
+                name={
+                  inv.user
+                    ? `${inv.user.first_name} ${inv.user.last_name}`
+                    : "Invited Supplier"
+                }
+                category={inv.user?.role_name || "Unassigned"}
+                location={inv.user?.address || "Unknown"}
+                phone={inv.user?.phone || "Unknown"}
+                email={inv.email}
+                nextAppointment={"--"}
+                status={inv.status as "Active" | "Pending" | "Cancelled"}
               />
             ))}
           </div>
         </main>
       </div>
     </div>
-  )
+  );
 }
