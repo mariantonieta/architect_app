@@ -10,9 +10,10 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { CreateProject } from "./form-project";
+// import { CreateProject } from "./form-project";
 import { useProjectModal } from "@/hooks/useFormProjectModal";
 import { useRolePermissions } from "@/middleware/role-based-access";
+import { useCreateProjectModal } from "@/hooks/useCreateOrEditProjectModal";
 
 export function NavMain({
   items,
@@ -23,10 +24,9 @@ export function NavMain({
     icon?: Icon;
   }[];
 }) {
-
   const location = useLocation(); // Hook para obtener la ubicación actual
-  const { openModal } = useProjectModal(); // Hook para controlar el modal
   const { isArchitect } = useRolePermissions(); // Hook para verificar el rol
+  const { toggleModal } = useCreateProjectModal();
 
   return (
     <SidebarGroup>
@@ -38,12 +38,11 @@ export function NavMain({
               <SidebarMenuButton
                 tooltip="Quick Create"
                 className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground min-w-8 duration-200 ease-linear"
-                onClick={openModal} // Usar openModal del hook
+                onClick={() => toggleModal(true)} // Usar openModal del hook
               >
                 <IconCirclePlusFilled />
                 <span>New Project</span>
               </SidebarMenuButton>
-              
 
               {/* <Button
                 size="icon"

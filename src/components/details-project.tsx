@@ -1,12 +1,20 @@
-import React, { useState, useEffect } from "react"
-import { useParams, useNavigate } from "react-router-dom"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { useProject} from "@/hooks/useProject" 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ArrowLeft, User, MapPin, Calendar, DollarSign, Users, Building2 } from "lucide-react"
-import { IconDotsVertical } from "@tabler/icons-react"
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { useProject } from "@/hooks/useProject";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  ArrowLeft,
+  User,
+  MapPin,
+  Calendar,
+  DollarSign,
+  Users,
+  Building2,
+} from "lucide-react";
+import { IconDotsVertical } from "@tabler/icons-react";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -16,13 +24,15 @@ import {
   AlertDialogFooter,
   AlertDialogCancel,
   AlertDialogAction,
-} from "@/components/ui/alert-dialog"
-import { IFCViewer } from "./ifc-viewer/ifc-viewer"
-import { CreateProject } from "./form-project"
+} from "@/components/ui/alert-dialog";
+import { IFCViewer } from "./ifc-viewer/ifc-viewer";
+import { useCreateProjectModal } from "@/hooks/useCreateOrEditProjectModal";
 
 export function ProjectDetails() {
-  const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
+  const { toggleModal } = useCreateProjectModal();
+
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
 
   const {
     project,
@@ -31,39 +41,19 @@ export function ProjectDetails() {
     deleteProject,
     isDeleting,
     updateProject,
-  } = useProject(id)
-  const [menuOpen, setMenuOpen] = useState(false)
-  const [deleted, setDeleted] = useState(false)
-  const [openDeleteModal, setOpenDeleteModal] = useState(false)
-  const [activeTab, setActiveTab] = useState("overview")
-  const [selectedFile, setSelectedFile] = useState<string | null>(null)
-  const [editOpen, setEditOpen] = useState(false)
- 
+  } = useProject(id);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [deleted, setDeleted] = useState(false);
+  const [openDeleteModal, setOpenDeleteModal] = useState(false);
+  const [activeTab, setActiveTab] = useState("overview");
+  const [selectedFile, setSelectedFile] = useState<string | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
+
   const [editForm, setEditForm] = useState({
     name: "",
     customerEmail: "",
     budget: "",
-    
-  })
-
-   useEffect(() => {
-    if (project) {
-      setEditForm({
-        name: project.name || "",
-        customerEmail: project.customer?.email || "",
-        budget: project.budget?.toString() || "",
-      })
-    }
-  }, [project])
-
-  const handleDelete = async () => {
-    await deleteProject(id!)
-    setOpenDeleteModal(false)
-    navigate("/projects")
-  }
-  
- 
-  
+  });
 
   useEffect(() => {
     if (project) {
@@ -71,40 +61,54 @@ export function ProjectDetails() {
         name: project.name || "",
         customerEmail: project.customer?.email || "",
         budget: project.budget?.toString() || "",
-      })
+      });
     }
-  }, [project])
+  }, [project]);
+
+  const handleDelete = async () => {
+    await deleteProject(id!);
+    setOpenDeleteModal(false);
+    navigate("/projects");
+  };
+
+  useEffect(() => {
+    if (project) {
+      setEditForm({
+        name: project.name || "",
+        customerEmail: project.customer?.email || "",
+        budget: project.budget?.toString() || "",
+      });
+    }
+  }, [project]);
 
   if (isLoading)
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <p className="text-lg">Loading project...</p>
       </div>
-    )
+    );
 
   if (isError || !project)
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <p className="text-lg">Project not found.</p>
       </div>
-    )
-
+    );
   const toggleMenu = () => setMenuOpen((v) => !v)
 
   const handleEdit = () => {
     setMenuOpen(false)
     setEditOpen(true)
   }
-  const planFiles = project.files?.filter(file =>
-  file.original_name.match(/\.(pdf|jpe?g)$/i)
-) || []
-const bimFiles = project.files?.filter(file =>
-  file.original_name.match(/\.ifc$/i)
-) || []
-const formattedCreateDate = project?.create_date
-  ? new Date(project.create_date).toLocaleDateString()
-  : "Not available"
-
+  const planFiles =
+    project.files?.filter((file) =>
+      file.original_name.match(/\.(pdf|jpe?g)$/i)
+    ) || [];
+  const bimFiles =
+    project.files?.filter((file) => file.original_name.match(/\.ifc$/i)) || [];
+  const formattedCreateDate = project?.create_date
+    ? new Date(project.create_date).toLocaleDateString()
+    : "Not available";
 
   const tabs = [
     { id: "overview", label: "Overview" },
@@ -114,15 +118,13 @@ const formattedCreateDate = project?.create_date
     { id: "budgets", label: "Budgets" },
     { id: "roles", label: "Roles" },
     { id: "history", label: "History" },
-  ]
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50">
- 
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex items-center justify-between">
-           
             <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
               <ArrowLeft className="h-4 w-4 mr-1 sm:mr-2" />
               <span className="hidden sm:inline">Back</span>
@@ -149,7 +151,47 @@ const formattedCreateDate = project?.create_date
                   <div className="absolute right-0 mt-2 w-40 bg-white border rounded shadow-md z-10">
                     <button
                       className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                      onClick={handleEdit}
+                      onClick={() =>
+                        toggleModal(
+                          true,
+                          {
+                            id: project.id,
+                            name: project.name,
+                            customerEmail: project.customer?.email,
+                            budget: project.budget,
+                            project_type: project.project_type,
+                            currency: project.currency,
+                            status: project.status,
+                            location: project.location,
+                            additionalUsersEmails:
+                              project.additionalUsersEmails,
+                            description: project.description,
+                            // Aquí vienen los archivos existentes:
+                            existingBlueprints: project.files
+                              ?.filter((f) => f.file_type === "bim_model")
+                              .map((f) => ({
+                                id: f.id,
+                                url: f.url,
+                                original_name: f.original_name,
+                              })),
+                            existingRenders: project.files
+                              ?.filter((f) => f.file_type === "renders")
+                              .map((f) => ({
+                                id: f.id,
+                                url: f.url,
+                                original_name: f.original_name,
+                              })),
+                            existingReports: project.files
+                              ?.filter((f) => f.file_type === "reports")
+                              .map((f) => ({
+                                id: f.id,
+                                url: f.url,
+                                original_name: f.original_name,
+                              })),
+                          },
+                          "edit"
+                        )
+                      }
                     >
                       Edit
                     </button>
@@ -157,8 +199,8 @@ const formattedCreateDate = project?.create_date
                       className="block w-full text-left px-4 py-2 hover:bg-red-100 text-red-600"
                       disabled={isDeleting}
                       onClick={() => {
-                        setOpenDeleteModal(true)
-                        setMenuOpen(false)
+                        setOpenDeleteModal(true);
+                        setMenuOpen(false);
                       }}
                     >
                       Delete
@@ -171,17 +213,21 @@ const formattedCreateDate = project?.create_date
         </div>
       </div>
 
-     
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
-        
         <div className="mb-4 sm:mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{project.name}</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+            {project.name}
+          </h1>
           <p className="text-sm sm:text-base text-gray-600">
             {project.customer?.email || "No client assigned"}
           </p>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6 sm:mb-8">
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="mb-6 sm:mb-8"
+        >
           <div className="overflow-x-auto">
             <TabsList className="inline-flex h-10 items-center justify-start rounded-md bg-gray-100 p-1 text-muted-foreground min-w-full sm:min-w-0">
               {tabs.map((tab) => (
@@ -201,30 +247,33 @@ const formattedCreateDate = project?.create_date
               <CardContent className="p-6">
                 <h2 className="text-lg font-semibold mb-2">Plans</h2>
                 {planFiles.length > 0 ? (
-  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-    {planFiles.map((file) => (
-      <div key={file.id} className="border rounded p-2">
-        {file.original_name.match(/\.pdf$/i) ? (
-          <iframe
-            src={file.url}
-            className="w-full h-64"
-            title={file.original_name}
-          />
-        ) : (
-          <img
-            src={file.url}
-            alt={file.original_name}
-            className="w-full h-64 object-contain"
-          />
-        )}
-        <p className="text-xs mt-1 truncate">{file.original_name}</p>
-      </div>
-    ))}
-  </div>
-) : (
-  <p className="text-sm text-gray-500">No plan files uploaded.</p>
-)}
-
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {planFiles.map((file) => (
+                      <div key={file.id} className="border rounded p-2">
+                        {file.original_name.match(/\.pdf$/i) ? (
+                          <iframe
+                            src={file.url}
+                            className="w-full h-64"
+                            title={file.original_name}
+                          />
+                        ) : (
+                          <img
+                            src={file.url}
+                            alt={file.original_name}
+                            className="w-full h-64 object-contain"
+                          />
+                        )}
+                        <p className="text-xs mt-1 truncate">
+                          {file.original_name}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500">
+                    No plan files uploaded.
+                  </p>
+                )}
               </CardContent>
             </Card>
 
@@ -241,7 +290,6 @@ const formattedCreateDate = project?.create_date
               </h2>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              
                 <Card>
                   <CardContent className="p-4 sm:p-6">
                     <div className="flex items-center gap-3">
@@ -249,7 +297,9 @@ const formattedCreateDate = project?.create_date
                         <User className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs sm:text-sm text-gray-500">Client</p>
+                        <p className="text-xs sm:text-sm text-gray-500">
+                          Client
+                        </p>
                         <p className="font-medium text-sm sm:text-base text-gray-900 truncate">
                           {project.customer?.email || "Not assigned"}
                         </p>
@@ -258,7 +308,6 @@ const formattedCreateDate = project?.create_date
                   </CardContent>
                 </Card>
 
-           
                 <Card>
                   <CardContent className="p-4 sm:p-6">
                     <div className="flex items-center gap-3">
@@ -266,7 +315,9 @@ const formattedCreateDate = project?.create_date
                         <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
                       </div>
                       <div>
-                        <p className="text-xs sm:text-sm text-gray-500">Location</p>
+                        <p className="text-xs sm:text-sm text-gray-500">
+                          Location
+                        </p>
                         <p className="font-medium text-sm sm:text-base text-gray-900">
                           {project.location}
                         </p>
@@ -275,7 +326,6 @@ const formattedCreateDate = project?.create_date
                   </CardContent>
                 </Card>
 
-              
                 <Card>
                   <CardContent className="p-4 sm:p-6">
                     <div className="flex items-center gap-3">
@@ -283,7 +333,9 @@ const formattedCreateDate = project?.create_date
                         <Building2 className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
                       </div>
                       <div>
-                        <p className="text-xs sm:text-sm text-gray-500">Project Type</p>
+                        <p className="text-xs sm:text-sm text-gray-500">
+                          Project Type
+                        </p>
                         <p className="font-medium text-sm sm:text-base text-gray-900">
                           {project.project_type}
                         </p>
@@ -292,7 +344,6 @@ const formattedCreateDate = project?.create_date
                   </CardContent>
                 </Card>
 
-         
                 <Card>
                   <CardContent className="p-4 sm:p-6">
                     <div className="flex items-center gap-3">
@@ -300,16 +351,17 @@ const formattedCreateDate = project?.create_date
                         <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
                       </div>
                       <div>
-                        <p className="text-xs sm:text-sm text-gray-500">Start Date</p>
+                        <p className="text-xs sm:text-sm text-gray-500">
+                          Start Date
+                        </p>
                         <p className="font-medium text-sm sm:text-base text-gray-900">
-                         {formattedCreateDate}
+                          {formattedCreateDate}
                         </p>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
 
-              
                 <Card>
                   <CardContent className="p-4 sm:p-6">
                     <div className="flex items-center gap-3">
@@ -317,7 +369,9 @@ const formattedCreateDate = project?.create_date
                         <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
                       </div>
                       <div>
-                        <p className="text-xs sm:text-sm text-gray-500">Budget</p>
+                        <p className="text-xs sm:text-sm text-gray-500">
+                          Budget
+                        </p>
                         <p className="font-medium text-sm sm:text-base text-gray-900">
                           ${project.budget?.toLocaleString() || "0"}
                         </p>
@@ -326,7 +380,6 @@ const formattedCreateDate = project?.create_date
                   </CardContent>
                 </Card>
 
-           
                 <Card>
                   <CardContent className="p-4 sm:p-6">
                     <div className="flex items-center gap-3">
@@ -334,66 +387,62 @@ const formattedCreateDate = project?.create_date
                         <Users className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
                       </div>
                       <div>
-                        <p className="text-xs sm:text-sm text-gray-500">Team Size</p>
+                        <p className="text-xs sm:text-sm text-gray-500">
+                          Team Size
+                        </p>
                         <p className="font-medium text-sm sm:text-base text-gray-900">
-                          {project.additionalUsersEmails|| 0}
+                          {project.additionalUsersEmails || 0}
                         </p>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
                 <Card className="sm:col-span-2 lg:col-span-3">
-        <CardContent className="p-4 sm:p-6">
-          <p className="text-xs sm:text-sm text-gray-500 mb-1">Description</p>
-          <p className="text-sm sm:text-base text-gray-900 whitespace-pre-line">
-            {project.description || "No description provided."}
-          </p>
-        </CardContent>
-      </Card>
+                  <CardContent className="p-4 sm:p-6">
+                    <p className="text-xs sm:text-sm text-gray-500 mb-1">
+                      Description
+                    </p>
+                    <p className="text-sm sm:text-base text-gray-900 whitespace-pre-line">
+                      {project.description || "No description provided."}
+                    </p>
+                  </CardContent>
+                </Card>
               </div>
 
-
-          
-              <div>
-             
-              
-              </div>
+              <div></div>
             </div>
           </TabsContent>
 
           <TabsContent value="3d-model" className="mt-6">
-              {bimFiles.length > 0 ? (
-    <div className="space-y-6">
-      {bimFiles.map((file) => (
-        <div key={file.id}>
-          <p className="text-sm font-medium mb-2">{file.original_name}</p>
-          <IFCViewer fileUrl={file.url} />
-        </div>
-      ))}
-    </div>
-  ) : (
-    <p className="text-sm text-gray-500">No 3D models available.</p>
-  )}
-           </TabsContent>
+            {bimFiles.length > 0 ? (
+              <div className="space-y-6">
+                {bimFiles.map((file) => (
+                  <div key={file.id}>
+                    <p className="text-sm font-medium mb-2">
+                      {file.original_name}
+                    </p>
+                    <IFCViewer fileUrl={file.url} />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500">No 3D models available.</p>
+            )}
+          </TabsContent>
 
           <TabsContent value="materials" className="mt-6">
-      
             <p>Materials Computation details go here.</p>
           </TabsContent>
 
-        
           <TabsContent value="budgets" className="mt-6">
-          
             <p>Budgets details go here.</p>
           </TabsContent>
 
           <TabsContent value="roles" className="mt-6">
-           
             <p>Roles details go here.</p>
           </TabsContent>
 
           <TabsContent value="history" className="mt-6">
-          
             <p>History details go here.</p>
           </TabsContent>
         </Tabs>
@@ -403,11 +452,14 @@ const formattedCreateDate = project?.create_date
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Project</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this project? This action cannot be undone.
+              Are you sure you want to delete this project? This action cannot
+              be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setOpenDeleteModal(false)}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => setOpenDeleteModal(false)}>
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               disabled={isDeleting}
@@ -418,41 +470,6 @@ const formattedCreateDate = project?.create_date
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-
-
-{editOpen && (
-
-
-  <CreateProject
-    initialData={{
-      
-      id: project.id,
-      name: project.name,
-      customerEmail: project.customer?.email,
-      budget: project.budget,
-      project_type: project.project_type,
-      currency: project.currency,
-      status: project.status,
-      location: project.location,
-      additionalUsersEmails: project.additionalUsersEmails,
-      description: project.description,
-      // Aquí vienen los archivos existentes:
-      existingBlueprints: project.files
-        ?.filter(f => f.file_type === "bim_model")
-        .map(f => ({ id: f.id, url: f.url, original_name: f.original_name })),
-      existingRenders: project.files
-        ?.filter(f => f.file_type === "renders")
-        .map(f => ({ id: f.id, url: f.url, original_name: f.original_name })),
-      existingReports: project.files
-        ?.filter(f => f.file_type === "reports")
-        .map(f => ({ id: f.id, url: f.url, original_name: f.original_name })),
-    }}
-    open={editOpen}
-    onOpenChange={setEditOpen}
-  />
-)}
-
     </div>
-  )
+  );
 }

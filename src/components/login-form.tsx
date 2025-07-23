@@ -20,27 +20,40 @@ type FormData = {
   password: string;
 };
 
-export function LoginForm({ className, ...props }: React.ComponentProps<"div">) {
+export function LoginForm({
+  className,
+  ...props
+}: React.ComponentProps<"div">) {
   const navigate = useNavigate();
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<FormData>();
   const [error, setError] = useState<string | null>(null);
 
   const loginWithToken = useLoginWithToken({
-    onSuccess: () => navigate("/"),
+    onSuccess: () => {
+      debugger;
+      navigate("/");
+    },
     onError: () => setError("Invalid credentials"),
   });
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get("access_token");
+  // useEffect(() => {
+  //   debugger
+  //   const params = new URLSearchParams(window.location.search);
+  //   const token = params.get("access_token");
 
-    if (token) {
-      loginWithToken.mutate(token);
-      params.delete("access_token");
-      const url = window.location.pathname + (params.toString() ? `?${params.toString()}` : "");
-      window.history.replaceState({}, document.title, url);
-    }
-  }, [loginWithToken]);
+  //   if (token) {
+  //     loginWithToken.mutate(token);
+  //     params.delete("access_token");
+  //     const url =
+  //       window.location.pathname +
+  //       (params.toString() ? `?${params.toString()}` : "");
+  //     window.history.replaceState({}, document.title, url);
+  //   }
+  // }, []);
 
   const onSubmit = async (data: FormData) => {
     setError(null);
@@ -54,7 +67,10 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
   };
 
   return (
-    <div className={cn("flex justify-center items-center min-h-screen", className)} {...props}>
+    <div
+      className={cn("flex justify-center items-center min-h-screen", className)}
+      {...props}
+    >
       <div className="w-full max-w-md flex flex-col gap-6">
         <Card>
           <CardHeader className="text-center">
@@ -64,24 +80,27 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
                 className="w-full mb-4"
                 type="button"
                 onClick={() => {
-                  window.location.href = "http://localhost:8000/auth/google/login";
+                  window.location.href =
+                    "http://localhost:8000/auth/google/login";
                 }}
               >
                 Sign in with Google
               </Button>
             </CardDescription>
             <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
-              <span className="bg-card text-muted-foreground relative z-10 px-2">Or</span>
+              <span className="bg-card text-muted-foreground relative z-10 px-2">
+                Or
+              </span>
             </div>
             <CardTitle className="text-xl">Login</CardTitle>
           </CardHeader>
           <CardContent>
             {loginWithToken.error && (
-              <p className="text-red-600 mb-4 text-center">Login failed. Please try again.</p>
+              <p className="text-red-600 mb-4 text-center">
+                Login failed. Please try again.
+              </p>
             )}
-            {error && (
-              <p className="text-red-600 mb-4 text-center">{error}</p>
-            )}
+            {error && <p className="text-red-600 mb-4 text-center">{error}</p>}
 
             <form onSubmit={handleSubmit(onSubmit)}>
               <div className="grid gap-6">
@@ -95,7 +114,9 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
                     aria-invalid={errors.email ? "true" : "false"}
                   />
                   {errors.email && (
-                    <p className="text-red-600 text-sm mt-1">{errors.email.message}</p>
+                    <p className="text-red-600 text-sm mt-1">
+                      {errors.email.message}
+                    </p>
                   )}
                 </div>
                 <div className="grid gap-3">
@@ -103,11 +124,15 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
                   <Input
                     id="password"
                     type="password"
-                    {...register("password", { required: "Password is required" })}
+                    {...register("password", {
+                      required: "Password is required",
+                    })}
                     aria-invalid={errors.password ? "true" : "false"}
                   />
                   {errors.password && (
-                    <p className="text-red-600 text-sm mt-1">{errors.password.message}</p>
+                    <p className="text-red-600 text-sm mt-1">
+                      {errors.password.message}
+                    </p>
                   )}
                 </div>
                 <a
@@ -120,8 +145,14 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
                 >
                   Forgot your password?
                 </a>
-                <Button type="submit" className="w-full" disabled={isSubmitting || loginWithToken.isPending}>
-                  {isSubmitting || loginWithToken.isPending ? "Logging in..." : "Login"}
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={isSubmitting || loginWithToken.isPending}
+                >
+                  {isSubmitting || loginWithToken.isPending
+                    ? "Logging in..."
+                    : "Login"}
                 </Button>
               </div>
               <div className="text-center text-sm mt-4">

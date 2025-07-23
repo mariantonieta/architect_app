@@ -14,7 +14,7 @@ export interface ProjectFormData {
     | "other";
     currency?: "ars" | "usd" | "eur";
     budget?: number;
-    location?: string;
+    location: string;
     status?: "idea" | "budgeting" | "in_progress" | "finished";
     additionalUsersEmails?: string[];
     filesBimModels?: File[];
@@ -56,7 +56,7 @@ export interface Project {
     | "other";
     currency?: "ars" | "usd" | "eur";
     budget?: number;
-    location?: string;
+    location: string;
     status?: "idea" | "budgeting" | "in_progress" | "finished";
     additionalUsersEmails?: string[];
     files?: ProjectFile[];
