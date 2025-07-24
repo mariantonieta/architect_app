@@ -59,7 +59,7 @@ export function ProjectDetails() {
     if (project) {
       setEditForm({
         name: project.name || "",
-        customerEmail: project.customer?.email || "",
+        customerEmail: project.customerEmail?.[0] || "",
         budget: project.budget?.toString() || "",
       });
     }
@@ -75,7 +75,8 @@ export function ProjectDetails() {
     if (project) {
       setEditForm({
         name: project.name || "",
-        customerEmail: project.customer?.email || "",
+        customerEmail: project.customerEmail?.[0] || "",
+
         budget: project.budget?.toString() || "",
       });
     }
@@ -94,12 +95,12 @@ export function ProjectDetails() {
         <p className="text-lg">Project not found.</p>
       </div>
     );
-  const toggleMenu = () => setMenuOpen((v) => !v)
+  const toggleMenu = () => setMenuOpen((v) => !v);
 
   const handleEdit = () => {
-    setMenuOpen(false)
-    setEditOpen(true)
-  }
+    setMenuOpen(false);
+    setEditOpen(true);
+  };
   const planFiles =
     project.files?.filter((file) =>
       file.original_name.match(/\.(pdf|jpe?g)$/i)
@@ -157,16 +158,15 @@ export function ProjectDetails() {
                           {
                             id: project.id,
                             name: project.name,
-                            customerEmail: project.customer?.email,
+                            customerEmail: project.customerEmail?.[0] || "",
                             budget: project.budget,
                             project_type: project.project_type,
                             currency: project.currency,
                             status: project.status,
                             location: project.location,
-                            additionalUsersEmails:
-                              project.additionalUsersEmails,
+                            architectEmail: project.architectEmail,
                             description: project.description,
-                            // Aquí vienen los archivos existentes:
+                        
                             existingBlueprints: project.files
                               ?.filter((f) => f.file_type === "bim_model")
                               .map((f) => ({
@@ -219,7 +219,7 @@ export function ProjectDetails() {
             {project.name}
           </h1>
           <p className="text-sm sm:text-base text-gray-600">
-            {project.customer?.email || "No client assigned"}
+            <p>{(project.customerEmail || []).join(", ") || "Not assigned"}</p>
           </p>
         </div>
 
@@ -301,7 +301,10 @@ export function ProjectDetails() {
                           Client
                         </p>
                         <p className="font-medium text-sm sm:text-base text-gray-900 truncate">
-                          {project.customer?.email || "Not assigned"}
+                          <p>
+                            {(project.customerEmail || []).join(", ") ||
+                              "Not assigned"}
+                          </p>
                         </p>
                       </div>
                     </div>
@@ -391,7 +394,11 @@ export function ProjectDetails() {
                           Team Size
                         </p>
                         <p className="font-medium text-sm sm:text-base text-gray-900">
-                          {project.additionalUsersEmails || 0}
+                          {[
+                            ...(project.customerEmail || []),
+                            ...(project.supplierEmail || []),
+                            ...(project.architectEmail || []),
+                          ].join(", ") || "No emails"}
                         </p>
                       </div>
                     </div>

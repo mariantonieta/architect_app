@@ -57,10 +57,6 @@ export function CreateOrEditProjectForm({
   );
   const [newReports, setNewReports] = useState<File[]>([]);
 
-  const bimFiles = [...existingBim, ...newBim];
-  const renders = [...existingRenders, ...newRenders];
-  const reports = [...existingReports, ...newReports];
-
   const setBimFiles = (files: (File | ExistingFile)[]) => {
     setExistingBim(files.filter((f): f is ExistingFile => "id" in f));
     setNewBim(files.filter((f): f is File => f instanceof File));
@@ -86,48 +82,44 @@ export function CreateOrEditProjectForm({
   } = useForm<ProjectFormData>({
     defaultValues: {
       name: initialData?.name || "",
-      customerEmail: initialData?.customerEmail || "",
-      supplierEmail: initialData?.supplierEmail || "",
+      customerEmail: initialData?.customerEmail || [], // ✅ array
+      supplierEmail: initialData?.supplierEmail || [],
+      architectEmail: initialData?.architectEmail || [],
       project_type: initialData?.project_type || "",
       currency: initialData?.currency || "ars",
       budget: initialData?.budget,
       location: initialData?.location || "",
       status: initialData?.status || "idea",
-      additionalUsersEmails: initialData?.additionalUsersEmails || [],
       description: initialData?.description || "",
     },
   });
 
   console.log("errors: ", errors);
 
-  const {
-    createProject,
-    updateProject,
-    isCreating,
-    isUpdating,
-    isError,
-    error,
-  } = useProject(initialData?.id);
+  const { createProject, updateProject, isCreating, isUpdating } = useProject(
+    initialData?.id
+  );
 
-  const onNextStep = () => setStep(2);
+  //  const onNextStep = () => setStep(2);
 
   const handleSubmitProject = async (data: ProjectFormData) => {
     const formData = new FormData();
     formData.append("name", data.name);
-    if (data.customerEmail)
-      formData.append("customer_email", data.customerEmail);
     formData.append("project_type", data.project_type);
     if (data.currency) formData.append("currency", data.currency);
     if (data.budget != null) formData.append("budget", data.budget.toString());
     if (data.location) formData.append("location", data.location);
     formData.append("status", data.status || "idea");
     if (data.description) formData.append("description", data.description);
-    if (data.additionalUsersEmails?.length) {
-      formData.append(
-        "additional_users_emails",
-        data.additionalUsersEmails.join(",")
-      );
-    }
+    (data.customerEmail || []).forEach((email) =>
+      formData.append("customer_email", email)
+    );
+    (data.supplierEmail || []).forEach((email) =>
+      formData.append("supplier_email", email)
+    );
+    (data.architectEmail || []).forEach((email) =>
+      formData.append("architect_email", email)
+    );
 
     if (initialData?.id) {
       formData.append("keep_bim_ids", existingBim.map((f) => f.id).join(","));
@@ -191,173 +183,172 @@ export function CreateOrEditProjectForm({
         }
       }}
     >
-      {/* <DialogTrigger asChild>{children}</DialogTrigger> */}
       <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         {/* {step === 1 ? (
           <> */}
-            <DialogHeader>
-              <DialogTitle>
-                {isCreateOrEdit === "edit"
-                  ? "Edit Project"
-                  : "Create a New Project"}
-              </DialogTitle>
-              <DialogDescription>
-                Complete the basic project information.
-              </DialogDescription>
-            </DialogHeader>
+        <DialogHeader>
+          <DialogTitle>
+            {isCreateOrEdit === "edit"
+              ? "Edit Project"
+              : "Create a New Project"}
+          </DialogTitle>
+          <DialogDescription>
+            Complete the basic project information.
+          </DialogDescription>
+        </DialogHeader>
 
-            <form onSubmit={handleSubmit(handleSubmitProject)} className="space-y-6">
-              
-              <FormField
-                label="Name"
-                id="name"
-                error={errors.name?.message}
-                required
-              >
-                <Controller
-                  control={control}
-                  name="name"
-                  rules={{ required: "Project name is required" }}
-                  render={({ field }) => (
-                    <Input
-                      {...field}
-                      id="name"
-                      autoFocus
-                      placeholder="Example: The Oaks Family House"
-                    />
-                  )}
+        <form
+          onSubmit={handleSubmit(handleSubmitProject)}
+          className="space-y-6"
+        >
+          <FormField
+            label="Name"
+            id="name"
+            error={errors.name?.message}
+            required
+          >
+            <Controller
+              control={control}
+              name="name"
+              rules={{ required: "Project name is required" }}
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  id="name"
+                  autoFocus
+                  placeholder="Example: The Oaks Family House"
                 />
-              </FormField>
+              )}
+            />
+          </FormField>
 
-              <FormField
-                label="Type"
-                id="project_type"
-                error={errors.project_type?.message}
-                required
-              >
-                <Controller
-                  control={control}
-                  name="project_type"
-                  rules={{ required: "Project type is required" }}
-                  render={({ field }) => (
-                    <select
-                      {...field}
-                      id="project_type"
-                      className="w-full border rounded px-2 py-1"
-                    >
-                      <option value="" disabled>
-                        Select project type
-                      </option>
-                      <option value="single_family_home">
-                        Single Family Home
-                      </option>
-                      <option value="residential_building">
-                        Residential Building
-                      </option>
-                      <option value="commercial_building">
-                        Commercial Building
-                      </option>
-                      <option value="industrial">Industrial</option>
-                      <option value="renovation">Renovation</option>
-                      <option value="recreational">Recreational</option>
-                      <option value="other">Other</option>
-                    </select>
-                  )}
-                />
-              </FormField>
+          <FormField
+            label="Type"
+            id="project_type"
+            error={errors.project_type?.message}
+            required
+          >
+            <Controller
+              control={control}
+              name="project_type"
+              rules={{ required: "Project type is required" }}
+              render={({ field }) => (
+                <select
+                  {...field}
+                  id="project_type"
+                  className="w-full border rounded px-2 py-1"
+                >
+                  <option value="" disabled>
+                    Select project type
+                  </option>
+                  <option value="single_family_home">Single Family Home</option>
+                  <option value="residential_building">
+                    Residential Building
+                  </option>
+                  <option value="commercial_building">
+                    Commercial Building
+                  </option>
+                  <option value="industrial">Industrial</option>
+                  <option value="renovation">Renovation</option>
+                  <option value="recreational">Recreational</option>
+                  <option value="other">Other</option>
+                </select>
+              )}
+            />
+          </FormField>
 
-              <FormField label="Status" id="status" required>
-                <Controller
-                  control={control}
-                  name="status"
-                  rules={{ required: "Status is required" }}
-                  render={({ field }) => (
-                    <select
-                      {...field}
-                      id="status"
-                      className="w-full border rounded px-2 py-1"
-                    >
-                      <option value="idea">Idea</option>
-                      <option value="budgeting">Budgeting</option>
-                      <option value="in_progress">In Progress</option>
-                      <option value="finished">Finished</option>
-                    </select>
-                  )}
-                />
-              </FormField>
+          <FormField label="Status" id="status" required>
+            <Controller
+              control={control}
+              name="status"
+              rules={{ required: "Status is required" }}
+              render={({ field }) => (
+                <select
+                  {...field}
+                  id="status"
+                  className="w-full border rounded px-2 py-1"
+                >
+                  <option value="idea">Idea</option>
+                  <option value="budgeting">Budgeting</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="finished">Finished</option>
+                </select>
+              )}
+            />
+          </FormField>
 
-              <div className="flex space-x-4">
-                <FormField label="Budget" id="budget" className="flex-1">
-                  <Controller
-                    control={control}
-                    name="budget"
-                    render={({ field }) => (
-                      <Input
-                        {...field}
-                        placeholder="0"
-                        id="budget"
-                        type="text"
-                        value={field.value ?? ""}
-                        onChange={(e) =>
-                          field.onChange(
-                            e.target.value === ""
-                              ? undefined
-                              : parseFloat(e.target.value)
-                          )
-                        }
-                      />
-                    )}
+          <div className="flex space-x-4">
+            <FormField label="Budget" id="budget" className="flex-1">
+              <Controller
+                control={control}
+                name="budget"
+                render={({ field }) => (
+                  <Input
+                    {...field}
+                    placeholder="0"
+                    id="budget"
+                    type="text"
+                    value={field.value ?? ""}
+                    onChange={(e) =>
+                      field.onChange(
+                        e.target.value === ""
+                          ? undefined
+                          : parseFloat(e.target.value)
+                      )
+                    }
                   />
-                </FormField>
+                )}
+              />
+            </FormField>
 
-                <FormField label="Currency" id="currency" className="w-32">
-                  <Controller
-                    control={control}
-                    name="currency"
-                    render={({ field }) => (
-                      <select
-                        {...field}
-                        id="currency"
-                        className="w-full border rounded px-2 py-1"
-                      >
-                        <option value="ars">ARS</option>
-                        <option value="usd">USD</option>
-                        <option value="eur">EUR</option>
-                      </select>
-                    )}
-                  />
-                </FormField>
-              </div>
+            <FormField label="Currency" id="currency" className="w-32">
+              <Controller
+                control={control}
+                name="currency"
+                render={({ field }) => (
+                  <select
+                    {...field}
+                    id="currency"
+                    className="w-full border rounded px-2 py-1"
+                  >
+                    <option value="ars">ARS</option>
+                    <option value="usd">USD</option>
+                    <option value="eur">EUR</option>
+                  </select>
+                )}
+              />
+            </FormField>
+          </div>
 
-              <FormField
-                label="Location"
-                id="location"
-                error={errors.location?.message}
-                required
-              >
-                <Controller
-                  control={control}
-                  name="location"
-                  rules={{ required: "Location is required" }}
-                  render={({ field }) => (
-                    <Input
-                      {...field}
-                      id="location"
-                      autoFocus
-                      placeholder="Example: Argentina"
-                    />
-                  )}
+          <FormField
+            label="Location"
+            id="location"
+            error={errors.location?.message}
+            required
+          >
+            <Controller
+              control={control}
+              name="location"
+              rules={{ required: "Location is required" }}
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  id="location"
+                  autoFocus
+                  placeholder="Example: Argentina"
                 />
-              </FormField>
+              )}
+            />
+          </FormField>
 
-              <FormField label="Additional Description" id="description">
-                <Controller
-                  control={control}
-                  name="description"
-                  render={({ field }) => <Input {...field} id="description" />}
-                />
-              </FormField>
-{/* 
+          <FormField label="Additional Description" id="description">
+            <Controller
+              control={control}
+              name="description"
+              render={({ field }) => <Input {...field} id="description" />}
+            />
+          </FormField>
+          {/* 
               <DialogFooter className="flex space-x-3">
                 <Button
                   type="button"
@@ -372,402 +363,213 @@ export function CreateOrEditProjectForm({
                 </Button>
               </DialogFooter> */}
 
-              <FormField
-                label="BIM Models (IFC, RVT)"
-                id="filesBimModels"
-                error={errors.filesBimModels?.message}
-              >
-                <FileDropzone
-                  files={[...existingBim, ...newBim]}
-                  accept={[".ifc", ".rvt"]}
-                  onFilesAdded={(newFiles) => {
-                    setNewBim([...newBim, ...newFiles]);
-                    clearErrors("filesBimModels");
-                  }}
-                  onFileRemove={(fileToRemove) => {
-                    if ("id" in fileToRemove) {
-                      setExistingBim((prev) =>
-                        prev.filter((f) => f.id !== fileToRemove.id)
-                      );
-                    } else {
-                      setNewBim((prev) =>
-                        prev.filter((f) => f !== fileToRemove)
-                      );
-                    }
-                  }}
+          <FormField
+            label="BIM Models (IFC, RVT)"
+            id="filesBimModels"
+            error={errors.filesBimModels?.message}
+          >
+            <FileDropzone
+              files={[...existingBim, ...newBim]}
+              accept={[".ifc", ".rvt"]}
+              onFilesAdded={(newFiles) => {
+                setNewBim([...newBim, ...newFiles]);
+                clearErrors("filesBimModels");
+              }}
+              onFileRemove={(fileToRemove) => {
+                if ("id" in fileToRemove) {
+                  setExistingBim((prev) =>
+                    prev.filter((f) => f.id !== fileToRemove.id)
+                  );
+                } else {
+                  setNewBim((prev) => prev.filter((f) => f !== fileToRemove));
+                }
+              }}
+            />
+          </FormField>
+
+          <FormField
+            label="Plans (PDF, JPG)"
+            id="filesRenders"
+            error={errors.filesRenders?.message}
+          >
+            <FileDropzone
+              files={[...existingRenders, ...newRenders]}
+              accept={[".jpg", ".jpeg", ".png", ".pdf"]}
+              onFilesAdded={(newFiles) => {
+                setNewRenders([...newRenders, ...newFiles]);
+                clearErrors("filesRenders");
+              }}
+              onFileRemove={(fileToRemove) => {
+                if ("id" in fileToRemove) {
+                  setExistingRenders((prev) =>
+                    prev.filter((f) => f.id !== fileToRemove.id)
+                  );
+                } else {
+                  setNewRenders((prev) =>
+                    prev.filter((f) => f !== fileToRemove)
+                  );
+                }
+              }}
+              onInvalidFiles={(invalid) => {
+                setError("filesRenders", {
+                  type: "manual",
+                  message: `Invalid render file(s): ${invalid
+                    .map((f) => f.name)
+                    .join(", ")}. Allowed: JPG, PNG, PDF`,
+                });
+              }}
+            />
+          </FormField>
+
+          <FormField
+            label="Render Files (JPG, PNG, PDF)"
+            id="filesReports"
+            error={errors.filesReports?.message}
+          >
+            <FileDropzone
+              files={[...existingReports, ...newReports]}
+              accept={[".pdf", ".jpg", ".jpeg"]}
+              onFilesAdded={(newFiles) => {
+                setNewReports([...newReports, ...newFiles]);
+                clearErrors("filesReports");
+              }}
+              onFileRemove={(fileToRemove) => {
+                if ("id" in fileToRemove) {
+                  setExistingReports((prev) =>
+                    prev.filter((f) => f.id !== fileToRemove.id)
+                  );
+                } else {
+                  setNewReports((prev) =>
+                    prev.filter((f) => f !== fileToRemove)
+                  );
+                }
+              }}
+              onInvalidFiles={(invalid) => {
+                setError("filesReports", {
+                  type: "manual",
+                  message: `Invalid report file(s): ${invalid
+                    .map((f) => f.name)
+                    .join(", ")}. Allowed: PDF, JPG`,
+                });
+              }}
+            />
+          </FormField>
+          <FormField
+            label="Architect Email"
+            id="architectEmail"
+            error={errors.architectEmail?.message}
+          >
+            <Controller
+              control={control}
+              name="architectEmail"
+              rules={{
+                validate: (emails: string[]) => {
+                  if (!emails.length) return true;
+                  const invalids = emails.filter(
+                    (email) => !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+                  );
+                  return (
+                    invalids.length === 0 ||
+                    `Invalid emails: ${invalids.join(", ")}`
+                  );
+                },
+              }}
+              render={({ field }) => (
+                <EmailSelector
+                  value={field.value || []}
+                  onChange={(emails) => field.onChange(emails)}
+                  placeholder="Enter email and press Enter"
+                  onEmailAdd={(email) => console.log("Email added:", email)}
                 />
-              </FormField>
-
-              <FormField
-                label="Plans (PDF, JPG)"
-                id="filesRenders"
-                error={errors.filesRenders?.message}
-              >
-                <FileDropzone
-                  files={[...existingRenders, ...newRenders]}
-                  accept={[".jpg", ".jpeg", ".png", ".pdf"]}
-                  onFilesAdded={(newFiles) => {
-                    setNewRenders([...newRenders, ...newFiles]);
-                    clearErrors("filesRenders");
-                  }}
-                  onFileRemove={(fileToRemove) => {
-                    if ("id" in fileToRemove) {
-                      setExistingRenders((prev) =>
-                        prev.filter((f) => f.id !== fileToRemove.id)
-                      );
-                    } else {
-                      setNewRenders((prev) =>
-                        prev.filter((f) => f !== fileToRemove)
-                      );
-                    }
-                  }}
-                  onInvalidFiles={(invalid) => {
-                    setError("filesRenders", {
-                      type: "manual",
-                      message: `Invalid render file(s): ${invalid
-                        .map((f) => f.name)
-                        .join(", ")}. Allowed: JPG, PNG, PDF`,
-                    });
-                  }}
-                />
-              </FormField>
-
-              <FormField
-                label="Render Files (JPG, PNG, PDF)"
-                id="filesReports"
-                error={errors.filesReports?.message}
-              >
-                <FileDropzone
-                  files={[...existingReports, ...newReports]}
-                  accept={[".pdf", ".jpg", ".jpeg"]}
-                  onFilesAdded={(newFiles) => {
-                    setNewReports([...newReports, ...newFiles]);
-                    clearErrors("filesReports");
-                  }}
-                  onFileRemove={(fileToRemove) => {
-                    if ("id" in fileToRemove) {
-                      setExistingReports((prev) =>
-                        prev.filter((f) => f.id !== fileToRemove.id)
-                      );
-                    } else {
-                      setNewReports((prev) =>
-                        prev.filter((f) => f !== fileToRemove)
-                      );
-                    }
-                  }}
-                  onInvalidFiles={(invalid) => {
-                    setError("filesReports", {
-                      type: "manual",
-                      message: `Invalid report file(s): ${invalid
-                        .map((f) => f.name)
-                        .join(", ")}. Allowed: PDF, JPG`,
-                    });
-                  }}
-                />
-              </FormField>
-              <FormField
-                label="Invite Architect(s)"
-                id="additionalUsersEmails"
-                error={errors.additionalUsersEmails?.message}
-              >
-                <Controller
-                  control={control}
-                  name="additionalUsersEmails"
-                  render={({ field }) => (
-                    <EmailSelector
-                      value={field.value || []}
-                      onChange={(newEmails) => field.onChange(newEmails)}
-                      placeholder="Enter email and press Enter"
-                      onEmailAdd={(email) => {
-                        console.log("Email added:", email);
-                      }}
-                    />
-                  )}
-                />
-              </FormField>
-
-              <FormField
-                label="Supplier Email"
-                id="supplierEmail"
-                error={errors.supplierEmail?.message}
-              >
-                <Controller
-                  control={control}
-                  name="supplierEmail"
-                  rules={{
-                    pattern: {
-                      value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                      message: "Invalid email address",
-                    },
-                  }}
-                  render={({ field }) => (
-                    <EmailSelector
-                      value={field.value ? [field.value] : []}
-                      onChange={(emails) => field.onChange(emails[0] || "")}
-                      placeholder="Enter supplier email and press Enter"
-                      onEmailAdd={(email) =>
-                        console.log("Supplier email added:", email)
-                      }
-                    />
-                  )}
-                />
-              </FormField>
-
-              <FormField
-                label="Customer Email"
-                id="customerEmail"
-                error={errors.customerEmail?.message}
-              >
-                <Controller
-                  control={control}
-                  name="customerEmail"
-                  rules={{
-                    pattern: {
-                      value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                      message: "Invalid email address",
-                    },
-                  }}
-                  render={({ field }) => (
-                    <EmailSelector
-                      value={field.value ? [field.value] : []}
-                      onChange={(emails) => field.onChange(emails[0] || "")}
-                      placeholder="Enter customer email and press Enter"
-                      onEmailAdd={(email) =>
-                        console.log("Customer email added:", email)
-                      }
-                    />
-                  )}
-                />
-              </FormField>
-
-              <DialogFooter className="flex space-x-3">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={() => setStep(1)}
-                  disabled={isCreating || isUpdating}
-                >
-                  Back
-                </Button>
-
-                <Button type="submit" disabled={isCreating || isUpdating}>
-                  {isCreating || isUpdating
-                    ? "Saving..."
-                    : initialData
-                    ? "Save Changes"
-                    : "Create Project"}
-                </Button>
-              </DialogFooter>
-            </form>
-          {/* </> */}
-        {/* ) : ( */}
-          {/* <>
-            <DialogHeader>
-              <DialogTitle>Add More Information</DialogTitle>
-              <DialogDescription>
-                You can upload files and assign additional users.
-              </DialogDescription>
-            </DialogHeader> */}
-
-            {/* <form
-              onSubmit={handleSubmit(handleSubmitProject)}
-              className="space-y-6"
-            >
-              <FormField
-                label="BIM Models (IFC, RVT)"
-                id="filesBimModels"
-                error={errors.filesBimModels?.message}
-              >
-                <FileDropzone
-                  files={[...existingBim, ...newBim]}
-                  accept={[".ifc", ".rvt"]}
-                  onFilesAdded={(newFiles) => {
-                    setNewBim([...newBim, ...newFiles]);
-                    clearErrors("filesBimModels");
-                  }}
-                  onFileRemove={(fileToRemove) => {
-                    if ("id" in fileToRemove) {
-                      setExistingBim((prev) =>
-                        prev.filter((f) => f.id !== fileToRemove.id)
-                      );
-                    } else {
-                      setNewBim((prev) =>
-                        prev.filter((f) => f !== fileToRemove)
-                      );
-                    }
-                  }}
-                />
-              </FormField>
-
-              <FormField
-                label="Plans (PDF, JPG)"
-                id="filesRenders"
-                error={errors.filesRenders?.message}
-              >
-                <FileDropzone
-                  files={[...existingRenders, ...newRenders]}
-                  accept={[".jpg", ".jpeg", ".png", ".pdf"]}
-                  onFilesAdded={(newFiles) => {
-                    setNewRenders([...newRenders, ...newFiles]);
-                    clearErrors("filesRenders");
-                  }}
-                  onFileRemove={(fileToRemove) => {
-                    if ("id" in fileToRemove) {
-                      setExistingRenders((prev) =>
-                        prev.filter((f) => f.id !== fileToRemove.id)
-                      );
-                    } else {
-                      setNewRenders((prev) =>
-                        prev.filter((f) => f !== fileToRemove)
-                      );
-                    }
-                  }}
-                  onInvalidFiles={(invalid) => {
-                    setError("filesRenders", {
-                      type: "manual",
-                      message: `Invalid render file(s): ${invalid
-                        .map((f) => f.name)
-                        .join(", ")}. Allowed: JPG, PNG, PDF`,
-                    });
-                  }}
-                />
-              </FormField>
-
-              <FormField
-                label="Render Files (JPG, PNG, PDF)"
-                id="filesReports"
-                error={errors.filesReports?.message}
-              >
-                <FileDropzone
-                  files={[...existingReports, ...newReports]}
-                  accept={[".pdf", ".jpg", ".jpeg"]}
-                  onFilesAdded={(newFiles) => {
-                    setNewReports([...newReports, ...newFiles]);
-                    clearErrors("filesReports");
-                  }}
-                  onFileRemove={(fileToRemove) => {
-                    if ("id" in fileToRemove) {
-                      setExistingReports((prev) =>
-                        prev.filter((f) => f.id !== fileToRemove.id)
-                      );
-                    } else {
-                      setNewReports((prev) =>
-                        prev.filter((f) => f !== fileToRemove)
-                      );
-                    }
-                  }}
-                  onInvalidFiles={(invalid) => {
-                    setError("filesReports", {
-                      type: "manual",
-                      message: `Invalid report file(s): ${invalid
-                        .map((f) => f.name)
-                        .join(", ")}. Allowed: PDF, JPG`,
-                    });
-                  }}
-                />
-              </FormField>
-              <FormField
-                label="Invite Architect(s)"
-                id="additionalUsersEmails"
-                error={errors.additionalUsersEmails?.message}
-              >
-                <Controller
-                  control={control}
-                  name="additionalUsersEmails"
-                  render={({ field }) => (
-                    <EmailSelector
-                      value={field.value || []}
-                      onChange={(newEmails) => field.onChange(newEmails)}
-                      placeholder="Enter email and press Enter"
-                      onEmailAdd={(email) => {
-                        console.log("Email added:", email);
-                      }}
-                    />
-                  )}
-                />
-              </FormField>
-
-              <FormField
-                label="Supplier Email"
-                id="supplierEmail"
-                error={errors.supplierEmail?.message}
-              >
-                <Controller
-                  control={control}
-                  name="supplierEmail"
-                  rules={{
-                    pattern: {
-                      value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                      message: "Invalid email address",
-                    },
-                  }}
-                  render={({ field }) => (
-                    <EmailSelector
-                      value={field.value ? [field.value] : []}
-                      onChange={(emails) => field.onChange(emails[0] || "")}
-                      placeholder="Enter supplier email and press Enter"
-                      onEmailAdd={(email) =>
-                        console.log("Supplier email added:", email)
-                      }
-                    />
-                  )}
-                />
-              </FormField>
-
-              <FormField
-                label="Customer Email"
-                id="customerEmail"
-                error={errors.customerEmail?.message}
-              >
-                <Controller
-                  control={control}
-                  name="customerEmail"
-                  rules={{
-                    pattern: {
-                      value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                      message: "Invalid email address",
-                    },
-                  }}
-                  render={({ field }) => (
-                    <EmailSelector
-                      value={field.value ? [field.value] : []}
-                      onChange={(emails) => field.onChange(emails[0] || "")}
-                      placeholder="Enter customer email and press Enter"
-                      onEmailAdd={(email) =>
-                        console.log("Customer email added:", email)
-                      }
-                    />
-                  )}
-                />
-              </FormField>
-
-              <DialogFooter className="flex space-x-3">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={() => setStep(1)}
-                  disabled={isCreating || isUpdating}
-                >
-                  Back
-                </Button>
-
-                <Button type="submit" disabled={isCreating || isUpdating}>
-                  {isCreating || isUpdating
-                    ? "Saving..."
-                    : initialData
-                    ? "Save Changes"
-                    : "Create Project"}
-                </Button>
-              </DialogFooter>
-
-              {isError && (
-                <p className="text-red-600 text-sm mt-2">
-                  Error: {error?.message || "Failed to save project"}
-                </p>
               )}
-            </form> */}
-          {/* </> */}
-        {/* )} */}
+            />
+          </FormField>
+
+          <FormField
+            label="Supplier Email"
+            id="supplierEmail"
+            error={errors.supplierEmail?.message}
+          >
+            <Controller
+              control={control}
+              name="supplierEmail"
+              rules={{
+                validate: (emails: string[]) => {
+                  if (!emails.length) return true;
+                  const invalids = emails.filter(
+                    (email) => !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+                  );
+                  return (
+                    invalids.length === 0 ||
+                    `Invalid emails: ${invalids.join(", ")}`
+                  );
+                },
+              }}
+              render={({ field }) => (
+                <EmailSelector
+                  value={field.value || []}
+                  onChange={(emails) => field.onChange(emails)}
+                  placeholder="Enter supplier email and press Enter"
+                  onEmailAdd={(email) =>
+                    console.log("Supplier email added:", email)
+                  }
+                />
+              )}
+            />
+          </FormField>
+
+          <FormField
+            label="Customer Email"
+            id="customerEmail"
+            error={errors.customerEmail?.message}
+          >
+            <Controller
+              control={control}
+              name="customerEmail"
+              rules={{
+                validate: (emails: string[]) => {
+                  if (!emails.length) return true;
+                  const invalids = emails.filter(
+                    (email) => !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+                  );
+                  return (
+                    invalids.length === 0 ||
+                    `Invalid emails: ${invalids.join(", ")}`
+                  );
+                },
+              }}
+              render={({ field }) => (
+                <EmailSelector
+                  value={field.value || []}
+                  onChange={(emails) => field.onChange(emails)}
+                  placeholder="Enter customer email and press Enter"
+                  onEmailAdd={(email) =>
+                    console.log("Customer email added:", email)
+                  }
+                />
+              )}
+            />
+          </FormField>
+
+          <DialogFooter className="flex space-x-3">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setStep(1)}
+              disabled={isCreating || isUpdating}
+            >
+              Back
+            </Button>
+
+            <Button type="submit" disabled={isCreating || isUpdating}>
+              {isCreating || isUpdating
+                ? "Saving..."
+                : initialData
+                ? "Save Changes"
+                : "Create Project"}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

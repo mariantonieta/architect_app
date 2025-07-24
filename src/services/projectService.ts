@@ -2,7 +2,9 @@ import api from "./api";
 
 export interface ProjectFormData {
     name: string;
-    customerEmail?: string;
+    customerEmail?: string[];
+    supplierEmail?: string[];
+    architectEmail?: string[];
     project_type:
     ""
     | "single_family_home"
@@ -16,18 +18,10 @@ export interface ProjectFormData {
     budget?: number;
     location: string;
     status?: "idea" | "budgeting" | "in_progress" | "finished";
-    additionalUsersEmails?: string[];
     filesBimModels?: File[];
     filesRenders?: File[];
     filesReports?: File[];
     description?: string;
-    customer?: {
-        email: string;
-    };
-    supplierEmail?: string;
-    supplier?: {
-        email: string
-    }
     create_date?: string;
     update_date?: string;
 }
@@ -44,8 +38,9 @@ export interface ProjectFile {
 export interface Project {
     id: string;
     name: string;
-    customerEmail?: string;
-    supplierEmail?: string;
+    customerEmail?: string[];
+    supplierEmail?: string[];
+    architectEmail?: string[];
     project_type:
     | "single_family_home"
     | "residential_building"
@@ -58,12 +53,9 @@ export interface Project {
     budget?: number;
     location: string;
     status?: "idea" | "budgeting" | "in_progress" | "finished";
-    additionalUsersEmails?: string[];
     files?: ProjectFile[];
     description?: string;
-    customer?: {
-        email: string;
-    };
+
     create_date?: string;
     update_date?: string;
 }

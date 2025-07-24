@@ -17,6 +17,8 @@
   import { ProjectModalProvider } from "./hooks/useFormProjectModal";
   import SupplierAgenda from "./pages/agenda-supplier";
 import { Budgets } from "./pages/budgets";
+import ArchitectAgenda from "./pages/agenda-architect";
+import CustomerAgenda from "./pages/agenda-customer";
 
   export function Router() {
     return (
@@ -255,6 +257,22 @@ import { Budgets } from "./pages/budgets";
     element={
       <RoleBasedAccess allowedRoles={["architect"]}>
         <SupplierAgenda />
+      </RoleBasedAccess>
+    } 
+  />
+    <Route 
+    path="/architect-agenda" 
+    element={
+      <RoleBasedAccess allowedRoles={["architect"]}>
+        <ArchitectAgenda />
+      </RoleBasedAccess>
+    } 
+  />
+    <Route 
+    path="/customers-agenda" 
+    element={
+      <RoleBasedAccess allowedRoles={["architect"]}>
+        <CustomerAgenda />
       </RoleBasedAccess>
     } 
   />

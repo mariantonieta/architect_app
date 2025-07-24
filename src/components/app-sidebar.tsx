@@ -37,7 +37,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const allItems = {
     dashboard: { title: "Dashboard", url: "/", icon: IconHome },
     projects: { title: "Projects", url: "/projects", icon: IconFolder },
-    agenda: { title: "Supplier's Agenda", url: "/suppliers-agenda", icon: IconCalendar },
+    supplierAgenda: { title: "Supplier's Agenda", url: "/suppliers-agenda", icon: IconCalendar },
+    customersAgenda: { title: "Customer's Agenda", url: "/customers-agenda", icon: IconCalendar },
+    architectAgenda: { title: "Architect's Agenda", url: "/architect-agenda", icon: IconCalendar },
     budgets: { title: "Budgets", url: "/supplier-budgets", icon: IconReport },
     relations: { title: "Relations", url: "/supplier/relations", icon: IconUsers },
   };
@@ -51,9 +53,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       navMain = [allItems.projects];
       break;
     case "architect":
-      navMain = [allItems.dashboard, allItems.projects, allItems.agenda];
+      navMain = [allItems.dashboard, allItems.projects, allItems.customersAgenda, allItems.architectAgenda, allItems.supplierAgenda];
       break;
-      // Add more roles as needed
+  
     default:
       navMain = []; 
   }

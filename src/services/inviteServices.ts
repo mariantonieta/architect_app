@@ -56,6 +56,13 @@ export const inviteService = {
         return response.data;
 
     },
+    async getCustomerInvitations(): Promise<Invitation[]> {
+
+        const response = await api.get("/invitations", {
+            params: { role: "customer" },
+        });
+        return response.data;
+    },
     async deleteInvitation(invitationId: string) {
         await api.delete(`/invitation/${invitationId}`);
     },
