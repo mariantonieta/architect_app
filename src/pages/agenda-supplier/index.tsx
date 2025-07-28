@@ -1,23 +1,37 @@
 import { useState } from "react";
-import { useSupplierInvitations, useInviteSupplier } from "@/hooks/useInvite";
+import { useInvitations, useInviteUser } from "@/hooks/useInvite";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { InviteModal } from "@/components/invite-modal";
 import { Agenda } from "@/components/agenda";
 
 export default function SupplierAgenda() {
-  const { data, isLoading, isError } = useSupplierInvitations();
-  const { mutate: inviteSupplier } = useInviteSupplier();
+  const role = "supplier";
+
+  const { data, isLoading, isError } = useInvitations(role);
+  const { mutate: inviteSupplier } = useInviteUser(role);
   const [openInviteModal, setOpenInviteModal] = useState(false);
 
-  const inviteFn = (email: string, { onSuccess, onError }: any) => {
-    inviteSupplier(
-      { email },
-      {
-        onSuccess,
-        onError,
-      }
-    );
+  const inviteFn = (
+    emails: string[],
+    { onSuccess, onError }: { onSuccess: (data: any) => void; onError: (error: any) => void }
+  ) => {
+    Promise.all(
+      emails.map(
+        (email) =>
+          new Promise<void>((resolve, reject) => {
+            inviteSupplier(
+              { email },
+              {
+                onSuccess: () => resolve(),
+                onError: (err) => reject(err),
+              }
+            );
+          })
+      )
+    )
+      .then(() => onSuccess({ msg: "All invitations sent." }))
+      .catch(onError);
   };
 
   return (
@@ -27,8 +41,9 @@ export default function SupplierAgenda() {
         setOpen={setOpenInviteModal}
         title="Invite Supplier"
         placeholder="supplier@email.com"
-        buttonText="Send Invitation"
+        buttonText="Send Invitations"
         inviteFn={inviteFn}
+        role={role}
       />
 
       <Agenda
@@ -39,7 +54,10 @@ export default function SupplierAgenda() {
         isError={isError}
         onOpenInviteModal={() => setOpenInviteModal(true)}
         InviteModalComponent={
-          <Button className="bg-gray-800 hover:bg-gray-700 text-white">
+          <Button
+            className="bg-gray-800 hover:bg-gray-700 text-white"
+            onClick={() => setOpenInviteModal(true)}
+          >
             <Plus className="h-4 w-4 mr-2" />
             New Supplier
           </Button>

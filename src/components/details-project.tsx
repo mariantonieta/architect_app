@@ -52,6 +52,7 @@ export function ProjectDetails() {
   const [editForm, setEditForm] = useState({
     name: "",
     customerEmail: "",
+
     budget: "",
   });
 
@@ -165,6 +166,7 @@ export function ProjectDetails() {
                             status: project.status,
                             location: project.location,
                             architectEmail: project.architectEmail,
+                            supplierEmail: project.supplierEmail,
                             description: project.description,
                         
                             existingBlueprints: project.files

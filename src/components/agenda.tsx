@@ -1,4 +1,4 @@
-import { SupplierCard } from "@/components/supplier-card"
+import { InvitationsCard } from "@/components/invitations-card"
 
 
 type Invitation = {
@@ -56,7 +56,7 @@ export function Agenda({
         <main className="flex-1 overflow-auto p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {invitations?.map((inv, index) => (
-              <SupplierCard
+              <InvitationsCard
                 key={index}
                 id={inv.id}
                 name={
@@ -64,7 +64,7 @@ export function Agenda({
                     ? `${inv.user.first_name} ${inv.user.last_name}`
                     : "Invited"
                 }
-                category={inv.user?.role_name || "Unassigned"}
+
                 location={inv.user?.address || "Unknown"}
                 phone={inv.user?.phone || "Unknown"}
                 email={inv.email}

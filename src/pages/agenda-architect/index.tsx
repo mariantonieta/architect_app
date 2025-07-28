@@ -1,28 +1,37 @@
 import { useState } from "react";
-import {
-  useArchitectInvitations,
-
-  useInviteArchitect,
-
-} from "@/hooks/useInvite";
+import { useInvitations, useInviteUser } from "@/hooks/useInvite";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { InviteModal } from "@/components/invite-modal"; 
+import { InviteModal } from "@/components/invite-modal";
 import { Agenda } from "@/components/agenda";
 
 export default function ArchitectAgenda() {
-  const { data, isLoading, isError } = useArchitectInvitations();
-  const { mutate: inviteArchitect } = useInviteArchitect();
+  const role = "architect";
+
+  const { data, isLoading, isError } = useInvitations(role);
+  const { mutate: inviteArchitect } = useInviteUser(role);
   const [openInviteModal, setOpenInviteModal] = useState(false);
 
-  const inviteFn = (email: string, { onSuccess, onError }: any) => {
-    inviteArchitect(
-      { email },
-      {
-        onSuccess,
-        onError,
-      }
-    );
+  const inviteFn = (
+    emails: string[],
+    { onSuccess, onError }: { onSuccess: (data: any) => void; onError: (error: any) => void }
+  ) => {
+    Promise.all(
+      emails.map(
+        (email) =>
+          new Promise<void>((resolve, reject) => {
+            inviteArchitect(
+              { email },
+              {
+                onSuccess: () => resolve(),
+                onError: (err) => reject(err),
+              }
+            );
+          })
+      )
+    )
+      .then(() => onSuccess({ msg: "All invitations sent." }))
+      .catch(onError);
   };
 
   return (
@@ -32,19 +41,23 @@ export default function ArchitectAgenda() {
         setOpen={setOpenInviteModal}
         title="Invite Architect"
         placeholder="architect@email.com"
-        buttonText="Send Invitation"
+        buttonText="Send Invitations"
         inviteFn={inviteFn}
+        role={role}
       />
 
       <Agenda
         title="Architect Agenda"
-        description="Manage your contacts and appointments with architect"
+        description="Manage your contacts and appointments with architects"
         invitations={data}
         isLoading={isLoading}
         isError={isError}
         onOpenInviteModal={() => setOpenInviteModal(true)}
         InviteModalComponent={
-          <Button className="bg-gray-800 hover:bg-gray-700 text-white" onClick={() => setOpenInviteModal(true)}>
+          <Button
+            className="bg-gray-800 hover:bg-gray-700 text-white"
+            onClick={() => setOpenInviteModal(true)}
+          >
             <Plus className="h-4 w-4 mr-2" />
             New Architect
           </Button>

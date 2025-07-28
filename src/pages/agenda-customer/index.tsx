@@ -1,23 +1,37 @@
 import { useState } from "react";
-import { useCustomerInvitations, useInviteCustomer } from "@/hooks/useInvite";
+import { useInvitations, useInviteUser } from "@/hooks/useInvite";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { InviteModal } from "@/components/invite-modal";
 import { Agenda } from "@/components/agenda";
 
 export default function CustomerAgenda() {
-  const { data, isLoading, isError } = useCustomerInvitations();
-  const { mutate: inviteCustomer } = useInviteCustomer();
+  const role = "customer";
+
+  const { data, isLoading, isError } = useInvitations(role);
+  const { mutate: inviteCustomer } = useInviteUser(role);
   const [openInviteModal, setOpenInviteModal] = useState(false);
 
-  const inviteFn = (email: string, { onSuccess, onError }: any) => {
-    inviteCustomer(
-      { email },
-      {
-        onSuccess,
-        onError,
-      }
-    );
+  const inviteFn = (
+    emails: string[],
+    { onSuccess, onError }: { onSuccess: (data: any) => void; onError: (error: any) => void }
+  ) => {
+    Promise.all(
+      emails.map(
+        (email) =>
+          new Promise<void>((resolve, reject) => {
+            inviteCustomer(
+              { email },
+              {
+                onSuccess: () => resolve(),
+                onError: (err) => reject(err),
+              }
+            );
+          })
+      )
+    )
+      .then(() => onSuccess({ msg: "All invitations sent." }))
+      .catch(onError);
   };
 
   return (
@@ -27,13 +41,14 @@ export default function CustomerAgenda() {
         setOpen={setOpenInviteModal}
         title="Invite Customer"
         placeholder="customer@email.com"
-        buttonText="Send Invitation"
+        buttonText="Send Invitations"
         inviteFn={inviteFn}
+        role="customer"
       />
 
       <Agenda
         title="Customer Agenda"
-        description="Manage your contacts and appointments with customer"
+        description="Manage your contacts and appointments with customers"
         invitations={data}
         isLoading={isLoading}
         isError={isError}

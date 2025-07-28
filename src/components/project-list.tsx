@@ -1,50 +1,56 @@
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
-import { projectService } from "@/services/projectService"
-import { Building2, MapPin, LinkIcon, User, Eye } from "lucide-react"
-import type { Project } from "@/services/projectService"
-import { useNavigate } from "react-router-dom"
-import { useProjects } from "@/hooks/useProject"
-import { useCreateProjectModal } from "@/hooks/useCreateOrEditProjectModal"
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Building2, MapPin, LinkIcon, User, Eye } from "lucide-react";
+import type { Project } from "@/services/projectService";
+import { useNavigate } from "react-router-dom";
+import { useProjects } from "@/hooks/useProject";
+import { useCreateProjectModal } from "@/hooks/useCreateOrEditProjectModal";
+import { useState } from "react";
+import ShareProjectModal from "./share-prooject-form";
 
 export function ProjectsList() {
-  const navigate = useNavigate()
-    const { toggleModal } = useCreateProjectModal()
+  const navigate = useNavigate();
+  const { toggleModal } = useCreateProjectModal();
+  const [openShareModal, setOpenShareModal] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
-  const {
-    data: projects = [],
-    isLoading,
-    isError,
-  } = useProjects()
+  const { data: projects = [], isLoading, isError } = useProjects();
 
-  if (isLoading) return <div className="p-6">Loading projects...</div>
-  if (isError) return <div className="p-6 text-red-500">Error loading projects</div>
+  if (isLoading) return <div className="p-6">Loading projects...</div>;
+  if (isError)
+    return <div className="p-6 text-red-500">Error loading projects</div>;
   if (projects.length === 0)
-    return <div className="p-6 text-gray-600">No projects found.</div>
+    return <div className="p-6 text-gray-600">No projects found.</div>;
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case "in_progress":
-        return "bg-blue-100 text-blue-800"
+        return "bg-blue-100 text-blue-800";
       case "completed":
-        return "bg-green-100 text-green-800"
+        return "bg-green-100 text-green-800";
       case "paused":
-        return "bg-yellow-100 text-yellow-800"
+        return "bg-yellow-100 text-yellow-800";
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-gray-100 text-gray-800";
     }
-  }
+  };
 
   const formatStatus = (status: string) => {
     const statusMap: { [key: string]: string } = {
       in_progress: "In Progress",
       completed: "Completed",
       paused: "Paused",
-    }
-    return statusMap[status.toLowerCase()] || status.replace(/_/g, " ")
-  }
+    };
+    return statusMap[status.toLowerCase()] || status.replace(/_/g, " ");
+  };
 
   const formatProjectType = (type: string) => {
     const typeMap: { [key: string]: string } = {
@@ -52,17 +58,17 @@ export function ProjectsList() {
       commercial: "Commercial",
       industrial: "Industrial",
       mixed_use: "Mixed Use",
-    }
-    return typeMap[type.toLowerCase()] || type.replace(/_/g, " ")
-  }
+    };
+    return typeMap[type.toLowerCase()] || type.replace(/_/g, " ");
+  };
 
   const calculateProgress = (project: Project) => {
     const hash = project.id.split("").reduce((a, b) => {
-      a = (a << 5) - a + b.charCodeAt(0)
-      return a & a
-    }, 0)
-    return Math.abs(hash) % 100
-  }
+      a = (a << 5) - a + b.charCodeAt(0);
+      return a & a;
+    }, 0);
+    return Math.abs(hash) % 100;
+  };
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -71,19 +77,16 @@ export function ProjectsList() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Projects</h1>
-              <p className="text-sm text-gray-600 mt-1">
-                List of projects
-              </p>
+              <p className="text-sm text-gray-600 mt-1">List of projects</p>
             </div>
-                <Button onClick={() => toggleModal(true)}>New Project</Button>
-
+            <Button onClick={() => toggleModal(true)}>New Project</Button>
           </div>
         </header>
 
         <main className="flex-1 overflow-auto p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {projects.map((project) => {
-              const progress = calculateProgress(project)
+              const progress = calculateProgress(project);
 
               return (
                 <Card
@@ -96,7 +99,9 @@ export function ProjectsList() {
                         {project.name}
                       </CardTitle>
                       <Badge
-                        className={`${getStatusColor(project.status)} text-xs font-medium px-2 py-1 rounded-md`}
+                        className={`${getStatusColor(
+                          project.status
+                        )} text-xs font-medium px-2 py-1 rounded-md`}
                       >
                         {formatStatus(project.status)}
                       </Badge>
@@ -138,8 +143,12 @@ export function ProjectsList() {
 
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-700">Progress</span>
-                        <span className="text-sm font-bold text-gray-900">{progress}%</span>
+                        <span className="text-sm font-medium text-gray-700">
+                          Progress
+                        </span>
+                        <span className="text-sm font-bold text-gray-900">
+                          {progress}%
+                        </span>
                       </div>
                       <Progress value={progress} className="h-2" />
                     </div>
@@ -167,17 +176,26 @@ export function ProjectsList() {
                         variant="ghost"
                         size="icon"
                         className="text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                        onClick={() => {
+                          setSelectedProject(project);
+                          setOpenShareModal(true);
+                        }}
                       >
                         <LinkIcon className="h-4 w-4" />
                       </Button>
                     </div>
                   </CardFooter>
                 </Card>
-              )
+              );
             })}
           </div>
         </main>
       </div>
+      <ShareProjectModal
+        open={openShareModal}
+        onOpenChange={setOpenShareModal}
+        project={selectedProject}
+      />
     </div>
-  )
+  );
 }

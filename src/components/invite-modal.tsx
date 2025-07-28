@@ -7,9 +7,9 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
+import { EmailSelector } from "@/components/email-selector";
 
 interface InviteModalProps {
   open: boolean;
@@ -17,8 +17,9 @@ interface InviteModalProps {
   title?: string;
   placeholder?: string;
   buttonText?: string;
+  role: "customer" | "supplier" | "architect";
   inviteFn: (
-    email: string,
+    emails: string[],
     callbacks: {
       onSuccess: (data: any) => void;
       onError: (error: any) => void;
@@ -31,21 +32,22 @@ export function InviteModal({
   setOpen,
   title = "Invite",
   placeholder = "email@example.com",
-  buttonText = "Send Invitation",
+  buttonText = "Send Invitations",
+  role,
   inviteFn,
 }: InviteModalProps) {
-  const [email, setEmail] = useState("");
+  const [emails, setEmails] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
   const handleInvite = () => {
-    if (!email) return;
+    if (!emails.length) return;
 
     setLoading(true);
-    inviteFn(email, {
+    inviteFn(emails, {
       onSuccess: (data) => {
-        toast(data.msg || "The invitation was successfully sent.");
-        setEmail("");
+        toast(data.msg || "Invitations sent.");
+        setEmails([]);
         setOpen(false);
         setLoading(false);
       },
@@ -64,19 +66,19 @@ export function InviteModal({
         </DialogHeader>
 
         <div className="grid gap-4 py-4">
-          <Label htmlFor="email">{title} Email</Label>
-          <Input
-            id="email"
-            type="email"
+          <Label>{title} Email</Label>
+          <EmailSelector
+            value={emails}
+            onChange={setEmails}
             placeholder={placeholder}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            disabled={loading}
+            role={role}
+            onEmailAdd={() => true}
+            onSearch={async () => []} // podés pasar una búsqueda real si tenés
           />
         </div>
 
         <DialogFooter>
-          <Button onClick={handleInvite} disabled={loading || !email}>
+          <Button onClick={handleInvite} disabled={loading || !emails.length}>
             {loading ? "Sending..." : buttonText}
           </Button>
         </DialogFooter>

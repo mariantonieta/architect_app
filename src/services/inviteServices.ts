@@ -23,15 +23,11 @@ export type Invitation = {
     user?: User;
 };
 
-export type InviteSupplierData = {
-    email: string;
-};
-export type InviteArchitectData = {
-    email: string;
-};
+export type RoleType = "supplier" | "customer" | "architect";
+
 export const inviteService = {
-    async inviteSupplier(data: InviteSupplierData) {
-        const response = await api.post("/invite/supplier", data, {
+    async inviteUserByRole(email: string, role: RoleType) {
+        const response = await api.post(`/invite/${role}`, { email }, {
             headers: {
                 "Content-Type": "application/json",
                 Accept: "application/json",
@@ -40,46 +36,31 @@ export const inviteService = {
         return response.data;
     },
 
-    async getSupplierInvitations(): Promise<Invitation[]> {
-        const response = await api.get("/invitations/suppliers");
-        return response.data;
-    },
-    async searchInvitationByEmail(email: string, role: 'customer' | 'supplier' | 'architect') {
-        const response = await api.get(`/invitations/search`, {
-            params: { email, role }
-        });
-        return response.data;
-    },
-
-    async inviteCustomer(data: { email: string }) {
-        const response = await api.post(`/invite/customer`, data);
-        return response.data;
-
-    },
-    async getCustomerInvitations(): Promise<Invitation[]> {
-
+    async getInvitationsByRole(role: RoleType): Promise<Invitation[]> {
         const response = await api.get("/invitations", {
-            params: { role: "customer" },
+            params: { role },
         });
         return response.data;
     },
+
+    async searchInvitationByEmailAndRole(email: string, role: RoleType): Promise<string[]> {
+        const response = await api.get("/invitations/search", {
+            params: { email, role },
+        });
+        return response.data;
+    },
+
     async deleteInvitation(invitationId: string) {
         await api.delete(`/invitation/${invitationId}`);
     },
-    async inviteArchitect(data: InviteArchitectData) {
-        const response = await api.post("/invite/architect", data, {
-            headers: {
-                "Content-Type": "application/json",
-                Accept: "application/json",
-            },
-        });
+
+    async updateInvitation(invitationId: string, data: { email?: string; status?: string }) {
+        const response = await api.patch(`/invitation/${invitationId}`, data);
         return response.data;
     },
 
-    async getArchitectInvitations(): Promise<Invitation[]> {
-        const response = await api.get("/invitations", {
-            params: { role: "architect" },
-        });
+    async getInvitationStatus(email: string): Promise<Invitation> {
+        const response = await api.get(`/invitation/status/${email}`);
         return response.data;
     },
 };

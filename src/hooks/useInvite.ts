@@ -1,63 +1,23 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { inviteService } from '../services/inviteServices';
-import type { Invitation, InviteSupplierData } from '../services/inviteServices';
+import type { Invitation, RoleType } from '../services/inviteServices';
 
-export function useSupplierInvitations() {
+export function useInvitations(role: RoleType) {
     return useQuery<Invitation[], Error>({
-        queryKey: ['supplierInvitations'],
-        queryFn: () => inviteService.getSupplierInvitations(),
+        queryKey: ['invitations', role],
+        queryFn: () => inviteService.getInvitationsByRole(role),
         refetchInterval: 5000,
         refetchIntervalInBackground: true,
     });
 }
 
-export function useInviteSupplier() {
-    const queryClient = useQueryClient();
-
-    return useMutation<any, Error, InviteSupplierData>({
-        mutationFn: (data) => inviteService.inviteSupplier(data),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['supplierInvitations'] });
-        },
-    });
-}
-
-export function useCustomerInvitations() {
-    return useQuery<Invitation[], Error>({
-        queryKey: ['customerInvitations'],
-        queryFn: () => inviteService.getCustomerInvitations(),
-        refetchInterval: 5000,
-        refetchIntervalInBackground: true,
-    });
-}
-
-export function useInviteCustomer() {
+export function useInviteUser(role: RoleType) {
     const queryClient = useQueryClient();
 
     return useMutation<any, Error, { email: string }>({
-        mutationFn: (data) => inviteService.inviteCustomer(data),
+        mutationFn: (data) => inviteService.inviteUserByRole(data.email, role),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['customerInvitations'] });
-        },
-    });
-}
-
-export function useArchitectInvitations() {
-    return useQuery<Invitation[], Error>({
-        queryKey: ['architectInvitations'],
-        queryFn: () => inviteService.getArchitectInvitations(),
-        refetchInterval: 5000,
-        refetchIntervalInBackground: true,
-    });
-}
-
-export function useInviteArchitect() {
-    const queryClient = useQueryClient();
-
-    return useMutation<any, Error, { email: string }>({
-        mutationFn: (data) => inviteService.inviteArchitect(data),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['architectInvitations'] });
+            queryClient.invalidateQueries({ queryKey: ['invitations', role] });
         },
     });
 }
@@ -68,16 +28,19 @@ export function useDeleteInvitation() {
     return useMutation({
         mutationFn: (invitationId: string) => inviteService.deleteInvitation(invitationId),
         onSuccess: () => {
-
-            queryClient.invalidateQueries({ queryKey: ['supplierInvitations'] });
-            queryClient.invalidateQueries({ queryKey: ['customerInvitations'] });
-            queryClient.invalidateQueries({ queryKey: ['architectInvitations'] });
+            ['supplier', 'customer', 'architect'].forEach((role) => {
+                queryClient.invalidateQueries({ queryKey: ['invitations', role] });
+            });
         },
     });
 }
 
-export function useSearchInvitation(role: 'customer' | 'supplier' | 'architect') {
-    return useMutation({
-        mutationFn: (email: string) => inviteService.searchInvitationByEmail(email, role),
+export function useSearchInvitation(email: string, role: RoleType) {
+    return useQuery({
+        queryKey: ['searchInvitation', email, role],
+        queryFn: () => inviteService.searchInvitationByEmailAndRole(email, role),
+        enabled: email.length > 0,
+        staleTime: 5 * 60 * 1000,
+        refetchOnWindowFocus: false,
     });
 }
