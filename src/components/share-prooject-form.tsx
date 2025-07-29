@@ -47,37 +47,88 @@ export default function ShareProjectModal({
   const inviteCustomer = useInviteUser("customer");
   const inviteSupplier = useInviteUser("supplier");
 
-  const onSubmit = async (data: any) => {
-    try {
-      const invites = [
-        ...data.architectEmail.map((email: string) => ({ email, role: "architect" })),
-        ...data.customerEmail.map((email: string) => ({ email, role: "customer" })),
-        ...data.supplierEmail.map((email: string) => ({ email, role: "supplier" })),
-      ];
-
-      for (const { email, role } of invites) {
-        const existing = await inviteService.searchInvitationByEmailAndRole(email, role);
-        const alreadyInvited = existing.some(
-          (e: string) => e.toLowerCase() === email.toLowerCase()
-        );
-
-        if (!alreadyInvited) {
-          if (role === "architect") await inviteArchitect.mutateAsync({ email });
-          if (role === "customer") await inviteCustomer.mutateAsync({ email });
-          if (role === "supplier") await inviteSupplier.mutateAsync({ email });
-        }
-      }
-
-      console.log(`Proyecto compartido con:`, invites);
-      onOpenChange(false);
-    } catch (error) {
-      console.error("Error al enviar invitaciones:", error);
-      // Podés mostrar un toast o alerta
+  const inviteFn = (
+    emails: string[],
+    role: RoleType,
+    { onSuccess, onError }: { onSuccess: () => void; onError: (error: any) => void }
+  ) => {
+    if (!project?.name) {
+      onError(new Error("No project name provided"));
+      return;
     }
+
+    Promise.all(
+      emails.map(
+        (email) =>
+          new Promise<void>(async (resolve, reject) => {
+            try {
+              const existing = await inviteService.searchInvitationByEmailAndRole(email, role);
+              const alreadyInvited = existing.some(
+                (e: string) => e.toLowerCase() === email.toLowerCase()
+              );
+              if (alreadyInvited) {
+                resolve();
+                return;
+              }
+
+              const invitePayload = { email, project_name: project.name };
+              let mutateFn;
+              if (role === "architect") mutateFn = inviteArchitect.mutateAsync;
+              else if (role === "customer") mutateFn = inviteCustomer.mutateAsync;
+              else if (role === "supplier") mutateFn = inviteSupplier.mutateAsync;
+console.log(invitePayload)
+              await mutateFn(invitePayload);
+              resolve();
+            } catch (error) {
+              reject(error);
+            }
+          })
+      )
+    )
+      .then(() => onSuccess())
+      .catch(onError);
+  };
+
+  const onSubmit = (data: any) => {
+    
+    const { architectEmail, customerEmail, supplierEmail } = data;
+
+    return new Promise<void>((resolve, reject) => {
+      Promise.all([
+        new Promise<void>((res, rej) =>
+          inviteFn(architectEmail, "architect", {
+            onSuccess: res,
+            onError: rej,
+          })
+        ),
+        new Promise<void>((res, rej) =>
+          inviteFn(customerEmail, "customer", {
+            onSuccess: res,
+            onError: rej,
+          })
+        ),
+        new Promise<void>((res, rej) =>
+          inviteFn(supplierEmail, "supplier", {
+            onSuccess: res,
+            onError: rej,
+          })
+        ),
+      ])
+        .then(() => {
+          console.log("Proyecto compartido con todos los invitados");
+          onOpenChange(false);
+          resolve();
+        })
+        .catch((error) => {
+          console.error("Error al enviar invitaciones:", error);
+          reject(error);
+        });
+    });
   };
 
   const handleSearch = async (query: string, role: RoleType) => {
     try {
+
       const res = await inviteService.searchInvitationByEmailAndRole(query, role);
       return res;
     } catch (error) {
@@ -96,7 +147,6 @@ export default function ShareProjectModal({
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-4">
-
           <FormField label="Architect Email" id="architectEmail" error={errors.architectEmail?.message}>
             <Controller
               control={control}
@@ -117,7 +167,7 @@ export default function ShareProjectModal({
                   placeholder="Enter architect email and press Enter"
                   role="architect"
                   onSearch={(query) => handleSearch(query, "architect")}
-                  onEmailAdd={() => true} // no hace nada
+                  onEmailAdd={() => true}
                 />
               )}
             />

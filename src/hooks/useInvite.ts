@@ -14,12 +14,18 @@ export function useInvitations(role: RoleType) {
 export function useInviteUser(role: RoleType) {
     const queryClient = useQueryClient();
 
-    return useMutation<any, Error, { email: string }>({
-        mutationFn: (data) => inviteService.inviteUserByRole(data.email, role),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['invitations', role] });
-        },
-    });
+    return useMutation<any, Error, { email: string; inviter_name?: string; project_name?: string }>(
+        {
+            mutationFn: (data) =>
+                inviteService.inviteUserByRole(data.email, role, {
+                    inviter_name: data.inviter_name,
+                    project_name: data.project_name,
+                }),
+            onSuccess: () => {
+                queryClient.invalidateQueries({ queryKey: ['invitations', role] });
+            },
+        }
+    );
 }
 
 export function useDeleteInvitation() {

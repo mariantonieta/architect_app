@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { InviteModal } from "@/components/invite-modal";
 import { Agenda } from "@/components/agenda";
+import { useUser } from "@/hooks/useUser";
 
 export default function CustomerAgenda() {
   const role = "customer";
@@ -11,17 +12,23 @@ export default function CustomerAgenda() {
   const { data, isLoading, isError } = useInvitations(role);
   const { mutate: inviteCustomer } = useInviteUser(role);
   const [openInviteModal, setOpenInviteModal] = useState(false);
+ const { data: currentUser, isLoading: userLoading, isError: userError } = useUser();
+  const inviter_name = currentUser?.first_name || "Inviter";
 
   const inviteFn = (
     emails: string[],
     { onSuccess, onError }: { onSuccess: (data: any) => void; onError: (error: any) => void }
   ) => {
+    if (!currentUser) {
+      onError(new Error("Current user not loaded"));
+      return;
+    }
     Promise.all(
       emails.map(
         (email) =>
           new Promise<void>((resolve, reject) => {
             inviteCustomer(
-              { email },
+              { email, inviter_name},
               {
                 onSuccess: () => resolve(),
                 onError: (err) => reject(err),
@@ -33,6 +40,8 @@ export default function CustomerAgenda() {
       .then(() => onSuccess({ msg: "All invitations sent." }))
       .catch(onError);
   };
+ if (userLoading) return <p>Loading user...</p>;
+  if (userError) return <p>Error loading user.</p>;
 
   return (
     <>

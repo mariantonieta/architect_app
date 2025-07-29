@@ -47,6 +47,8 @@ export function CreateOrEditProjectForm({
   const queryClient = useQueryClient();
   const [step, setStep] = useState<1 | 2>(1);
 
+
+
   const [existingBim, setExistingBim] = useState<ExistingFile[]>(
     initialData?.existingBlueprints || []
   );
@@ -59,7 +61,9 @@ export function CreateOrEditProjectForm({
     initialData?.existingReports || []
   );
   const [newReports, setNewReports] = useState<File[]>([]);
-
+  const [architectEmails, setArchitectEmails] = useState<string[]>([]);
+  const [customerEmails, setCustomerEmails] = useState<string[]>([]);
+  const [supplierEmails, setSupplierEmails] = useState<string[]>([]);
   const setBimFiles = (files: (File | ExistingFile)[]) => {
     setExistingBim(files.filter((f): f is ExistingFile => "id" in f));
     setNewBim(files.filter((f): f is File => f instanceof File));
@@ -117,10 +121,16 @@ export function CreateOrEditProjectForm({
       const alreadyExists = res.some(
         (existingEmail) => existingEmail.toLowerCase() === email.toLowerCase()
       );
-      if (alreadyExists) {
-        return true;
+      if (alreadyExists)  return true;
+         if (role === "architect") {
+        setArchitectEmails((prev) => [...prev, email.toLowerCase()]);
+      } else if (role === "customer") {
+        setCustomerEmails((prev) => [...prev, email.toLowerCase()]);
+      } else if (role === "supplier") {
+        setSupplierEmails((prev) => [...prev, email.toLowerCase()]);
       }
-      await inviteUser.mutateAsync({ email });
+      
+
       return true;
     } catch (error) {
       console.error("Error agregando email:", error);
@@ -153,6 +163,7 @@ export function CreateOrEditProjectForm({
     useRoleInvitationHandlers("supplier");
 
   const handleSubmitProject = async (data: ProjectFormData) => {
+    
     const formData = new FormData();
     console.log("Datos enviados0", data)
     formData.append("name", data.name);
@@ -635,7 +646,7 @@ useEffect(() => {
               type="button"
               variant="secondary"
               onClick={() => {
-                navigate(-1);
+                onOpenChange(false)
               }}
               disabled={isCreating || isUpdating}
             >

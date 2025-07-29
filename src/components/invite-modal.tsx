@@ -73,7 +73,7 @@ export function InviteModal({
             placeholder={placeholder}
             role={role}
             onEmailAdd={() => true}
-            onSearch={async () => []} // podés pasar una búsqueda real si tenés
+            onSearch={async () => []} 
           />
         </div>
 

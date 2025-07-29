@@ -24,15 +24,14 @@ export function NavMain({
     icon?: Icon;
   }[];
 }) {
-  const location = useLocation(); // Hook para obtener la ubicación actual
-  const { isArchitect } = useRolePermissions(); // Hook para verificar el rol
+  const location = useLocation(); 
+  const { isArchitect } = useRolePermissions(); 
   const { toggleModal } = useCreateProjectModal();
 
   return (
     <SidebarGroup>
       <SidebarGroupContent className="flex flex-col gap-2">
         <SidebarMenu>
-          {/* Solo mostrar el botón de "New Project" para arquitectos */}
           {isArchitect && (
             <SidebarMenuItem className="flex items-center gap-2">
               <SidebarMenuButton

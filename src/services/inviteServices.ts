@@ -26,16 +26,25 @@ export type Invitation = {
 export type RoleType = "supplier" | "customer" | "architect";
 
 export const inviteService = {
-    async inviteUserByRole(email: string, role: RoleType) {
-        const response = await api.post(`/invite/${role}`, { email }, {
+    async inviteUserByRole(
+        email: string,
+        role: RoleType,
+        options?: { inviter_name?: string; project_name?: string }
+    ) {
+        const payload = {
+            email,
+            ...options,
+        };
+
+        const response = await api.post(`/invite/${role}`, payload, {
             headers: {
                 "Content-Type": "application/json",
                 Accept: "application/json",
             },
         });
+
         return response.data;
     },
-
     async getInvitationsByRole(role: RoleType): Promise<Invitation[]> {
         const response = await api.get("/invitations", {
             params: { role },
