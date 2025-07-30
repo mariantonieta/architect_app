@@ -21,6 +21,7 @@ import { useCreateProjectModal } from "@/hooks/useCreateOrEditProjectModal";
 import { inviteService, type RoleType } from "@/services/inviteServices";
 import { useInviteUser } from "@/hooks/useInvite";
 import { FormField } from "./form-field";
+import { toast } from "sonner";
 
 type ProjectFormInput = Omit<
   ProjectFormData,
@@ -100,8 +101,6 @@ export function CreateOrEditProjectForm({
       description: initialData?.description || "",
     },
   });
-
-  console.log("errors: ", errors);
 
   const { createProject, updateProject, isCreating, isUpdating } = useProject(
     initialData?.id
@@ -207,11 +206,12 @@ export function CreateOrEditProjectForm({
       }
       queryClient.invalidateQueries({ queryKey: ["projects"] });
 
+      toast.success("Project saved successfully");
       reset();
       setStep(1);
       onOpenChange(false);
       onCreated?.();
-      navigate("/");
+      navigate("/projects");
     } catch (err) {
       console.error("Error saving project", err);
     }

@@ -27,8 +27,8 @@ export function ProjectsList() {
   if (isLoading) return <div className="p-6">Loading projects...</div>;
   if (isError)
     return <div className="p-6 text-red-500">Error loading projects</div>;
-  if (projects.length === 0)
-    return <div className="p-6 text-gray-600">No projects found.</div>;
+  // if (projects.length === 0)
+  //   return <div className="p-6 text-gray-600">No projects found.</div>;
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {

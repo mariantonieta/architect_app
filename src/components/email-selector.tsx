@@ -1,4 +1,4 @@
-import { Input } from "@/components/ui/input"; 
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -9,7 +9,10 @@ interface EmailSelectorProps {
   placeholder?: string;
   onEmailAdd?: (email: string) => Promise<boolean> | boolean;
   role?: "customer" | "supplier" | "architect";
-  onSearch?: (query: string, role: "customer" | "supplier" | "architect") => Promise<string[]>;
+  onSearch?: (
+    query: string,
+    role: "customer" | "supplier" | "architect"
+  ) => Promise<string[]>;
 }
 
 export function EmailSelector({
@@ -29,7 +32,6 @@ export function EmailSelector({
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
 
-
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -41,14 +43,12 @@ export function EmailSelector({
       setLoading(false);
       return;
     }
-      if (!onSearch) {
-
-    setData([]);
-    setShowData(false);
-    setLoading(false);
-    return;
-  }
-
+    if (!onSearch) {
+      setData([]);
+      setShowData(false);
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
 
@@ -64,12 +64,14 @@ export function EmailSelector({
             return;
           }
 
-          const filtered = results.filter((email) => !safeValue.includes(email));
+          const filtered = results.filter(
+            (email) => !safeValue.includes(email)
+          );
 
           setData(filtered);
           setShowData(true);
           setLoading(false);
-          setHighlightedIndex(-1); 
+          setHighlightedIndex(-1);
         })
         .catch(() => {
           if (!active) return;
@@ -88,43 +90,45 @@ export function EmailSelector({
       if (debounceTimer.current) clearTimeout(debounceTimer.current);
     };
   }, [input, role, safeValue, onSearch]);
-const addEmail = async (emailToAdd?: string) => {
-  const email = (emailToAdd ?? input).trim();
-  const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const addEmail = async (emailToAdd?: string) => {
+    const email = (emailToAdd ?? input).trim();
+    const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-  console.log("Input:", email);
-  console.log("Is valid:", isValidEmail);
-  console.log("Already added:", safeValue.includes(email));
+    console.log("Input:", email);
+    console.log("Is valid:", isValidEmail);
+    console.log("Already added:", safeValue.includes(email));
 
-  if (email) {
-    if (isValidEmail && !safeValue.includes(email)) {
-      if (onEmailAdd) {
-        const canAdd = await onEmailAdd(email);
-        console.log("onEmailAdd allowed:", canAdd);
-        if (canAdd === false) {
-          setInput("");
-          setShowData(false);
-          setHighlightedIndex(-1);
-          return;
+    if (email) {
+      if (isValidEmail && !safeValue.includes(email)) {
+        if (onEmailAdd) {
+          const canAdd = await onEmailAdd(email);
+          console.log("onEmailAdd allowed:", canAdd);
+          if (canAdd === false) {
+            setInput("");
+            setShowData(false);
+            setHighlightedIndex(-1);
+            return;
+          }
         }
+        onChange([...safeValue, email]);
       }
-      onChange([...safeValue, email]);
     }
-  }
 
-  setInput("");
-  setData([]);
-  setShowData(false);
-  setHighlightedIndex(-1);
-};
-
-
+    setInput("");
+    setData([]);
+    setShowData(false);
+    setHighlightedIndex(-1);
+  };
 
   const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     switch (e.key) {
       case "Enter":
         e.preventDefault();
-        if (showData && highlightedIndex >= 0 && highlightedIndex < data.length) {
+        if (
+          showData &&
+          highlightedIndex >= 0 &&
+          highlightedIndex < data.length
+        ) {
           await addEmail(data[highlightedIndex]);
         } else {
           await addEmail();
@@ -145,14 +149,16 @@ const addEmail = async (emailToAdd?: string) => {
           setShowData(true);
           setHighlightedIndex(data.length - 1);
         } else {
-          setHighlightedIndex((prev) => (prev <= 0 ? data.length - 1 : prev - 1));
+          setHighlightedIndex((prev) =>
+            prev <= 0 ? data.length - 1 : prev - 1
+          );
         }
         break;
-      case "Backspace":
-        if (input === "" && safeValue.length > 0) {
-          onChange(safeValue.slice(0, -1));
-        }
-        break;
+      // case "Backspace":
+      //   if (input === "" && safeValue.length > 0) {
+      //     onChange(safeValue.slice(0, -1));
+      //   }
+      //   break;
       case ",":
         e.preventDefault();
         await addEmail();
@@ -162,7 +168,10 @@ const addEmail = async (emailToAdd?: string) => {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
         setShowData(false);
         setHighlightedIndex(-1);
       }
@@ -177,9 +186,12 @@ const addEmail = async (emailToAdd?: string) => {
       className="relative flex flex-wrap gap-1 border rounded p-2 min-h-[3rem]"
     >
       {safeValue.map((email) => (
-        <Badge key={email} className="flex items-center space-x-1">
+        <Badge
+          key={email}
+          className="flex items-center space-x-1 hover:text-red-500 cursor-pointer"
+          onClick={() => onChange(safeValue.filter((e) => e !== email))}
+        >
           {email}
-        
         </Badge>
       ))}
       <Input
@@ -193,11 +205,13 @@ const addEmail = async (emailToAdd?: string) => {
         }}
         autoComplete="off"
       />
-      {loading && <div className="absolute right-2 top-3">Loading...</div>}
+      {/* {loading && <div className="absolute right-2 top-3">Loading...</div>} */}
       {showData && (
         <ul className="absolute z-10 left-0 top-full mt-1 max-h-40 w-full overflow-auto rounded border bg-white shadow-md">
           {data.length === 0 && !loading && (
-            <li className="px-3 py-2 text-center text-gray-500">No results found.</li>
+            <li className="px-3 py-2 text-center text-gray-500">
+              No results found.
+            </li>
           )}
           {data.map((email, idx) => (
             <li

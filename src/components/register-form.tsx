@@ -4,7 +4,7 @@ import { Building2, Package, Users } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import {jwtDecode} from "jwt-decode"; 
+import { jwtDecode } from "jwt-decode";
 
 import {
   Card,
@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 import { authService } from "@/services/authServices";
+import { toast } from "sonner";
 
 const userTypes = [
   { label: "Architect", value: "architect", icon: Building2 },
@@ -44,10 +45,15 @@ type JwtPayload = {
   exp: number;
 };
 
-export function RegisterForm({ className, ...props }: React.ComponentProps<"div">) {
+export function RegisterForm({
+  className,
+  ...props
+}: React.ComponentProps<"div">) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [decodedRole, setDecodedRole] = useState<RegisterFormData["role"] | null>(null);
+  const [decodedRole, setDecodedRole] = useState<
+    RegisterFormData["role"] | null
+  >(null);
 
   const {
     register,
@@ -60,33 +66,9 @@ export function RegisterForm({ className, ...props }: React.ComponentProps<"div"
       role: "architect",
     },
   });
-useEffect(() => {
-  const token = searchParams.get("token");
-  if (token) {
-    try {
-      const decoded = jwtDecode<JwtPayload>(token);
-      console.log("Token decodificado:", decoded);
-      if (decoded.role) {
-        const roleValue = decoded.role as RegisterFormData["role"];
-        setValue("role", roleValue, { shouldValidate: true });
-        setDecodedRole(roleValue);
-      } else {
-        setValue("role", "architect", { shouldValidate: true });
-        setDecodedRole("architect");
-      }
-    } catch (error) {
-      console.error("Invalid token", error);
-      setValue("role", "architect", { shouldValidate: true }); 
-      setDecodedRole("architect");
-    }
-  } else {
-    setValue("role", "architect", { shouldValidate: true }); 
-    setDecodedRole("architect"); 
-  }
-}, [searchParams, setValue]);
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // const [error, setError] = useState<string | null>(null);
 
   const role = watch("role");
   const selectedRole = decodedRole ?? role;
@@ -94,14 +76,15 @@ useEffect(() => {
   const password = watch("password");
 
   const onRoleChange = (value: string) => {
-
     if (!decodedRole) {
-      setValue("role", value as RegisterFormData["role"], { shouldValidate: true });
+      setValue("role", value as RegisterFormData["role"], {
+        shouldValidate: true,
+      });
     }
   };
 
   const onSubmit = async (data: RegisterFormData) => {
-    setError(null);
+    // setError(null);
     setLoading(true);
     try {
       const { confirmPassword, ...rest } = data;
@@ -109,16 +92,45 @@ useEffect(() => {
       await authService.register(submitData);
       console.log(JSON.stringify(submitData, null, 2));
       navigate("/login");
+      toast.success("Registration successful! Please log in.");
     } catch (err) {
-      setError("Registration failed");
-      console.error(err);
+      // setError("Registration failed");
+      console.error("Registration error:", err);
+      toast.error("Registration failed");
     } finally {
       setLoading(false);
     }
   };
 
+  useEffect(() => {
+    const token = searchParams.get("token");
+    if (token) {
+      try {
+        const decoded = jwtDecode<JwtPayload>(token);
+        console.log("Token decodificado:", decoded);
+        if (decoded.role) {
+          const roleValue = decoded.role as RegisterFormData["role"];
+          setValue("role", roleValue, { shouldValidate: true });
+          setDecodedRole(roleValue);
+        }
+      } catch (error) {
+        console.error("Invalid token", error);
+        setDecodedRole("architect");
+      }
+    } else {
+      setValue("role", "architect", { shouldValidate: true });
+      setDecodedRole("architect");
+    }
+  }, [searchParams, setValue]);
+
   return (
-    <div className={cn("flex justify-center items-center min-h-screen pt-12", className)} {...props}>
+    <div
+      className={cn(
+        "flex justify-center items-center min-h-screen pt-12",
+        className
+      )}
+      {...props}
+    >
       <div className="w-full max-w-md flex flex-col gap-6">
         <Card>
           <CardHeader className="text-center">
@@ -159,10 +171,14 @@ useEffect(() => {
                 <Input
                   id="first_name"
                   type="text"
-                  {...register("first_name", { required: "First name is required" })}
+                  {...register("first_name", {
+                    required: "First name is required",
+                  })}
                 />
                 {errors.first_name && (
-                  <p className="text-sm text-red-500">{errors.first_name.message}</p>
+                  <p className="text-sm text-red-500">
+                    {errors.first_name.message}
+                  </p>
                 )}
               </div>
 
@@ -171,10 +187,14 @@ useEffect(() => {
                 <Input
                   id="last_name"
                   type="text"
-                  {...register("last_name", { required: "Last name is required" })}
+                  {...register("last_name", {
+                    required: "Last name is required",
+                  })}
                 />
                 {errors.last_name && (
-                  <p className="text-sm text-red-500">{errors.last_name.message}</p>
+                  <p className="text-sm text-red-500">
+                    {errors.last_name.message}
+                  </p>
                 )}
               </div>
 
@@ -197,11 +217,16 @@ useEffect(() => {
                   type="password"
                   {...register("password", {
                     required: "Password is required",
-                    minLength: { value: 6, message: "Password must be at least 6 characters" },
+                    minLength: {
+                      value: 6,
+                      message: "Password must be at least 6 characters",
+                    },
                   })}
                 />
                 {errors.password && (
-                  <p className="text-sm text-red-500">{errors.password.message}</p>
+                  <p className="text-sm text-red-500">
+                    {errors.password.message}
+                  </p>
                 )}
               </div>
 
@@ -212,11 +237,14 @@ useEffect(() => {
                   type="password"
                   {...register("confirmPassword", {
                     required: "Please confirm your password",
-                    validate: (value) => value === password || "Passwords do not match",
+                    validate: (value) =>
+                      value === password || "Passwords do not match",
                   })}
                 />
                 {errors.confirmPassword && (
-                  <p className="text-sm text-red-500">{errors.confirmPassword.message}</p>
+                  <p className="text-sm text-red-500">
+                    {errors.confirmPassword.message}
+                  </p>
                 )}
               </div>
 
@@ -227,7 +255,11 @@ useEffect(() => {
                       <Label htmlFor={field}>
                         {field.charAt(0).toUpperCase() + field.slice(1)}
                       </Label>
-                      <Input id={field} type="text" {...register(field as keyof RegisterFormData)} />
+                      <Input
+                        id={field}
+                        type="text"
+                        {...register(field as keyof RegisterFormData)}
+                      />
                     </div>
                   ))}
                 </>
@@ -236,7 +268,11 @@ useEffect(() => {
               {selectedRole === "architect" && (
                 <div className="grid gap-3">
                   <Label htmlFor="entity_type">Entity Type</Label>
-                  <Input id="entity_type" type="text" {...register("entity_type")} />
+                  <Input
+                    id="entity_type"
+                    type="text"
+                    {...register("entity_type")}
+                  />
                 </div>
               )}
 
@@ -247,9 +283,9 @@ useEffect(() => {
                 </div>
               )}
 
-              {error && (
+              {/* {error && (
                 <p className="text-red-500 text-sm text-center">{error}</p>
-              )}
+              )} */}
 
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Creating account..." : "Sign Up"}
@@ -257,7 +293,14 @@ useEffect(() => {
 
               <div className="text-center text-sm">
                 Already have an account?{" "}
-                <a href="/login" className="underline underline-offset-4">
+                <a
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate("/login");
+                  }}
+                  className="hover:underline underline-offset-4 text-blue-600 hover:text-blue-800 cursor-pointer"
+                >
                   Login
                 </a>
               </div>

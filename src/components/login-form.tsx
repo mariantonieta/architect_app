@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { authService } from "@/services/authServices";
 import { useNavigate } from "react-router-dom";
 import { useLoginWithToken } from "@/hooks/useLoginWithToken";
+import { toast } from "sonner";
 
 type FormData = {
   email: string;
@@ -30,14 +31,16 @@ export function LoginForm({
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<FormData>();
-  const [error, setError] = useState<string | null>(null);
+  // const [error, setError] = useState<string | null>(null);
 
   const loginWithToken = useLoginWithToken({
     onSuccess: () => {
-      debugger;
       navigate("/");
     },
-    onError: () => setError("Invalid credentials"),
+    onError: () => {
+      toast.error("Login failed. Please try again.");
+      // setError("Invalid credentialsss");
+    },
   });
 
   // useEffect(() => {
@@ -56,13 +59,14 @@ export function LoginForm({
   // }, []);
 
   const onSubmit = async (data: FormData) => {
-    setError(null);
+    // setError(null);
     try {
       const response = await authService.login(data.email, data.password);
       loginWithToken.mutate(response.access_token);
     } catch (err) {
       console.error(err);
-      setError("Invalid credentials");
+      toast.error("Login failed. Please try again.");
+      // setError("Invalid credentials");
     }
   };
 
@@ -100,7 +104,7 @@ export function LoginForm({
                 Login failed. Please try again.
               </p>
             )}
-            {error && <p className="text-red-600 mb-4 text-center">{error}</p>}
+            {/* {error && <p className="text-red-600 mb-4 text-center">{error}</p>} */}
 
             <form onSubmit={handleSubmit(onSubmit)}>
               <div className="grid gap-6">
@@ -160,7 +164,7 @@ export function LoginForm({
                 <button
                   type="button"
                   onClick={() => navigate("/register")}
-                  className="underline underline-offset-4 text-blue-600 hover:text-blue-800"
+                  className="hover:underline underline-offset-4 text-blue-600 hover:text-blue-800 cursor-pointer"
                 >
                   Sign up
                 </button>
