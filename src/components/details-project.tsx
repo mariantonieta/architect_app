@@ -220,9 +220,9 @@ export function ProjectDetails() {
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
             {project.name}
           </h1>
-          <p className="text-sm sm:text-base text-gray-600">
+          <div className="text-sm sm:text-base text-gray-600">
             <p>{(project.customerEmail || []).join(", ") || "Not assigned"}</p>
-          </p>
+          </div>
         </div>
 
         <Tabs
@@ -302,12 +302,12 @@ export function ProjectDetails() {
                         <p className="text-xs sm:text-sm text-gray-500">
                           Client
                         </p>
-                        <p className="font-medium text-sm sm:text-base text-gray-900 truncate">
+                        <div className="font-medium text-sm sm:text-base text-gray-900 truncate">
                           <p>
                             {(project.customerEmail || []).join(", ") ||
                               "Not assigned"}
                           </p>
-                        </p>
+                        </div>
                       </div>
                     </div>
                   </CardContent>

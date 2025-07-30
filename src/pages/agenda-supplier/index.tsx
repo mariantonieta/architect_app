@@ -71,12 +71,14 @@ export default function SupplierAgenda() {
       {
         onSuccess: () => {
           toast.success("Invitations sent!");
-          
         },
         onError: (err) => {
           toast.error("Failed to send invitations.");
           onError(err);
         },
+        onSettled: () => {
+          setOpenInviteModal(false);
+        }
       }
     );
   };
