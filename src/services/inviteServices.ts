@@ -29,7 +29,7 @@ export const inviteService = {
     async inviteUserByRole(
         email: string,
         role: RoleType,
-        options?: { inviter_name?: string; project_name?: string }
+        options?: { inviter_name?: string; project_name?: string; project_id?: string }
     ) {
         const payload = {
             email,

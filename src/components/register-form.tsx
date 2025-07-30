@@ -60,24 +60,30 @@ export function RegisterForm({ className, ...props }: React.ComponentProps<"div"
       role: "architect",
     },
   });
-
-  useEffect(() => {
-    const token = searchParams.get("token");
-    if (token) {
-      try {
-        const decoded = jwtDecode<JwtPayload>(token);
-        console.log("Token decodificado:", decoded); 
-        if (decoded.role) {
-          const roleValue = decoded.role as RegisterFormData["role"];
-          setValue("role", roleValue, { shouldValidate: true });
-          setDecodedRole(roleValue);
-        }
-      } catch (error) {
-        console.error("Invalid token", error);
-           setDecodedRole("architect");
+useEffect(() => {
+  const token = searchParams.get("token");
+  if (token) {
+    try {
+      const decoded = jwtDecode<JwtPayload>(token);
+      console.log("Token decodificado:", decoded);
+      if (decoded.role) {
+        const roleValue = decoded.role as RegisterFormData["role"];
+        setValue("role", roleValue, { shouldValidate: true });
+        setDecodedRole(roleValue);
+      } else {
+        setValue("role", "architect", { shouldValidate: true });
+        setDecodedRole("architect");
       }
+    } catch (error) {
+      console.error("Invalid token", error);
+      setValue("role", "architect", { shouldValidate: true }); 
+      setDecodedRole("architect");
     }
-  }, [searchParams, setValue]);
+  } else {
+    setValue("role", "architect", { shouldValidate: true }); 
+    setDecodedRole("architect"); 
+  }
+}, [searchParams, setValue]);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

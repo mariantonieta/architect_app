@@ -21,9 +21,10 @@ import {
 interface SupplierCardProps {
   id: string;
   name: string;
-  location: string;
-  phone: string;
+  location?: string;
+  phone?: string;
   email: string;
+  company?: string;
   nextAppointment?: string;
   status: "Active" | "Pending" | "Cancelled";
 }
@@ -52,7 +53,6 @@ export function InvitationsCard({
           <div className="flex items-start justify-between mb-4">
             <div>
               <h3 className="font-semibold text-lg text-gray-900 mb-1">{name}</h3>
-           
             </div>
             <Badge
               variant={status === "Active" ? "default" : "secondary"}
@@ -68,15 +68,21 @@ export function InvitationsCard({
           </div>
 
           <div className="space-y-3 mb-4">
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <MapPin className="h-4 w-4 shrink-0" />
-              <span>{location}</span>
-            </div>
+            
+            {location && (
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <MapPin className="h-4 w-4 shrink-0" />
+                <span>{location}</span>
+              </div>
+            )}
 
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <Phone className="h-4 w-4 shrink-0" />
-              <span>{phone}</span>
-            </div>
+        
+            {phone && (
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <Phone className="h-4 w-4 shrink-0" />
+                <span>{phone}</span>
+              </div>
+            )}
 
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <Mail className="h-4 w-4 shrink-0" />

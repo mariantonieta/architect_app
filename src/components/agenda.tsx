@@ -1,5 +1,4 @@
-import { InvitationsCard } from "@/components/invitations-card"
-
+import { InvitationsCard } from "@/components/invitations-card";
 
 type Invitation = {
   id: string;
@@ -8,9 +7,10 @@ type Invitation = {
   user?: {
     first_name: string;
     last_name: string;
-    role_name?: string;
+    role_name?: "architect" | "supplier" | "customer";
     address?: string;
     phone?: string;
+    company?: string;
   };
 };
 
@@ -46,32 +46,67 @@ export function Agenda({
               <p className="text-sm text-gray-600 mt-1">{description}</p>
             </div>
             {InviteModalComponent && (
-              <div onClick={onOpenInviteModal}>
-                {InviteModalComponent}
-              </div>
+              <div onClick={onOpenInviteModal}>{InviteModalComponent}</div>
             )}
           </div>
         </header>
 
         <main className="flex-1 overflow-auto p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {invitations?.map((inv, index) => (
-              <InvitationsCard
-                key={index}
-                id={inv.id}
-                name={
-                  inv.user
-                    ? `${inv.user.first_name} ${inv.user.last_name}`
-                    : "Invited"
-                }
+            {invitations?.map((inv) => {
+              const role = inv.user?.role_name;
 
-                location={inv.user?.address || "Unknown"}
-                phone={inv.user?.phone || "Unknown"}
-                email={inv.email}
-                nextAppointment={"--"}
-                status={inv.status as "Active" | "Pending" | "Cancelled"}
-              />
-            ))}
+              const name = inv.user
+                ? `${inv.user.first_name} ${inv.user.last_name}`
+                : "Invited";
+
+              const commonProps = {
+                key: inv.id,
+                id: inv.id,
+                name,
+                email: inv.email,
+                status: inv.status as "Active" | "Pending" | "Cancelled",
+              };
+
+              if (role === "architect") {
+                return (
+                  <InvitationsCard
+                    {...commonProps}
+                
+                
+                  />
+                );
+              }
+
+              if (role === "supplier") {
+                return (
+                  <InvitationsCard
+                    {...commonProps}
+                    phone={inv.user?.phone || "Unknown"}
+                    location={inv.user?.address || "Unknown"}
+                    company={inv.user?.company || "Unknown"}
+                  />
+                );
+              }
+
+              if (role === "customer") {
+                return (
+                  <InvitationsCard
+                    {...commonProps}
+                    phone={inv.user?.phone || "Unknown"}
+                    location={inv.user?.address || "Unknown"}
+                  />
+                );
+              }
+              return (
+                <InvitationsCard
+                  {...commonProps}
+                  phone={inv.user?.phone || "Unknown"}
+                  location={inv.user?.address || "Unknown"}
+                  company={inv.user?.company || "Unknown"}
+                />
+              );
+            })}
           </div>
         </main>
       </div>

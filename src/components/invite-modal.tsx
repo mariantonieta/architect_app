@@ -73,7 +73,7 @@ export function InviteModal({
             placeholder={placeholder}
             role={role}
             onEmailAdd={() => true}
-            onSearch={async () => []} 
+        
           />
         </div>
 

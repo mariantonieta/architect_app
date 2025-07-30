@@ -94,7 +94,7 @@ export function CreateOrEditProjectForm({
       architectEmail: initialData?.architectEmail || [],
       project_type: initialData?.project_type || "",
       currency: initialData?.currency || "ars",
-      budget: initialData?.budget,
+      estimated_budget: initialData?.estimated_budget,
       location: initialData?.location || "",
       status: initialData?.status || "idea",
       description: initialData?.description || "",
@@ -169,7 +169,7 @@ export function CreateOrEditProjectForm({
     formData.append("name", data.name);
     formData.append("project_type", data.project_type);
     if (data.currency) formData.append("currency", data.currency);
-    if (data.budget != null) formData.append("budget", data.budget.toString());
+    if (data.estimated_budget != null) formData.append("estimated_budget", data.estimated_budget.toString());
     if (data.location) formData.append("location", data.location);
     formData.append("status", data.status || "idea");
     if (data.description) formData.append("description", data.description);
@@ -240,7 +240,7 @@ useEffect(() => {
         : [],
       project_type: initialData.project_type || "",
       currency: initialData.currency || "ars",
-      budget: initialData.budget,
+      estimated_budget: initialData.estimated_budget,
       location: initialData.location || "",
       status: initialData.status || "idea",
       description: initialData.description || "",
@@ -255,6 +255,15 @@ useEffect(() => {
     setStep(1);
   }
 }, [initialData, reset]);
+useEffect(() => {
+  if (Object.keys(errors).length > 0) {
+    const timeout = setTimeout(() => {
+      clearErrors(); 
+    }, 4000); 
+
+    return () => clearTimeout(timeout); 
+  }
+}, [errors, clearErrors]);
 
 
   return (
@@ -370,12 +379,12 @@ useEffect(() => {
             <FormField label="Budget" id="budget" className="flex-1">
               <Controller
                 control={control}
-                name="budget"
+                name="estimated_budget"
                 render={({ field }) => (
                   <Input
                     {...field}
                     placeholder="0"
-                    id="budget"
+                    id="estimated_budget"
                     type="text"
                     value={field.value ?? ""}
                     onChange={(e) =>
@@ -472,6 +481,14 @@ useEffect(() => {
                 } else {
                   setNewBim((prev) => prev.filter((f) => f !== fileToRemove));
                 }
+              }}
+                    onInvalidFiles={(invalid) => {
+                setError("filesBimModels", {
+                  type: "manual",
+                  message: `Invalid bimModels file(s): ${invalid
+                    .map((f) => f.name)
+                    .join(", ")}. Allowed: IFC, RVT`,
+                });
               }}
             />
           </FormField>

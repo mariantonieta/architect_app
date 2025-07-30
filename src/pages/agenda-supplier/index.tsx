@@ -6,20 +6,56 @@ import { InviteModal } from "@/components/invite-modal";
 import { Agenda } from "@/components/agenda";
 import { useUser } from "@/hooks/useUser";
 
+type RoleName = "supplier" | "customer" | "architect";
+
+type Invitation = {
+  id: string;
+  email: string;
+  status: string;
+  user?: {
+    first_name: string;
+    last_name: string;
+    role_name?: RoleName;
+    address?: string;
+    phone?: string;
+    company?: string;
+  };
+};
+
+function mapInvitations(rawInvitations: any[] | undefined): Invitation[] | undefined {
+  if (!rawInvitations) return undefined;
+  const validRoles: RoleName[] = ["supplier", "customer", "architect"];
+
+  return rawInvitations.map((inv) => {
+    const userRole = inv.user?.role_name;
+    return {
+      ...inv,
+      user: inv.user
+        ? {
+            ...inv.user,
+            role_name: validRoles.includes(userRole) ? userRole : undefined,
+          }
+        : undefined,
+    };
+  });
+}
+
 export default function SupplierAgenda() {
   const role = "supplier";
 
-  const { data, isLoading, isError } = useInvitations(role);
+  const { data: rawData, isLoading, isError } = useInvitations(role);
   const { mutate: inviteSupplier } = useInviteUser(role);
   const [openInviteModal, setOpenInviteModal] = useState(false);
-const { data: currentUser, isLoading: userLoading, isError: userError } = useUser();
+  const { data: currentUser, isLoading: userLoading, isError: userError } = useUser();
   const inviter_name = currentUser?.first_name || "Inviter";
+
+  const data = mapInvitations(rawData);
 
   const inviteFn = (
     emails: string[],
     { onSuccess, onError }: { onSuccess: (data: any) => void; onError: (error: any) => void }
   ) => {
-       if (!currentUser) {
+    if (!currentUser) {
       onError(new Error("Current user not loaded"));
       return;
     }
@@ -40,9 +76,9 @@ const { data: currentUser, isLoading: userLoading, isError: userError } = useUse
       .then(() => onSuccess({ msg: "All invitations sent." }))
       .catch(onError);
   };
-   if (userLoading) return <p>Loading user...</p>;
-  if (userError) return <p>Error loading user.</p>;
 
+  if (userLoading) return <p>Loading user...</p>;
+  if (userError) return <p>Error loading user.</p>;
 
   return (
     <>

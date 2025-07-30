@@ -15,7 +15,7 @@ export interface ProjectFormData {
     | "recreational"
     | "other";
     currency?: "ars" | "usd" | "eur";
-    budget?: number;
+    estimated_budget?: number;
     location: string;
     status?: "idea" | "budgeting" | "in_progress" | "finished";
     filesBimModels?: File[];
@@ -50,7 +50,7 @@ export interface Project {
     | "recreational"
     | "other";
     currency?: "ars" | "usd" | "eur";
-    budget?: number;
+    estimated_budget?: number;
     location: string;
     status?: "idea" | "budgeting" | "in_progress" | "finished";
     files?: ProjectFile[];

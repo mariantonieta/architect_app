@@ -6,16 +6,51 @@ import { InviteModal } from "@/components/invite-modal";
 import { Agenda } from "@/components/agenda";
 import { useUser } from "@/hooks/useUser";
 
+type RoleName = "supplier" | "customer" | "architect";
+
+type Invitation = {
+  id: string;
+  email: string;
+  status: string;
+  user?: {
+    first_name: string;
+    last_name: string;
+    role_name?: RoleName;
+    address?: string;
+    phone?: string;
+    company?: string;
+  };
+};
+
+function mapInvitations(rawInvitations: any[] | undefined): Invitation[] | undefined {
+  if (!rawInvitations) return undefined;
+  const validRoles: RoleName[] = ["supplier", "customer", "architect"];
+
+  return rawInvitations.map((inv) => {
+    const userRole = inv.user?.role_name;
+    return {
+      ...inv,
+      user: inv.user
+        ? {
+            ...inv.user,
+            role_name: validRoles.includes(userRole) ? userRole : undefined,
+          }
+        : undefined,
+    };
+  });
+}
+
 export default function ArchitectAgenda() {
   const role = "architect";
 
   const { data: currentUser, isLoading: userLoading, isError: userError } = useUser();
-
   const inviter_name = currentUser?.first_name || "Inviter";
 
-  const { data, isLoading, isError } = useInvitations(role);
+  const { data: rawData, isLoading, isError } = useInvitations(role);
   const { mutate: inviteArchitect } = useInviteUser(role);
   const [openInviteModal, setOpenInviteModal] = useState(false);
+
+  const data = mapInvitations(rawData);
 
   const inviteFn = (
     emails: string[],

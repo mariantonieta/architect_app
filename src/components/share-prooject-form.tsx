@@ -71,7 +71,11 @@ export default function ShareProjectModal({
                 return;
               }
 
-              const invitePayload = { email, project_name: project.name };
+const invitePayload = {
+  email,
+  project_id: project.id,
+  project_name: project.name,
+};
               let mutateFn;
               if (role === "architect") mutateFn = inviteArchitect.mutateAsync;
               else if (role === "customer") mutateFn = inviteCustomer.mutateAsync;

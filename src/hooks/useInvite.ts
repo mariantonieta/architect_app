@@ -14,12 +14,13 @@ export function useInvitations(role: RoleType) {
 export function useInviteUser(role: RoleType) {
     const queryClient = useQueryClient();
 
-    return useMutation<any, Error, { email: string; inviter_name?: string; project_name?: string }>(
+    return useMutation<any, Error, { email: string; inviter_name?: string; project_name?: string; project_id?: string }>(
         {
             mutationFn: (data) =>
                 inviteService.inviteUserByRole(data.email, role, {
                     inviter_name: data.inviter_name,
                     project_name: data.project_name,
+                    project_id: data.project_id,
                 }),
             onSuccess: () => {
                 queryClient.invalidateQueries({ queryKey: ['invitations', role] });

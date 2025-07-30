@@ -9,7 +9,7 @@ interface EmailSelectorProps {
   placeholder?: string;
   onEmailAdd?: (email: string) => Promise<boolean> | boolean;
   role?: "customer" | "supplier" | "architect";
-  onSearch: (query: string, role: "customer" | "supplier" | "architect") => Promise<string[]>;
+  onSearch?: (query: string, role: "customer" | "supplier" | "architect") => Promise<string[]>;
 }
 
 export function EmailSelector({
@@ -41,6 +41,14 @@ export function EmailSelector({
       setLoading(false);
       return;
     }
+      if (!onSearch) {
+
+    setData([]);
+    setShowData(false);
+    setLoading(false);
+    return;
+  }
+
 
     setLoading(true);
 
