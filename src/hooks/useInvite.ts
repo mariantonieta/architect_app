@@ -10,25 +10,35 @@ export function useInvitations(role: RoleType) {
         refetchIntervalInBackground: true,
     });
 }
-
 export function useInviteUser(role: RoleType) {
     const queryClient = useQueryClient();
 
-    return useMutation<any, Error, { email: string; inviter_name?: string; project_name?: string; project_id?: string }>(
+    return useMutation<
+        void,
+        Error,
         {
-            mutationFn: (data) =>
-                inviteService.inviteUserByRole(data.email, role, {
-                    inviter_name: data.inviter_name,
-                    project_name: data.project_name,
-                    project_id: data.project_id,
-                }),
-            onSuccess: () => {
-                queryClient.invalidateQueries({ queryKey: ['invitations', role] });
-            },
+            emails: string[];
+            inviter_name?: string;
+            project_name?: string;
+            project_id?: string;
         }
-    );
+    >({
+        mutationFn: async ({ emails, inviter_name, project_name, project_id }) => {
+            await Promise.all(
+                emails.map((email) =>
+                    inviteService.inviteUserByRole(email, role, {
+                        inviter_name,
+                        project_name,
+                        project_id,
+                    })
+                )
+            );
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['invitations', role] });
+        },
+    });
 }
-
 export function useDeleteInvitation() {
     const queryClient = useQueryClient();
 

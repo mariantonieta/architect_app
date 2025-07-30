@@ -5,6 +5,7 @@ import { Plus } from "lucide-react";
 import { InviteModal } from "@/components/invite-modal";
 import { Agenda } from "@/components/agenda";
 import { useUser } from "@/hooks/useUser";
+import { toast } from "sonner";
 
 type RoleName = "supplier" | "customer" | "architect";
 
@@ -21,6 +22,7 @@ type Invitation = {
     company?: string;
   };
 };
+
 function mapInvitations(rawInvitations: any[] | undefined): Invitation[] | undefined {
   if (!rawInvitations) return undefined;
   const validRoles: RoleName[] = ["supplier", "customer", "architect"];
@@ -54,25 +56,28 @@ export default function CustomerAgenda() {
     { onSuccess, onError }: { onSuccess: (data: any) => void; onError: (error: any) => void }
   ) => {
     if (!currentUser) {
-      onError(new Error("Current user not loaded"));
+      const err = new Error("Current user not loaded");
+      toast.error(err.message);
+      onError(err);
       return;
     }
-    Promise.all(
-      emails.map(
-        (email) =>
-          new Promise<void>((resolve, reject) => {
-            inviteCustomer(
-              { email, inviter_name },
-              {
-                onSuccess: () => resolve(),
-                onError: (err) => reject(err),
-              }
-            );
-          })
-      )
-    )
-      .then(() => onSuccess({ msg: "All invitations sent." }))
-      .catch(onError);
+
+    inviteCustomer(
+      {
+        emails,
+        inviter_name,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Invitations sent!");
+         setOpenInviteModal(false);
+        },
+        onError: (err) => {
+          toast.error("Failed to send invitations.");
+          onError(err);
+        },
+      }
+    );
   };
 
   if (userLoading) return <p>Loading user...</p>;
@@ -87,7 +92,7 @@ export default function CustomerAgenda() {
         placeholder="customer@email.com"
         buttonText="Send Invitations"
         inviteFn={inviteFn}
-        role="customer"
+        role={role}
       />
 
       <Agenda

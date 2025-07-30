@@ -5,6 +5,7 @@ import { Plus } from "lucide-react";
 import { InviteModal } from "@/components/invite-modal";
 import { Agenda } from "@/components/agenda";
 import { useUser } from "@/hooks/useUser";
+import { toast } from "sonner";
 
 type RoleName = "supplier" | "customer" | "architect";
 
@@ -56,25 +57,28 @@ export default function SupplierAgenda() {
     { onSuccess, onError }: { onSuccess: (data: any) => void; onError: (error: any) => void }
   ) => {
     if (!currentUser) {
-      onError(new Error("Current user not loaded"));
+      const err = new Error("Current user not loaded");
+      toast.error(err.message);
+      onError(err);
       return;
     }
-    Promise.all(
-      emails.map(
-        (email) =>
-          new Promise<void>((resolve, reject) => {
-            inviteSupplier(
-              { email, inviter_name },
-              {
-                onSuccess: () => resolve(),
-                onError: (err) => reject(err),
-              }
-            );
-          })
-      )
-    )
-      .then(() => onSuccess({ msg: "All invitations sent." }))
-      .catch(onError);
+
+    inviteSupplier(
+      {
+        emails,
+        inviter_name,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Invitations sent!");
+          
+        },
+        onError: (err) => {
+          toast.error("Failed to send invitations.");
+          onError(err);
+        },
+      }
+    );
   };
 
   if (userLoading) return <p>Loading user...</p>;

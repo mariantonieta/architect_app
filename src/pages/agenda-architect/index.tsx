@@ -5,6 +5,8 @@ import { Plus } from "lucide-react";
 import { InviteModal } from "@/components/invite-modal";
 import { Agenda } from "@/components/agenda";
 import { useUser } from "@/hooks/useUser";
+import { toast } from "sonner";
+
 
 type RoleName = "supplier" | "customer" | "architect";
 
@@ -47,37 +49,40 @@ export default function ArchitectAgenda() {
   const inviter_name = currentUser?.first_name || "Inviter";
 
   const { data: rawData, isLoading, isError } = useInvitations(role);
-  const { mutate: inviteArchitect } = useInviteUser(role);
+
   const [openInviteModal, setOpenInviteModal] = useState(false);
 
   const data = mapInvitations(rawData);
+const { mutate: inviteArchitect } = useInviteUser(role);
 
-  const inviteFn = (
-    emails: string[],
-    { onSuccess, onError }: { onSuccess: (data: any) => void; onError: (error: any) => void }
-  ) => {
-    if (!currentUser) {
-      onError(new Error("Current user not loaded"));
-      return;
+const inviteFn = (
+  emails: string[],
+  { onSuccess, onError }: { onSuccess: (data: any) => void; onError: (error: any) => void }
+) => {
+  if (!currentUser) {
+    const err = new Error("Current user not loaded");
+    toast.error(err.message);
+    onError(err);
+    return;
+  }
+
+  inviteArchitect(
+    {
+      emails,
+      inviter_name,
+    },
+    {
+      onSuccess: () => {
+        toast.success("Invitations sent!");
+          setOpenInviteModal(false);
+      },
+      onError: (err) => {
+        toast.error("Failed to send invitations.");
+        onError(err);
+      },
     }
-
-    Promise.all(
-      emails.map(
-        (email) =>
-          new Promise<void>((resolve, reject) => {
-            inviteArchitect(
-              { email, inviter_name },
-              {
-                onSuccess: () => resolve(),
-                onError: (err) => reject(err),
-              }
-            );
-          })
-      )
-    )
-      .then(() => onSuccess({ msg: "All invitations sent." }))
-      .catch(onError);
-  };
+  );
+};
 
   if (userLoading) return <p>Loading user...</p>;
   if (userError) return <p>Error loading user.</p>;

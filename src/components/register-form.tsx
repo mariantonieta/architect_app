@@ -43,6 +43,7 @@ type JwtPayload = {
   sub: string;
   role: string;
   exp: number;
+  email: string;
 };
 
 export function RegisterForm({
@@ -102,26 +103,41 @@ export function RegisterForm({
     }
   };
 
-  useEffect(() => {
-    const token = searchParams.get("token");
-    if (token) {
-      try {
-        const decoded = jwtDecode<JwtPayload>(token);
-        console.log("Token decodificado:", decoded);
-        if (decoded.role) {
-          const roleValue = decoded.role as RegisterFormData["role"];
-          setValue("role", roleValue, { shouldValidate: true });
-          setDecodedRole(roleValue);
-        }
-      } catch (error) {
-        console.error("Invalid token", error);
-        setDecodedRole("architect");
+  const token = searchParams.get("token");
+useEffect(() => {
+  if (token) {
+    try {
+      const decoded = jwtDecode<JwtPayload>(token);
+      console.log("Token decodificado:", decoded);
+      if (decoded.role) {
+        const roleValue = decoded.role as RegisterFormData["role"];
+        setValue("role", roleValue, {
+          shouldValidate: true,
+          shouldDirty: true,
+          shouldTouch: true,
+        });
+        setDecodedRole(roleValue);
       }
-    } else {
-      setValue("role", "architect", { shouldValidate: true });
+      if (decoded.sub) {
+        setValue("email", decoded.sub, {
+          shouldValidate: true,
+          shouldDirty: true,
+          shouldTouch: true,
+        });
+      }
+    } catch (error) {
+      console.error("Invalid token", error);
       setDecodedRole("architect");
     }
-  }, [searchParams, setValue]);
+  } else {
+    setValue("role", "architect", {
+      shouldValidate: true,
+      shouldDirty: true,
+      shouldTouch: true,
+    });
+    setDecodedRole("architect");
+  }
+}, [searchParams, setValue]);
 
   return (
     <div
@@ -204,6 +220,8 @@ export function RegisterForm({
                   id="email"
                   type="email"
                   {...register("email", { required: "Email is required" })}
+                  disabled={!!token}
+                  
                 />
                 {errors.email && (
                   <p className="text-sm text-red-500">{errors.email.message}</p>
