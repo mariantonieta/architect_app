@@ -8,7 +8,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Building2, MapPin, LinkIcon, User, Eye } from "lucide-react";
+import { Building2, MapPin, LinkIcon, User, Eye, Plus } from "lucide-react";
 import type { Project } from "@/services/projectService";
 import { useNavigate } from "react-router-dom";
 import { useProjects } from "@/hooks/useProject";
@@ -79,7 +79,10 @@ export function ProjectsList() {
               <h1 className="text-2xl font-bold text-gray-900">Projects</h1>
               <p className="text-sm text-gray-600 mt-1">List of projects</p>
             </div>
-            <Button onClick={() => toggleModal(true)}>New Project</Button>
+            <Button onClick={() => toggleModal(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              New Project
+            </Button>
           </div>
         </header>
 

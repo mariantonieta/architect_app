@@ -1,7 +1,6 @@
-import * as React from "react"
-import { Link } from "react-router-dom"
+import * as React from "react";
+import { Link } from "react-router-dom";
 import {
-  
   IconDashboard,
   IconHome,
   IconCalendar,
@@ -10,12 +9,11 @@ import {
   IconInnerShadowTop,
   IconListDetails,
   IconReport,
-
   IconUsers,
-} from "@tabler/icons-react"
+} from "@tabler/icons-react";
 
-import { NavMain } from "@/components/nav-main"
-import { NavUser } from "@/components/nav-user"
+import { NavMain } from "@/components/nav-main";
+import { NavUser } from "@/components/nav-user";
 import {
   Sidebar,
   SidebarContent,
@@ -24,10 +22,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
 
-import { useUser } from "@/hooks/useUser"
-
+import { useUser } from "@/hooks/useUser";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { data: user, isLoading, error } = useUser();
@@ -37,11 +34,45 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const allItems = {
     dashboard: { title: "Dashboard", url: "/", icon: IconHome },
     projects: { title: "Projects", url: "/projects", icon: IconFolder },
-    supplierAgenda: { title: "Supplier's Agenda", url: "/suppliers-agenda", icon: IconCalendar },
-    customersAgenda: { title: "Customer's Agenda", url: "/customers-agenda", icon: IconCalendar },
-    architectAgenda: { title: "Architect's Agenda", url: "/architect-agenda", icon: IconCalendar },
+    agenda: {
+      title: "Agenda",
+      icon: IconCalendar,
+      items: [
+        {
+          title: "Suppliers",
+          url: "/suppliers-agenda",
+        },
+        {
+          title: "Customers",
+          url: "/customers-agenda",
+        },
+        {
+          title: "Architects",
+          url: "/architect-agenda",
+        },
+      ],
+    },
+    // supplierAgenda: {
+    //   title: "Supplier's Agenda",
+    //   url: "/suppliers-agenda",
+    //   icon: IconCalendar,
+    // },
+    // customersAgenda: {
+    //   title: "Customer's Agenda",
+    //   url: "/customers-agenda",
+    //   icon: IconCalendar,
+    // },
+    // architectAgenda: {
+    //   title: "Architect's Agenda",
+    //   url: "/architect-agenda",
+    //   icon: IconCalendar,
+    // },
     budgets: { title: "Budgets", url: "/supplier-budgets", icon: IconReport },
-    relations: { title: "Relations", url: "/supplier/relations", icon: IconUsers },
+    relations: {
+      title: "Relations",
+      url: "/supplier/relations",
+      icon: IconUsers,
+    },
   };
   let navMain = [];
 
@@ -53,11 +84,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       navMain = [allItems.projects];
       break;
     case "architect":
-      navMain = [allItems.dashboard, allItems.projects, allItems.customersAgenda, allItems.architectAgenda, allItems.supplierAgenda];
+      navMain = [
+        allItems.dashboard,
+        allItems.projects,
+        allItems.agenda,
+        // allItems.customersAgenda,
+        // allItems.architectAgenda,
+        // allItems.supplierAgenda,
+      ];
       break;
-  
+
     default:
-      navMain = []; 
+      navMain = [];
   }
 
   return (
@@ -65,7 +103,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild className="data-[slot=sidebar-menu-button]:!p-1.5">
+            <SidebarMenuButton
+              asChild
+              className="data-[slot=sidebar-menu-button]:!p-1.5"
+            >
               <Link to="/">
                 <IconInnerShadowTop className="!size-5" />
                 <span className="text-base font-semibold">Propus App</span>
