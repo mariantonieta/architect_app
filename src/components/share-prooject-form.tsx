@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 
 import { useInviteUser } from "@/hooks/useInvite"; 
-import { inviteService } from "@/services/inviteServices"; 
+import { inviteService } from "@/services/inviteServices";
 
 type RoleType = "architect" | "customer" | "supplier";
 
@@ -47,96 +47,49 @@ export default function ShareProjectModal({
   const inviteCustomer = useInviteUser("customer");
   const inviteSupplier = useInviteUser("supplier");
 
-  const inviteFn = (
-    emails: string[],
-    role: RoleType,
-    { onSuccess, onError }: { onSuccess: () => void; onError: (error: any) => void }
-  ) => {
-    if (!project?.name) {
-      onError(new Error("No project name provided"));
-      return;
+  const inviteEmails = async (emails: string[], role: RoleType) => {
+    if (!project?.name) throw new Error("No project selected");
+
+    for (const email of emails) {
+      const existing = await inviteService.searchInvitationByEmailAndRole(email, role);
+      const alreadyInvited = existing.some(
+        (e: string) => e.toLowerCase() === email.toLowerCase()
+      );
+      if (alreadyInvited) continue;
+
+      const payload = {
+        emails: [email],
+        project_id: project.id,
+        project_name: project.name,
+      };
+
+      if (role === "architect") await inviteArchitect.mutateAsync(payload);
+      else if (role === "customer") await inviteCustomer.mutateAsync(payload);
+      else if (role === "supplier") await inviteSupplier.mutateAsync(payload);
     }
-
-    Promise.all(
-      emails.map(
-        (email) =>
-          new Promise<void>(async (resolve, reject) => {
-            try {
-              const existing = await inviteService.searchInvitationByEmailAndRole(email, role);
-              const alreadyInvited = existing.some(
-                (e: string) => e.toLowerCase() === email.toLowerCase()
-              );
-              if (alreadyInvited) {
-                resolve();
-                return;
-              }
-
-const invitePayload = {
-  email,
-  project_id: project.id,
-  project_name: project.name,
-};
-              let mutateFn;
-              if (role === "architect") mutateFn = inviteArchitect.mutateAsync;
-              else if (role === "customer") mutateFn = inviteCustomer.mutateAsync;
-              else if (role === "supplier") mutateFn = inviteSupplier.mutateAsync;
-console.log(invitePayload)
-              await mutateFn(invitePayload);
-              resolve();
-            } catch (error) {
-              reject(error);
-            }
-          })
-      )
-    )
-      .then(() => onSuccess())
-      .catch(onError);
   };
 
-  const onSubmit = (data: any) => {
-    
+  const onSubmit = async (data: any) => {
     const { architectEmail, customerEmail, supplierEmail } = data;
 
-    return new Promise<void>((resolve, reject) => {
-      Promise.all([
-        new Promise<void>((res, rej) =>
-          inviteFn(architectEmail, "architect", {
-            onSuccess: res,
-            onError: rej,
-          })
-        ),
-        new Promise<void>((res, rej) =>
-          inviteFn(customerEmail, "customer", {
-            onSuccess: res,
-            onError: rej,
-          })
-        ),
-        new Promise<void>((res, rej) =>
-          inviteFn(supplierEmail, "supplier", {
-            onSuccess: res,
-            onError: rej,
-          })
-        ),
-      ])
-        .then(() => {
-          console.log("Proyecto compartido con todos los invitados");
-          onOpenChange(false);
-          resolve();
-        })
-        .catch((error) => {
-          console.error("Error al enviar invitaciones:", error);
-          reject(error);
-        });
-    });
+    try {
+      await Promise.all([
+        inviteEmails(architectEmail, "architect"),
+        inviteEmails(customerEmail, "customer"),
+        inviteEmails(supplierEmail, "supplier"),
+      ]);
+      console.log("Proyecto compartido con todos los invitados");
+      onOpenChange(false);
+    } catch (error) {
+      console.error("Error al enviar invitaciones:", error);
+
+    }
   };
 
   const handleSearch = async (query: string, role: RoleType) => {
     try {
-
-      const res = await inviteService.searchInvitationByEmailAndRole(query, role);
-      return res;
-    } catch (error) {
-      console.error("Error buscando emails:", error);
+      return await inviteService.searchInvitationByEmailAndRole(query, role);
+    } catch {
       return [];
     }
   };
