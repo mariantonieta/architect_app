@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useInvitations, useInviteUser } from "@/hooks/useInvite";
+import { useInvitations, useInviteAgendaUser } from "@/hooks/useInvite";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { InviteModal } from "@/components/invite-modal";
@@ -45,7 +45,7 @@ export default function CustomerAgenda() {
   const role = "customer";
 
   const { data: rawData, isLoading, isError } = useInvitations(role);
-  const { mutate: inviteCustomer } = useInviteUser(role);
+  const { mutate: inviteCustomer } = useInviteAgendaUser(role);
   const [openInviteModal, setOpenInviteModal] = useState(false);
   const { data: currentUser, isLoading: userLoading, isError: userError } = useUser();
   const inviter_name = currentUser?.first_name || "Inviter";

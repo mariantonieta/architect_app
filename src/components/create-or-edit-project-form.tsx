@@ -164,7 +164,7 @@ export function CreateOrEditProjectForm({
   const handleSubmitProject = async (data: ProjectFormData) => {
     
     const formData = new FormData();
-    console.log("Datos enviados0", data)
+    //console.log("Datos enviados0", data)
     formData.append("name", data.name);
     formData.append("project_type", data.project_type);
     if (data.currency) formData.append("currency", data.currency);
@@ -219,7 +219,7 @@ export function CreateOrEditProjectForm({
 
 useEffect(() => {
   if (initialData) {
-    console.log("initialData", initialData);
+   // console.log("initialData", initialData);
 
     reset({
       name: initialData.name || "",
@@ -270,7 +270,7 @@ useEffect(() => {
     <Dialog
       open={open}
       onOpenChange={(val) => {
-        console.log("Initial data on open:", initialData);
+       // console.log("Initial data on open:", initialData);
         onOpenChange(val);
         if (!val) setStep(1);
         if (val && initialData) {

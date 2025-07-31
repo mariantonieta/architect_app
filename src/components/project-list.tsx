@@ -23,6 +23,9 @@ export function ProjectsList() {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
   const { data: projects = [], isLoading, isError } = useProjects();
+    console.log("Proyectos recibidos del backend:", projects);
+
+
 
   if (isLoading) return <div className="p-6">Loading projects...</div>;
   if (isError)

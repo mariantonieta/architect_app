@@ -10,6 +10,28 @@ export function useInvitations(role: RoleType) {
         refetchIntervalInBackground: true,
     });
 }
+export function useInviteAgendaUser(role: RoleType) {
+    const queryClient = useQueryClient();
+
+    return useMutation<
+        { msg: string; invitation_id: string },
+        Error,
+        { emails: string[]; inviter_name?: string }
+    >({
+        mutationFn: async ({ emails, inviter_name }) => {
+            const results = await Promise.all(
+                emails.map((email) =>
+                    inviteService.inviteAgendaUser(email, role, { inviter_name })
+                )
+            );
+            return results[0];
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['agendaInvitations', role] });
+        },
+    });
+}
+
 export function useInviteUser(role: RoleType) {
     const queryClient = useQueryClient();
 

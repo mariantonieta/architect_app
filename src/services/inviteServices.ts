@@ -72,4 +72,24 @@ export const inviteService = {
         const response = await api.get(`/invitation/status/${email}`);
         return response.data;
     },
+    async inviteAgendaUser(
+        email: string,
+        role: RoleType,
+        options?: { inviter_name?: string }
+    ) {
+        const payload = {
+            email,
+            ...options,
+        };
+
+        const response = await api.post(`/invitationsagenda/${role}`, payload, {
+            headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+            },
+        });
+
+        return response.data;
+    }
+
 };

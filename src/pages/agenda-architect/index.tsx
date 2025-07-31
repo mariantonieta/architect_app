@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useInvitations, useInviteUser } from "@/hooks/useInvite";
+import { useInvitations, useInviteAgendaUser } from "@/hooks/useInvite";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { InviteModal } from "@/components/invite-modal";
@@ -53,7 +53,7 @@ export default function ArchitectAgenda() {
   const [openInviteModal, setOpenInviteModal] = useState(false);
 
   const data = mapInvitations(rawData);
-const { mutate: inviteArchitect } = useInviteUser(role);
+const { mutate: inviteArchitect } = useInviteAgendaUser(role);
 
 const inviteFn = (
   emails: string[],
