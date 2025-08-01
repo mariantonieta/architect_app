@@ -72,6 +72,7 @@ export function Agenda({
                 return (
                   <InvitationsCard
                     {...commonProps}
+                    
                 
                 
                   />

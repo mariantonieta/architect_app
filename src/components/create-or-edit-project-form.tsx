@@ -79,6 +79,11 @@ export function CreateOrEditProjectForm({
     setExistingReports(files.filter((f): f is ExistingFile => "id" in f));
     setNewReports(files.filter((f): f is File => f instanceof File));
   };
+ const normalizeEmails = (emails: unknown): string[] => {
+  if (Array.isArray(emails)) return emails.filter(Boolean);
+  if (typeof emails === "string" && emails.trim()) return [emails.trim()];
+  return [];
+};
 
   const {
     control,
@@ -90,9 +95,10 @@ export function CreateOrEditProjectForm({
   } = useForm<ProjectFormData>({
     defaultValues: {
       name: initialData?.name || "",
-      customerEmail: initialData?.customerEmail || [],
-      supplierEmail: initialData?.supplierEmail || [],
-      architectEmail: initialData?.architectEmail || [],
+      customerEmail: normalizeEmails(initialData?.customerEmail),
+
+      supplierEmail: normalizeEmails(initialData?.supplierEmail),
+      architectEmail: normalizeEmails(initialData?.architectEmail),
       project_type: initialData?.project_type || "",
       currency: initialData?.currency || "ars",
       estimated_budget: initialData?.estimated_budget,
@@ -216,28 +222,16 @@ export function CreateOrEditProjectForm({
       console.error("Error saving project", err);
     }
   };
-
+ 
 useEffect(() => {
   if (initialData) {
-   // console.log("initialData", initialData);
+    //console.log("initialData", initialData);
 
     reset({
       name: initialData.name || "",
-      customerEmail: Array.isArray(initialData.customerEmail)
-        ? initialData.customerEmail
-        : initialData.customerEmail
-        ? [initialData.customerEmail]
-        : [],
-      supplierEmail: Array.isArray(initialData.supplierEmail)
-        ? initialData.supplierEmail
-        : initialData.supplierEmail
-        ? [initialData.supplierEmail]
-        : [],
-      architectEmail: Array.isArray(initialData.architectEmail)
-        ? initialData.architectEmail
-        : initialData.architectEmail
-        ? [initialData.architectEmail]
-        : [],
+         customerEmail: normalizeEmails(initialData.customerEmail),
+      supplierEmail: normalizeEmails(initialData.supplierEmail),
+      architectEmail: normalizeEmails(initialData.architectEmail),
       project_type: initialData.project_type || "",
       currency: initialData.currency || "ars",
       estimated_budget: initialData.estimated_budget,
@@ -252,9 +246,26 @@ useEffect(() => {
     setNewBim([]);
     setNewRenders([]);
     setNewReports([]);
-    setStep(1);
+      setArchitectEmails(normalizeEmails(initialData.architectEmail));
+    setCustomerEmails(normalizeEmails(initialData.customerEmail));
+    setSupplierEmails(normalizeEmails(initialData.supplierEmail));
+
+      
+    } else if (open) {
+      // Resetear todo si es creación nueva
+      reset();
+      setExistingBim([]);
+      setExistingRenders([]);
+      setExistingReports([]);
+      setNewBim([]);
+      setNewRenders([]);
+      setNewReports([]);
+      setArchitectEmails([]);
+      setCustomerEmails([]);
+      setSupplierEmails([]);
+    
   }
-}, [initialData, reset]);
+}, [initialData, reset, open]);
 useEffect(() => {
   if (Object.keys(errors).length > 0) {
     const timeout = setTimeout(() => {
@@ -270,7 +281,7 @@ useEffect(() => {
     <Dialog
       open={open}
       onOpenChange={(val) => {
-       // console.log("Initial data on open:", initialData);
+     //   console.log("Initial data on open:", initialData);
         onOpenChange(val);
         if (!val) setStep(1);
         if (val && initialData) {
@@ -376,7 +387,7 @@ useEffect(() => {
           </FormField>
 
           <div className="flex space-x-4">
-            <FormField label="Budget" id="budget" className="flex-1">
+            <FormField label="Budget" id="estimated_budget" className="flex-1">
               <Controller
                 control={control}
                 name="estimated_budget"
@@ -588,6 +599,8 @@ useEffect(() => {
                   role="architect"
                   onSearch={searchArchitect}
                   onEmailAdd={handleArchitectAdd}
+                    showInput={!!(field.value && field.value.length > 0)}
+
                 />
               )}
             />
@@ -621,6 +634,8 @@ useEffect(() => {
                   role="customer"
                   onSearch={searchCustomer}
                   onEmailAdd={handleCustomerAdd}
+                   showInput={!!(field.value && field.value.length > 0)}
+
                 />
               )}
             />
@@ -653,7 +668,9 @@ useEffect(() => {
                   role="supplier"
                   onSearch={searchSupplier}
                   onEmailAdd={handleSupplierAdd}
-                />
+                 showInput={!!(field.value && field.value.length > 0)}
+
+                  />
               )}
             />
           </FormField>

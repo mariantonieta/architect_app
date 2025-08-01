@@ -51,17 +51,20 @@ export function ProjectDetails() {
 
   const [editForm, setEditForm] = useState({
     name: "",
-    customerEmail: "",
-
-    budget: "",
+customerEmail: [] as string[],
+  architectEmail: [] as string[],
+  supplierEmail: [] as string[],
+    estimated_budget: "",
   });
 
   useEffect(() => {
     if (project) {
       setEditForm({
         name: project.name || "",
-        customerEmail: project.customerEmail?.[0] || "",
-        budget: project.budget?.toString() || "",
+          customerEmail: [] as string[],
+  architectEmail: [] as string[],
+  supplierEmail: [] as string[],
+        estimated_budget: project.estimated_budget?.toString() || "",
       });
     }
   }, [project]);
@@ -76,9 +79,10 @@ export function ProjectDetails() {
     if (project) {
       setEditForm({
         name: project.name || "",
-        customerEmail: project.customerEmail?.[0] || "",
-
-        budget: project.budget?.toString() || "",
+      customerEmail: project.customerEmail || [],
+      architectEmail: project.architectEmail || [],
+      supplierEmail: project.supplierEmail || [],
+        estimated_budget: project.estimated_budget?.toString() || "",
       });
     }
   }, [project]);
@@ -111,6 +115,8 @@ export function ProjectDetails() {
   const formattedCreateDate = project?.create_date
     ? new Date(project.create_date).toLocaleDateString()
     : "Not available";
+    console.log("create_date raw value:", project?.create_date);
+console.log("formattedCreateDate:", formattedCreateDate);
 
   const tabs = [
     { id: "overview", label: "Overview" },
@@ -159,14 +165,15 @@ export function ProjectDetails() {
                           {
                             id: project.id,
                             name: project.name,
-                            customerEmail: project.customerEmail?.[0] || "",
-                            budget: project.budget,
+                            customerEmail: project.customerEmail || [],
+
+                            estimated_budget: project.estimated_budget,
                             project_type: project.project_type,
                             currency: project.currency,
                             status: project.status,
                             location: project.location,
-                            architectEmail: project.architectEmail,
-                            supplierEmail: project.supplierEmail,
+                            architectEmail: project.architectEmail || [],
+                            supplierEmail: project.supplierEmail || [],
                             description: project.description,
                         
                             existingBlueprints: project.files
@@ -220,9 +227,7 @@ export function ProjectDetails() {
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
             {project.name}
           </h1>
-          <div className="text-sm sm:text-base text-gray-600">
-            <p>{(project.customerEmail || []).join(", ") || "Not assigned"}</p>
-          </div>
+        
         </div>
 
         <Tabs
@@ -342,14 +347,17 @@ export function ProjectDetails() {
                           Project Type
                         </p>
                         <p className="font-medium text-sm sm:text-base text-gray-900">
-                          {project.project_type}
+                     {project.project_type
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ')}
                         </p>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card>
+              {/*  <Card>
                   <CardContent className="p-4 sm:p-6">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-gray-100 rounded-lg flex-shrink-0">
@@ -366,7 +374,7 @@ export function ProjectDetails() {
                     </div>
                   </CardContent>
                 </Card>
-
+              */}
                 <Card>
                   <CardContent className="p-4 sm:p-6">
                     <div className="flex items-center gap-3">
@@ -378,7 +386,7 @@ export function ProjectDetails() {
                           Budget
                         </p>
                         <p className="font-medium text-sm sm:text-base text-gray-900">
-                          ${project.budget?.toLocaleString() || "0"}
+                          ${project.estimated_budget?.toLocaleString() || "0"}
                         </p>
                       </div>
                     </div>
@@ -397,7 +405,7 @@ export function ProjectDetails() {
                         </p>
                         <p className="font-medium text-sm sm:text-base text-gray-900">
                           {[
-                            ...(project.customerEmail || []),
+                           
                             ...(project.supplierEmail || []),
                             ...(project.architectEmail || []),
                           ].join(", ") || "No emails"}

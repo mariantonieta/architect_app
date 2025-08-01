@@ -32,11 +32,12 @@ interface SupplierCardProps {
 export function InvitationsCard({
   id,
   name,
-  location,
+  location, 
   phone,
   email,
   status,
 }: SupplierCardProps) {
+
   const deleteMutation = useDeleteInvitation();
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
 

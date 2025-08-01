@@ -72,7 +72,12 @@ export function InviteModal({
             onChange={setEmails}
             placeholder={placeholder}
             role={role}
-            onEmailAdd={() => true}
+            onEmailAdd={(email) => {
+  const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const alreadyExists = emails.includes(email);
+  return isValid && !alreadyExists;
+}}
+
         
           />
         </div>

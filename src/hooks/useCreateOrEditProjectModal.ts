@@ -32,6 +32,26 @@ export function useCreateProjectModal() {
       gcTime: Infinity, // Los datos nunca se eliminan del cache
     }
   );
+  function normalizeProjectData(data: any) {
+    console.log("🔥 Normalizing project data", data);
+
+    const toArray = (value: any) => {
+      if (Array.isArray(value)) return value.filter(Boolean);
+      if (typeof value === "string" && value.trim()) return [value.trim()];
+      return [];
+
+    };
+
+    return {
+      ...data,
+      customerEmail: toArray(data.customerEmail),
+      supplierEmail: toArray(data.supplierEmail),
+      architectEmail: toArray(data.architectEmail),
+      existingBlueprints: data.existingBlueprints || [],
+      existingRenders: data.existingRenders || [],
+      existingReports: data.existingReports || [],
+    };
+  }
 
   // Toggle del modal con parámetros opcionales
   const toggleModal = (
@@ -42,7 +62,8 @@ export function useCreateProjectModal() {
 
     const newState: CreateProjectModalState = {
       isOpen,
-      initialData: isCreateOrEdit !== 'create' ? initialData : undefined,
+      initialData: isCreateOrEdit !== 'create' ? normalizeProjectData(initialData) : undefined,
+
       isCreateOrEdit, // Guardar el tipo de operación (crear o editar)
     };
 
