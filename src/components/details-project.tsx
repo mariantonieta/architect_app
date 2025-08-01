@@ -25,6 +25,12 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
+import {
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent,
+} from "@/components/ui/accordion";
 import { IFCViewer } from "./ifc-viewer/ifc-viewer";
 import { useCreateProjectModal } from "@/hooks/useCreateOrEditProjectModal";
 
@@ -51,9 +57,9 @@ export function ProjectDetails() {
 
   const [editForm, setEditForm] = useState({
     name: "",
-customerEmail: [] as string[],
-  architectEmail: [] as string[],
-  supplierEmail: [] as string[],
+    customerEmail: [] as string[],
+    architectEmail: [] as string[],
+    supplierEmail: [] as string[],
     estimated_budget: "",
   });
 
@@ -61,9 +67,9 @@ customerEmail: [] as string[],
     if (project) {
       setEditForm({
         name: project.name || "",
-          customerEmail: [] as string[],
-  architectEmail: [] as string[],
-  supplierEmail: [] as string[],
+        customerEmail: [] as string[],
+        architectEmail: [] as string[],
+        supplierEmail: [] as string[],
         estimated_budget: project.estimated_budget?.toString() || "",
       });
     }
@@ -79,9 +85,9 @@ customerEmail: [] as string[],
     if (project) {
       setEditForm({
         name: project.name || "",
-      customerEmail: project.customerEmail || [],
-      architectEmail: project.architectEmail || [],
-      supplierEmail: project.supplierEmail || [],
+        customerEmail: project.customerEmail || [],
+        architectEmail: project.architectEmail || [],
+        supplierEmail: project.supplierEmail || [],
         estimated_budget: project.estimated_budget?.toString() || "",
       });
     }
@@ -115,8 +121,8 @@ customerEmail: [] as string[],
   const formattedCreateDate = project?.create_date
     ? new Date(project.create_date).toLocaleDateString()
     : "Not available";
-    console.log("create_date raw value:", project?.create_date);
-console.log("formattedCreateDate:", formattedCreateDate);
+  console.log("create_date raw value:", project?.create_date);
+  console.log("formattedCreateDate:", formattedCreateDate);
 
   const tabs = [
     { id: "overview", label: "Overview" },
@@ -175,7 +181,7 @@ console.log("formattedCreateDate:", formattedCreateDate);
                             architectEmail: project.architectEmail || [],
                             supplierEmail: project.supplierEmail || [],
                             description: project.description,
-                        
+
                             existingBlueprints: project.files
                               ?.filter((f) => f.file_type === "bim_model")
                               .map((f) => ({
@@ -227,7 +233,6 @@ console.log("formattedCreateDate:", formattedCreateDate);
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
             {project.name}
           </h1>
-        
         </div>
 
         <Tabs
@@ -252,30 +257,32 @@ console.log("formattedCreateDate:", formattedCreateDate);
           <TabsContent value="plans">
             <Card>
               <CardContent className="p-6">
-                <h2 className="text-lg font-semibold mb-2">Plans</h2>
+                <h2 className="text-lg font-semibold mb-4">Plans</h2>
                 {planFiles.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <Accordion type="multiple" className="w-full space-y-2">
                     {planFiles.map((file) => (
-                      <div key={file.id} className="border rounded p-2">
-                        {file.original_name.match(/\.pdf$/i) ? (
-                          <iframe
-                            src={file.url}
-                            className="w-full h-64"
-                            title={file.original_name}
-                          />
-                        ) : (
-                          <img
-                            src={file.url}
-                            alt={file.original_name}
-                            className="w-full h-64 object-contain"
-                          />
-                        )}
-                        <p className="text-xs mt-1 truncate">
+                      <AccordionItem key={file.id} value={file.id}>
+                        <AccordionTrigger>
                           {file.original_name}
-                        </p>
-                      </div>
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          {file.original_name.match(/\.pdf$/i) ? (
+                            <iframe
+                              src={file.url}
+                              className="w-full h-96 rounded border"
+                              title={file.original_name}
+                            />
+                          ) : (
+                            <img
+                              src={file.url}
+                              alt={file.original_name}
+                              className="w-full h-96 object-contain rounded border"
+                            />
+                          )}
+                        </AccordionContent>
+                      </AccordionItem>
                     ))}
-                  </div>
+                  </Accordion>
                 ) : (
                   <p className="text-sm text-gray-500">
                     No plan files uploaded.
@@ -283,12 +290,6 @@ console.log("formattedCreateDate:", formattedCreateDate);
                 )}
               </CardContent>
             </Card>
-
-            {selectedFile && (
-              <div className="mt-6">
-                <IFCViewer fileUrl={selectedFile} />
-              </div>
-            )}
           </TabsContent>
           <TabsContent value="overview" className="mt-6">
             <div className="space-y-8">
@@ -347,17 +348,21 @@ console.log("formattedCreateDate:", formattedCreateDate);
                           Project Type
                         </p>
                         <p className="font-medium text-sm sm:text-base text-gray-900">
-                     {project.project_type
-      .split('_')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-      .join(' ')}
+                          {project.project_type
+                            .split("_")
+                            .map(
+                              (word) =>
+                                word.charAt(0).toUpperCase() +
+                                word.slice(1).toLowerCase()
+                            )
+                            .join(" ")}
                         </p>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
 
-              {/*  <Card>
+                {/*  <Card>
                   <CardContent className="p-4 sm:p-6">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-gray-100 rounded-lg flex-shrink-0">
@@ -405,7 +410,6 @@ console.log("formattedCreateDate:", formattedCreateDate);
                         </p>
                         <p className="font-medium text-sm sm:text-base text-gray-900">
                           {[
-                           
                             ...(project.supplierEmail || []),
                             ...(project.architectEmail || []),
                           ].join(", ") || "No emails"}
@@ -432,16 +436,16 @@ console.log("formattedCreateDate:", formattedCreateDate);
 
           <TabsContent value="3d-model" className="mt-6">
             {bimFiles.length > 0 ? (
-              <div className="space-y-6">
+              <Accordion type="multiple" className="w-full space-y-2">
                 {bimFiles.map((file) => (
-                  <div key={file.id}>
-                    <p className="text-sm font-medium mb-2">
-                      {file.original_name}
-                    </p>
-                    <IFCViewer fileUrl={file.url} />
-                  </div>
+                  <AccordionItem value={file.id} key={file.id}>
+                    <AccordionTrigger>{file.original_name}</AccordionTrigger>
+                    <AccordionContent>
+                      <IFCViewer fileUrl={file.url} />
+                    </AccordionContent>
+                  </AccordionItem>
                 ))}
-              </div>
+              </Accordion>
             ) : (
               <p className="text-sm text-gray-500">No 3D models available.</p>
             )}
