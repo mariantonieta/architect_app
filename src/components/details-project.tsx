@@ -34,6 +34,8 @@ import {
 import { IFCViewer } from "./ifc-viewer/ifc-viewer";
 import { useCreateProjectModal } from "@/hooks/useCreateOrEditProjectModal";
 
+import { MaterialsTable } from "./material-table";
+
 export function ProjectDetails() {
   const { toggleModal } = useCreateProjectModal();
 
@@ -128,7 +130,8 @@ export function ProjectDetails() {
     { id: "overview", label: "Overview" },
     { id: "plans", label: "Plans" },
     { id: "3d-model", label: "3D Model" },
-    { id: "materials", label: "Materials Computation" },
+    { id: "materials-computation", label: "Materials Computation" },
+    {id: "materials", label: "Materials" },
     { id: "budgets", label: "Budgets" },
     { id: "roles", label: "Roles" },
     { id: "history", label: "History" },
@@ -451,8 +454,11 @@ export function ProjectDetails() {
             )}
           </TabsContent>
 
-          <TabsContent value="materials" className="mt-6">
-            <p>Materials Computation details go here.</p>
+          <TabsContent value="materials-computation" className="mt-6">
+          Materials computation
+          </TabsContent>
+                    <TabsContent value="materials" className="mt-6">
+            <MaterialsTable/>
           </TabsContent>
 
           <TabsContent value="budgets" className="mt-6">
