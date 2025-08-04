@@ -25,29 +25,31 @@ import {
 } from "@/components/ui/sidebar";
 
 import { useUser } from "@/hooks/useUser";
+import { useTranslation } from "react-i18next";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { data: user, isLoading, error } = useUser();
+  const { t } = useTranslation();
 
   if (isLoading || error || !user) return null;
 
   const allItems = {
-    dashboard: { title: "Dashboard", url: "/", icon: IconHome },
-    projects: { title: "Projects", url: "/projects", icon: IconFolder },
+    dashboard: { title: t('sidebar.dashboard'), url: "/", icon: IconHome },
+    projects: { title: t('sidebar.projects'), url: "/projects", icon: IconFolder },
     agenda: {
-      title: "Agenda",
+      title: t('sidebar.agenda'),
       icon: IconCalendar,
       items: [
         {
-          title: "Suppliers",
+          title: t('sidebar.suppliers'),
           url: "/suppliers-agenda",
         },
         {
-          title: "Customers",
+          title: t('sidebar.customers'),
           url: "/customers-agenda",
         },
         {
-          title: "Architects",
+          title: t('sidebar.architects'),
           url: "/architect-agenda",
         },
       ],

@@ -1,56 +1,51 @@
-  import { BrowserRouter, Route, Routes } from "react-router-dom";
-  import { 
-    Login, 
-    NotFound, 
-    Register, 
-    Account, 
-    RoleDashboard} from "./pages";
-  import { AUTH_STORAGE } from "./lib/constants";
-  import { AuthValidationMiddleware } from "./middleware/auth-validation";
-  import { RoleBasedAccess } from "./middleware/role-based-access";
-  import GoogleAuthRedirect from "./components/google-redirect";
-  import { GoogleCompleteRegistration } from "./components/google-complete-registration";
-  import { ResetPasswordRequest } from "./components/reset-password-request";
-  import { ResetPasswordForm } from "./components/reset-password-form";
-  import { Layout } from "./components/layout";
-  import { ProjectId, Projects } from "./pages/project";
-  import { ProjectModalProvider } from "./hooks/useFormProjectModal";
-  import SupplierAgenda from "./pages/agenda-supplier";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { Login, NotFound, Register, Account, RoleDashboard } from "./pages";
+import { AUTH_STORAGE } from "./lib/constants";
+import { AuthValidationMiddleware } from "./middleware/auth-validation";
+import { RoleBasedAccess } from "./middleware/role-based-access";
+import GoogleAuthRedirect from "./components/google-redirect";
+import { GoogleCompleteRegistration } from "./components/google-complete-registration";
+import { ResetPasswordRequest } from "./components/reset-password-request";
+import { ResetPasswordForm } from "./components/reset-password-form";
+import { Layout } from "./components/layout";
+import { ProjectId, Projects } from "./pages/project";
+import { ProjectModalProvider } from "./hooks/useFormProjectModal";
+import SupplierAgenda from "./pages/agenda-supplier";
 import { Budgets } from "./pages/budgets";
 import ArchitectAgenda from "./pages/agenda-architect";
 import CustomerAgenda from "./pages/agenda-customer";
 
-  export function Router() {
-    return (
-      <BrowserRouter>
-        <Routes>
-          <Route path="auth/google/callback" element={<GoogleAuthRedirect />} />
-          <Route
-            path="auth/google/complete-registration"
-            element={<GoogleCompleteRegistration />}
-          />
-          <Route path="reset-password" element={<ResetPasswordRequest />} />
-          <Route path="reset-password/form" element={<ResetPasswordForm />} />
-          <Route path="login" element={<Login />} />
-          <Route path="register" element={<Register />} />
+export function Router() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="auth/google/callback" element={<GoogleAuthRedirect />} />
+        <Route
+          path="auth/google/complete-registration"
+          element={<GoogleCompleteRegistration />}
+        />
+        <Route path="reset-password" element={<ResetPasswordRequest />} />
+        <Route path="reset-password/form" element={<ResetPasswordForm />} />
+        <Route path="login" element={<Login />} />
+        <Route path="register" element={<Register />} />
 
+        <Route
+          element={
+            <AuthValidationMiddleware to="/login" storageKey={AUTH_STORAGE} />
+          }
+        >
           <Route
             element={
-              <AuthValidationMiddleware to="/login" storageKey={AUTH_STORAGE} />
+              <ProjectModalProvider>
+                <Layout />
+              </ProjectModalProvider>
             }
           >
-              <Route
-              element={
-                <ProjectModalProvider>
-                  <Layout />
-                </ProjectModalProvider>
-              }
-            >
-              {/* Dashboard principal que detecta el rol y muestra el dashboard apropiado */}
-              <Route index element={<RoleDashboard />} />
-              
-              {/* Rutas específicas para Arquitectos */}
-              {/* <Route 
+            {/* Dashboard principal que detecta el rol y muestra el dashboard apropiado */}
+            <Route index element={<RoleDashboard />} />
+
+            {/* Rutas específicas para Arquitectos */}
+            {/* <Route 
                 path="/architect" 
                 element={
                   <RoleBasedAccess allowedRoles={["architect"]}>
@@ -102,9 +97,9 @@ import CustomerAgenda from "./pages/agenda-customer";
                   </RoleBasedAccess>
                 } 
               /> */}
-              
-              {/* Rutas específicas para Clientes */}
-              {/* <Route 
+
+            {/* Rutas específicas para Clientes */}
+            {/* <Route 
                 path="/customer" 
                 element={
                   <RoleBasedAccess allowedRoles={["customer"]}>
@@ -178,9 +173,9 @@ import CustomerAgenda from "./pages/agenda-customer";
                   </RoleBasedAccess>
                 } 
               /> */}
-              
-              {/* Rutas específicas para Proveedores */}
-              {/* <Route 
+
+            {/* Rutas específicas para Proveedores */}
+            {/* <Route 
                 path="/supplier" 
                 element={
                   <RoleBasedAccess allowedRoles={["supplier"]}>
@@ -232,78 +227,75 @@ import CustomerAgenda from "./pages/agenda-customer";
                   </RoleBasedAccess>
                 } 
               />*/}
-              <Route 
-                path="/supplier/relations" 
-                element={
-                  <RoleBasedAccess allowedRoles={["supplier"]}>
-                    <div className="container mx-auto px-4 py-8">
-                      <h1 className="text-2xl font-bold mb-6">Relations</h1>
-               
+            <Route
+              path="/supplier/relations"
+              element={
+                <RoleBasedAccess allowedRoles={["supplier"]}>
+                  <div className="container mx-auto px-4 py-8">
+                    <h1 className="text-2xl font-bold mb-6">Relations</h1>
                   </div>
-                  </RoleBasedAccess>
-                } 
-              />
-              <Route 
-                path="/supplier-budgets" 
-                element={
-                  <RoleBasedAccess allowedRoles={["supplier"]}>
-                    <Budgets />
-                  </RoleBasedAccess>
-                } 
-              /> 
-              
-              <Route 
-    path="/suppliers-agenda" 
-    element={
-      <RoleBasedAccess allowedRoles={["architect"]}>
-        <SupplierAgenda />
-      </RoleBasedAccess>
-    } 
-  />
-    <Route 
-    path="/architect-agenda" 
-    element={
-      <RoleBasedAccess allowedRoles={["architect"]}>
-        <ArchitectAgenda />
-      </RoleBasedAccess>
-    } 
-  />
-    <Route 
-    path="/customers-agenda" 
-    element={
-      <RoleBasedAccess allowedRoles={["architect"]}>
-        <CustomerAgenda />
-      </RoleBasedAccess>
-    } 
-  />
+                </RoleBasedAccess>
+              }
+            />
+            <Route
+              path="/supplier-budgets"
+              element={
+                <RoleBasedAccess allowedRoles={["supplier"]}>
+                  <Budgets />
+                </RoleBasedAccess>
+              }
+            />
 
-              {/* Rutas compartidas */}
-              <Route path="/account" element={<Account />} />
-              
-              {/* Proyectos - solo para arquitectos */}
-              <Route 
-                path="/projects" 
-                element={
-                  <RoleBasedAccess allowedRoles={["architect"]}>
-                    <Projects />
-                  </RoleBasedAccess>
-                } 
-              />
-              <Route 
-                path="/projects/:id" 
-                element={
-                  <RoleBasedAccess allowedRoles={["architect"]}>
-                    <ProjectId />
+            <Route
+              path="/suppliers-agenda"
+              element={
+                <RoleBasedAccess allowedRoles={["architect"]}>
+                  <SupplierAgenda />
+                </RoleBasedAccess>
+              }
+            />
+            <Route
+              path="/architect-agenda"
+              element={
+                <RoleBasedAccess allowedRoles={["architect"]}>
+                  <ArchitectAgenda />
+                </RoleBasedAccess>
+              }
+            />
+            <Route
+              path="/customers-agenda"
+              element={
+                <RoleBasedAccess allowedRoles={["architect"]}>
+                  <CustomerAgenda />
+                </RoleBasedAccess>
+              }
+            />
 
-                  </RoleBasedAccess>
-                } 
-              />
-              
-            </Route>
+            {/* Rutas compartidas */}
+            <Route path="/account" element={<Account />} />
+
+            {/* Proyectos - solo para arquitectos */}
+            <Route
+              path="/projects"
+              element={
+                <RoleBasedAccess allowedRoles={["architect"]}>
+                  <Projects />
+                </RoleBasedAccess>
+              }
+            />
+            <Route
+              path="/projects/:id"
+              element={
+                <RoleBasedAccess allowedRoles={["architect"]}>
+                  <ProjectId />
+                </RoleBasedAccess>
+              }
+            />
           </Route>
+        </Route>
 
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    );
-  }
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}

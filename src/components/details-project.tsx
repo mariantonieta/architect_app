@@ -118,6 +118,7 @@ export function ProjectDetails() {
     project.files?.filter((file) =>
       file.original_name.match(/\.(pdf|jpe?g)$/i)
     ) || [];
+    
   const bimFiles =
     project.files?.filter((file) => file.original_name.match(/\.ifc$/i)) || [];
   const formattedCreateDate = project?.create_date
@@ -133,8 +134,8 @@ export function ProjectDetails() {
     { id: "materials-computation", label: "Materials Computation" },
     {id: "materials", label: "Materials" },
     { id: "budgets", label: "Budgets" },
-    { id: "roles", label: "Roles" },
-    { id: "history", label: "History" },
+    // { id: "roles", label: "Roles" },
+    // { id: "history", label: "History" },
   ];
 
   return (

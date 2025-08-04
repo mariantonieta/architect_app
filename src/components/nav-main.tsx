@@ -23,6 +23,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { ChevronRight, type LucideIcon } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export function NavMain({
   items,
@@ -41,6 +42,7 @@ export function NavMain({
   const location = useLocation();
   const { isArchitect } = useRolePermissions();
   const { toggleModal } = useCreateProjectModal();
+  const { t } = useTranslation();
 
   return (
     <SidebarGroup>
@@ -54,7 +56,7 @@ export function NavMain({
                 onClick={() => toggleModal(true)} // Usar openModal del hook
               >
                 <IconCirclePlusFilled />
-                <span>New Project</span>
+                <span>{t('projects.createProject')}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           )}

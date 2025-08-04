@@ -5,11 +5,8 @@ import {
   IconNotification,
   IconUserCircle,
   IconSettings,
-} from "@tabler/icons-react"
-import {
-  Avatar,
-  AvatarFallback,
-} from "@/components/ui/avatar"
+} from "@tabler/icons-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,40 +15,42 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@/components/ui/sidebar"
-import { useNavigate } from "react-router-dom"
-import { useUser } from "@/hooks/useUser"
-import { useQueryClient } from "@tanstack/react-query"
+} from "@/components/ui/sidebar";
+import { useNavigate } from "react-router-dom";
+import { useUser } from "@/hooks/useUser";
+import { useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 
 export function NavUser() {
-  const { data: user, isLoading } = useUser()
-  const { isMobile } = useSidebar()
-  const navigate = useNavigate()
-  const queryClient = useQueryClient()
+  const { data: user, isLoading } = useUser();
+  const { isMobile } = useSidebar();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   function handleAccountClick() {
-    navigate("/account")
+    navigate("/account");
   }
 
   function handleSettingsClick() {
-    navigate("/settings")
+    navigate("/settings");
   }
 
   function handleLogout() {
-    localStorage.removeItem("auth_token")
-    localStorage.removeItem("user_id")
-    localStorage.removeItem("user")
-    queryClient.clear()
-    navigate("/login")
+    localStorage.removeItem("auth_token");
+    localStorage.removeItem("user_id");
+    localStorage.removeItem("user");
+    queryClient.clear();
+    navigate("/login");
   }
 
-  if (isLoading || !user) return null
+  if (isLoading || !user) return null;
 
   return (
     <SidebarMenu>
@@ -64,7 +63,7 @@ export function NavUser() {
             >
               <div className="flex items-center gap-2 truncate text-left">
                 <IconSettings className="size-4" />
-                <span className="text-sm">Settings</span>
+                <span className="text-sm">{t("sidebar.settings")}</span>
               </div>
               <IconDotsVertical className="size-4 text-muted-foreground" />
             </SidebarMenuButton>
@@ -85,7 +84,9 @@ export function NavUser() {
                 </Avatar>
                 <div className="grid text-sm leading-tight">
                   <span className="font-medium">{user.first_name}</span>
-                  <span className="text-muted-foreground text-xs truncate">{user.email}</span>
+                  <span className="text-muted-foreground text-xs truncate">
+                    {user.email}
+                  </span>
                 </div>
               </div>
             </DropdownMenuLabel>
@@ -93,25 +94,31 @@ export function NavUser() {
             <DropdownMenuSeparator />
 
             <DropdownMenuGroup>
-              <DropdownMenuItem onClick={handleAccountClick} className="flex items-center gap-2 cursor-pointer">
+              <DropdownMenuItem
+                onClick={handleAccountClick}
+                className="flex items-center gap-2 cursor-pointer"
+              >
                 <IconUserCircle className="size-4" />
-                Account
+                {t("sidebar.account")}
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <IconNotification className="size-4" />
-                Notifications
+                {t("sidebar.notifications")}
               </DropdownMenuItem>
             </DropdownMenuGroup>
 
             <DropdownMenuSeparator />
 
-            <DropdownMenuItem onClick={handleLogout} className="flex items-center gap-2 cursor-pointer">
+            <DropdownMenuItem
+              onClick={handleLogout}
+              className="flex items-center gap-2 cursor-pointer"
+            >
               <IconLogout className="size-4" />
-              Log out
+              {t("sidebar.logout")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>
-  )
+  );
 }
