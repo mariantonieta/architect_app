@@ -53,7 +53,7 @@ export function InvitationsCard({
         <CardContent className="p-6">
           <div className="flex items-start justify-between mb-4">
             <div>
-              <h3 className="font-semibold text-lg text-gray-900 mb-1">{name}</h3>
+              <h3 className="font-semibold text-lg mb-1">{name}</h3>
             </div>
             <Badge
               variant={status === "Active" ? "default" : "secondary"}

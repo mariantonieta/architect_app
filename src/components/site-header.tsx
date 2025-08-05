@@ -15,13 +15,13 @@ export function SiteHeader() {
   const userRole = user.role || t('users.userRole');
 
   return (
-    <header className="mb-4 bg-white px-6 py-5">
+    <header className="mb-4 bg-background px-6 py-5 text-foreground shadow-sm">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <SidebarTrigger />
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-semibold text-gray-900">
+              <h1 className="text-2xl font-semibold ">
                 {t('common.welcome')}, <span className="text-primary">{userName}</span>
               </h1>
               <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">

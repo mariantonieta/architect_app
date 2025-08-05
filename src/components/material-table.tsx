@@ -432,7 +432,7 @@ export function MaterialsTable({
           Vista
         </Label>
         <Select defaultValue="materials">
-          <SelectTrigger className="flex w-fit @4xl/main:hidden" size="sm" id="view-selector">
+          <SelectTrigger className="flex w-fit @4xl/main:hidden"  id="view-selector">
             <SelectValue placeholder="Seleccionar vista" />
           </SelectTrigger>
           <SelectContent>
@@ -482,7 +482,7 @@ export function MaterialsTable({
                 })}
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button className="bg-primary text-white hover:bg-primary/90" size="sm">
+          <Button className="bg-primary hover:bg-primary/90" size="sm">
             <Plus />
             <span className="hidden lg:inline">Agregar Material</span>
           </Button>
@@ -554,7 +554,7 @@ export function MaterialsTable({
                   table.setPageSize(Number(value))
                 }}
               >
-                <SelectTrigger size="sm" className="w-20" id="rows-per-page">
+                <SelectTrigger  className="w-20" id="rows-per-page">
                   <SelectValue placeholder={table.getState().pagination.pageSize} />
                 </SelectTrigger>
                 <SelectContent side="top">

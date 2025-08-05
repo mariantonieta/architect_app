@@ -9,7 +9,6 @@ import {
   ArrowLeft,
   User,
   MapPin,
-  Calendar,
   DollarSign,
   Users,
   Building2,
@@ -48,14 +47,16 @@ export function ProjectDetails() {
     isError,
     deleteProject,
     isDeleting,
-    updateProject,
+        updateProject,
+
   } = useProject(id);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [deleted, setDeleted] = useState(false);
+const [deleted, setDeleted] = useState(false);
+  
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
-  const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [editOpen, setEditOpen] = useState(false);
+const [selectedFile, setSelectedFile] = useState<string | null>(null);
 
   const [editForm, setEditForm] = useState({
     name: "",
@@ -139,8 +140,8 @@ export function ProjectDetails() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b">
+    <div className="min-h-screen">
+      <div className=" border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex items-center justify-between">
             <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
@@ -151,7 +152,7 @@ export function ProjectDetails() {
             <div className="flex items-center gap-2">
               <Badge
                 variant="secondary"
-                className="bg-blue-100 text-blue-700 capitalize text-xs sm:text-sm"
+                className=" text-blue-700 capitalize text-xs sm:text-sm"
               >
                 {project.status.replace(/_/g, " ")}
               </Badge>
@@ -166,9 +167,9 @@ export function ProjectDetails() {
                   <IconDotsVertical className="h-4 w-4" />
                 </Button>
                 {menuOpen && (
-                  <div className="absolute right-0 mt-2 w-40 bg-white border rounded shadow-md z-10">
+                  <div className="absolute right-0 mt-2 w-40  border rounded shadow-md z-10">
                     <button
-                      className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                      className="block w-full text-left px-4 py-2 "
                       onClick={() =>
                         toggleModal(
                           true,
@@ -215,7 +216,7 @@ export function ProjectDetails() {
                       Edit
                     </button>
                     <button
-                      className="block w-full text-left px-4 py-2 hover:bg-red-100 text-red-600"
+                      className="block w-full text-left px-4 py-2  text-red-600"
                       disabled={isDeleting}
                       onClick={() => {
                         setOpenDeleteModal(true);
@@ -234,7 +235,7 @@ export function ProjectDetails() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
         <div className="mb-4 sm:mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2">
             {project.name}
           </h1>
         </div>
@@ -245,12 +246,12 @@ export function ProjectDetails() {
           className="mb-6 sm:mb-8"
         >
           <div className="overflow-x-auto">
-            <TabsList className="inline-flex h-10 items-center justify-start rounded-md bg-gray-100 p-1 text-muted-foreground min-w-full sm:min-w-0">
+            <TabsList className="inline-flex h-10 items-center justify-start rounded-md  p-1 text-muted-foreground min-w-full sm:min-w-0">
               {tabs.map((tab) => (
                 <TabsTrigger
                   key={tab.id}
                   value={tab.id}
-                  className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm flex-shrink-0"
+                  className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active] data-[state=active]:text-blue-600 data-[state=active]:shadow-sm flex-shrink-0"
                 >
                   <span className="truncate">{tab.label}</span>
                 </TabsTrigger>
@@ -288,7 +289,7 @@ export function ProjectDetails() {
                     ))}
                   </Accordion>
                 ) : (
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm ">
                     No plan files uploaded.
                   </p>
                 )}
@@ -297,7 +298,7 @@ export function ProjectDetails() {
           </TabsContent>
           <TabsContent value="overview" className="mt-6">
             <div className="space-y-8">
-              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">
+              <h2 className="text-lg sm:text-xl font-semibold ">
                 Project Information
               </h2>
 
@@ -305,14 +306,14 @@ export function ProjectDetails() {
                 <Card>
                   <CardContent className="p-4 sm:p-6">
                     <div className="flex items-center gap-3">
-                      <div className="p-2 bg-gray-100 rounded-lg flex-shrink-0">
-                        <User className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
+                      <div className="p-2 rounded-lg flex-shrink-0">
+                        <User className="h-4 w-4 sm:h-5 sm:w-5 " />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs sm:text-sm text-gray-500">
+                        <p className="text-xs sm:text-sm ">
                           Client
                         </p>
-                        <div className="font-medium text-sm sm:text-base text-gray-900 truncate">
+                        <div className="font-medium text-sm sm:text-base  truncate">
                           <p>
                             {(project.customerEmail || []).join(", ") ||
                               "Not assigned"}
@@ -326,14 +327,14 @@ export function ProjectDetails() {
                 <Card>
                   <CardContent className="p-4 sm:p-6">
                     <div className="flex items-center gap-3">
-                      <div className="p-2 bg-gray-100 rounded-lg flex-shrink-0">
-                        <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
+                      <div className="p-2 rounded-lg flex-shrink-0">
+                        <MapPin className="h-4 w-4 sm:h-5 sm:w-5" />
                       </div>
                       <div>
-                        <p className="text-xs sm:text-sm text-gray-500">
+                        <p className="text-xs sm:text-sm ">
                           Location
                         </p>
-                        <p className="font-medium text-sm sm:text-base text-gray-900">
+                        <p className="font-medium text-sm sm:text-base">
                           {project.location}
                         </p>
                       </div>
@@ -344,14 +345,14 @@ export function ProjectDetails() {
                 <Card>
                   <CardContent className="p-4 sm:p-6">
                     <div className="flex items-center gap-3">
-                      <div className="p-2 bg-gray-100 rounded-lg flex-shrink-0">
-                        <Building2 className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
+                      <div className="p-2  rounded-lg flex-shrink-0">
+                        <Building2 className="h-4 w-4 sm:h-5 sm:w-5 " />
                       </div>
                       <div>
-                        <p className="text-xs sm:text-sm text-gray-500">
+                        <p className="text-xs sm:text-sm ">
                           Project Type
                         </p>
-                        <p className="font-medium text-sm sm:text-base text-gray-900">
+                        <p className="font-medium text-sm sm:text-base ">
                           {project.project_type
                             .split("_")
                             .map(
@@ -387,14 +388,14 @@ export function ProjectDetails() {
                 <Card>
                   <CardContent className="p-4 sm:p-6">
                     <div className="flex items-center gap-3">
-                      <div className="p-2 bg-gray-100 rounded-lg flex-shrink-0">
-                        <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
+                      <div className="p-2  rounded-lg flex-shrink-0">
+                        <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 " />
                       </div>
                       <div>
-                        <p className="text-xs sm:text-sm text-gray-500">
+                        <p className="text-xs sm:text-sm">
                           Budget
                         </p>
-                        <p className="font-medium text-sm sm:text-base text-gray-900">
+                        <p className="font-medium text-sm sm:text-base">
                           ${project.estimated_budget?.toLocaleString() || "0"}
                         </p>
                       </div>
@@ -405,14 +406,14 @@ export function ProjectDetails() {
                 <Card>
                   <CardContent className="p-4 sm:p-6">
                     <div className="flex items-center gap-3">
-                      <div className="p-2 bg-gray-100 rounded-lg flex-shrink-0">
-                        <Users className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
+                      <div className="p-2 rounded-lg flex-shrink-0">
+                        <Users className="h-4 w-4 sm:h-5 sm:w-5" />
                       </div>
                       <div>
-                        <p className="text-xs sm:text-sm text-gray-500">
+                        <p className="text-xs sm:text-sm">
                           Team Size
                         </p>
-                        <p className="font-medium text-sm sm:text-base text-gray-900">
+                        <p className="font-medium text-sm sm:text-base">
                           {[
                             ...(project.supplierEmail || []),
                             ...(project.architectEmail || []),
@@ -424,10 +425,10 @@ export function ProjectDetails() {
                 </Card>
                 <Card className="sm:col-span-2 lg:col-span-3">
                   <CardContent className="p-4 sm:p-6">
-                    <p className="text-xs sm:text-sm text-gray-500 mb-1">
+                    <p className="text-xs sm:text-sm mb-1">
                       Description
                     </p>
-                    <p className="text-sm sm:text-base text-gray-900 whitespace-pre-line">
+                    <p className="text-sm sm:text-base whitespace-pre-line">
                       {project.description || "No description provided."}
                     </p>
                   </CardContent>
@@ -451,7 +452,7 @@ export function ProjectDetails() {
                 ))}
               </Accordion>
             ) : (
-              <p className="text-sm text-gray-500">No 3D models available.</p>
+              <p className="text-sm">No 3D models available.</p>
             )}
           </TabsContent>
 

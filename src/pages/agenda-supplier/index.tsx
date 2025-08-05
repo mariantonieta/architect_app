@@ -107,7 +107,7 @@ export default function SupplierAgenda() {
         onOpenInviteModal={() => setOpenInviteModal(true)}
         InviteModalComponent={
           <Button
-            className="bg-gray-800 hover:bg-gray-700 text-white"
+            className=" hover:bg-gray-700"
             onClick={() => setOpenInviteModal(true)}
           >
             <Plus className="h-4 w-4 mr-2" />

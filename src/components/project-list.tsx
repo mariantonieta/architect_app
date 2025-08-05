@@ -74,13 +74,13 @@ export function ProjectsList() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen">
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="bg-white border-b border-gray-200 px-6 py-4">
+        <header className=" border-b px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Projects</h1>
-              <p className="text-sm text-gray-600 mt-1">List of projects</p>
+              <h1 className="text-2xl font-bold">Projects</h1>
+              <p className="text-sm mt-1">List of projects</p>
             </div>
             <Button onClick={() => toggleModal(true)}>
               <Plus className="h-4 w-4 mr-2" />
@@ -97,11 +97,11 @@ export function ProjectsList() {
               return (
                 <Card
                   key={project.id}
-                  className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
+                  className=" shadow-sm hover:shadow-md transition-shadow"
                 >
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">
-                      <CardTitle className="text-lg font-bold text-gray-900 leading-tight pr-2">
+                      <CardTitle className="text-lg font-bold leading-tight pr-2">
                         {project.name}
                       </CardTitle>
                       <Badge
@@ -114,14 +114,14 @@ export function ProjectsList() {
                     </div>
                   </CardHeader>
 
-                  <CardContent className="space-y-4 pb-4 text-sm text-gray-700">
-                    <div className="flex items-center gap-40 text-sm text-gray-600">
+                  <CardContent className="space-y-4 pb-4 text-sm">
+                    <div className="flex items-center gap-40 text-sm">
                       <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4 text-gray-400" />
+                        <MapPin className="h-4 w-4" />
                         <span>{project.location}</span>
                       </div>
                       <div className="flex items-center gap-1">
-                        <Building2 className="h-4 w-4 text-gray-400" />
+                        <Building2 className="h-4 w-4" />
                         <span>{formatProjectType(project.project_type)}</span>
                       </div>
                     </div>

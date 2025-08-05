@@ -7,7 +7,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useForm, Controller } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
@@ -22,6 +21,13 @@ import { inviteService, type RoleType } from "@/services/inviteServices";
 import { useInviteUser } from "@/hooks/useInvite";
 import { FormField } from "./form-field";
 import { toast } from "sonner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type ProjectFormInput = Omit<
   ProjectFormData,
@@ -330,61 +336,56 @@ useEffect(() => {
               )}
             />
           </FormField>
+<FormField
+  label="Type"
+  id="project_type"
+  error={errors.project_type?.message}
+  required
+>
+  <Controller
+    control={control}
+    name="project_type"
+    rules={{ required: "Project type is required" }}
+    render={({ field }) => (
+      <Select value={field.value} onValueChange={field.onChange}>
+        <SelectTrigger id="project_type"  className="w-full">
+          <SelectValue placeholder="Select project type" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="single_family_home">Single Family Home</SelectItem>
+          <SelectItem value="residential_building">Residential Building</SelectItem>
+          <SelectItem value="commercial_building">Commercial Building</SelectItem>
+          <SelectItem value="industrial">Industrial</SelectItem>
+          <SelectItem value="renovation">Renovation</SelectItem>
+          <SelectItem value="recreational">Recreational</SelectItem>
+          <SelectItem value="other">Other</SelectItem>
+        </SelectContent>
+      </Select>
+    )}
+  />
+</FormField>
 
-          <FormField
-            label="Type"
-            id="project_type"
-            error={errors.project_type?.message}
-            required
-          >
-            <Controller
-              control={control}
-              name="project_type"
-              rules={{ required: "Project type is required" }}
-              render={({ field }) => (
-                <select
-                  {...field}
-                  id="project_type"
-                  className="w-full border rounded px-2 py-1"
-                >
-                  <option value="" disabled>
-                    Select project type
-                  </option>
-                  <option value="single_family_home">Single Family Home</option>
-                  <option value="residential_building">
-                    Residential Building
-                  </option>
-                  <option value="commercial_building">
-                    Commercial Building
-                  </option>
-                  <option value="industrial">Industrial</option>
-                  <option value="renovation">Renovation</option>
-                  <option value="recreational">Recreational</option>
-                  <option value="other">Other</option>
-                </select>
-              )}
-            />
-          </FormField>
 
-          <FormField label="Status" id="status" required>
-            <Controller
-              control={control}
-              name="status"
-              rules={{ required: "Status is required" }}
-              render={({ field }) => (
-                <select
-                  {...field}
-                  id="status"
-                  className="w-full border rounded px-2 py-1"
-                >
-                  <option value="idea">Idea</option>
-                  <option value="budgeting">Budgeting</option>
-                  <option value="in_progress">In Progress</option>
-                  <option value="finished">Finished</option>
-                </select>
-              )}
-            />
-          </FormField>
+       <FormField label="Status" id="status" required className="w-full">
+  <Controller
+    control={control}
+    name="status"
+    rules={{ required: "Status is required" }}
+    render={({ field }) => (
+      <Select value={field.value} onValueChange={field.onChange}>
+        <SelectTrigger id="status" className="w-full" size="default">
+          <SelectValue placeholder="Select status" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="idea">Idea</SelectItem>
+          <SelectItem value="budgeting">Budgeting</SelectItem>
+          <SelectItem value="in_progress">In Progress</SelectItem>
+          <SelectItem value="finished">Finished</SelectItem>
+        </SelectContent>
+      </Select>
+    )}
+  />
+</FormField>
 
           <div className="flex space-x-4">
             <FormField label="Budget" id="estimated_budget" className="flex-1">
@@ -415,15 +416,17 @@ useEffect(() => {
                 control={control}
                 name="currency"
                 render={({ field }) => (
-                  <select
-                    {...field}
-                    id="currency"
-                    className="w-full border rounded px-2 py-1"
-                  >
-                    <option value="ars">ARS</option>
-                    <option value="usd">USD</option>
-                    <option value="eur">EUR</option>
-                  </select>
+                
+                          <Select value={field.value} onValueChange={field.onChange}>
+                            <SelectTrigger id="currency" className="w-full" size="default">
+          <SelectValue placeholder="Select status" />
+        </SelectTrigger>
+         <SelectContent>
+                    <SelectItem value="ars">ARS</SelectItem>
+                    <SelectItem value="usd">USD</SelectItem>
+                    <SelectItem value="eur">EUR</SelectItem>
+                    </SelectContent>
+                  </Select>
                 )}
               />
             </FormField>
