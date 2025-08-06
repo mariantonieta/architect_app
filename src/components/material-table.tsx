@@ -11,26 +11,11 @@ import {
   type UniqueIdentifier,
 } from "@dnd-kit/core"
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers"
-import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable"
-import { CSS } from "@dnd-kit/utilities"
-import {
-  Edit,
-  GripVertical,
-  Calendar,
-  Plus,
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-  MoreHorizontal,
-  Columns,
-  TrendingUp,
-} from "lucide-react"
+import { SortableContext, arrayMove, verticalListSortingStrategy } from "@dnd-kit/sortable"
+import { Edit, Calendar, Plus, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, MoreHorizontal, Columns, Save, Trash2 } from 'lucide-react'
 import {
   type ColumnDef,
   type ColumnFiltersState,
-  type Row,
   type SortingState,
   type VisibilityState,
   flexRender,
@@ -42,24 +27,10 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
 import { toast } from "sonner"
-import { z } from "zod"
-import { useIsMobile } from "@/hooks/use-mobile"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { Checkbox } from "@/components/ui/checkbox"
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@/components/ui/drawer"
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -68,302 +39,46 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Separator } from "@/components/ui/separator"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { type Material, } from "../types/material"
+import { DragHandle } from "./drag-handle"
+import { EditableCell } from "./editable-cell"
+import { EditableSelect } from "./editable-select"
+import { DraggableRow } from "./draggable-row"
+import { AddMaterialRow } from "./add-material-row"
 
-export const materialsSchema = z.object({
-  id: z.number(),
-  item: z.string(),
-  description: z.string(),
-  unit: z.string(),
-  quantity: z.number(),
-  category: z.string(),
-  subcategory: z.string(),
-  metricQuantity: z.number(),
-  updatedQuantity: z.number(),
-  finalUnit: z.string(),
-  status: z.string(),
-})
 
-export type Material = z.infer<typeof materialsSchema>
-
-export const sampleMaterialsData: Material[] = [
-  {
-    id: 1,
-    item: "Cemento",
-    description: "Cemento Portland normal bolsa 50kg",
-    unit: "kg",
-    quantity: 180,
-    category: "MAMPOSTERÍA Y TABIQUERÍA",
-    subcategory: "Muros portantes",
-    metricQuantity: 20,
-    updatedQuantity: 24.5,
-    finalUnit: "m2",
-    status: "Presupuestado",
-  },
-  {
-    id: 2,
-    item: "Ladrillo común",
-    description: "Ladrillo común de mampostería",
-    unit: "u",
-    quantity: 1000,
-    category: "MAMPOSTERÍA Y TABIQUERÍA",
-    subcategory: "Muros portantes",
-    metricQuantity: 20,
-    updatedQuantity: 20,
-    finalUnit: "m2",
-    status: "Presupuestado",
-  },
-  {
-    id: 3,
-    item: "Hierro ADN420",
-    description: "Hierro para estructura",
-    unit: "kg",
-    quantity: 640,
-    category: "MAMPOSTERÍA Y TABIQUERÍA",
-    subcategory: "Muros portantes",
-    metricQuantity: 20,
-    updatedQuantity: 20,
-    finalUnit: "m2",
-    status: "Presupuestado",
-  },
-  {
-    id: 4,
-    item: "Arena fina",
-    description: "Arena fina para mortero",
-    unit: "m3",
-    quantity: 5,
-    category: "MAMPOSTERÍA Y TABIQUERÍA",
-    subcategory: "Muros portantes",
-    metricQuantity: 20,
-    updatedQuantity: 18.5,
-    finalUnit: "m2",
-    status: "En proceso",
-  },
-  {
-    id: 5,
-    item: "Piedra partida",
-    description: "Piedra partida 6-20mm",
-    unit: "m3",
-    quantity: 8,
-    category: "HORMIGÓN ARMADO",
-    subcategory: "Fundaciones",
-    metricQuantity: 15,
-    updatedQuantity: 15,
-    finalUnit: "m3",
-    status: "Pendiente",
-  },
+export const unitOptions = [
+  { value: "kg", label: "kg" },
+  { value: "u", label: "u" },
+  { value: "m3", label: "m³" },
+  { value: "m2", label: "m²" },
+  { value: "m", label: "m" },
 ]
 
-// Create a separate component for the drag handle
-function DragHandle({ id }: { id: number }) {
-  const { attributes, listeners } = useSortable({
-    id,
-  })
-
-  return (
-    <Button
-      {...attributes}
-      {...listeners}
-      variant="ghost"
-      size="icon"
-      className="text-muted-foreground size-7 hover:bg-transparent"
-    >
-      <GripVertical className="text-muted-foreground size-3" />
-      <span className="sr-only">Drag to reorder</span>
-    </Button>
-  )
-}
-
-const materialsColumns: ColumnDef<Material>[] = [
-  {
-    id: "drag",
-    header: () => null,
-    cell: ({ row }) => <DragHandle id={row.original.id} />,
-  },
-  {
-    id: "select",
-    header: ({ table }) => (
-      <div className="flex items-center justify-center">
-        <Checkbox
-         checked={
-    table.getIsAllPageRowsSelected()
-      ? true
-      : table.getIsSomePageRowsSelected()
-      ? "indeterminate"
-      : false
-  }
-  onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-  aria-label="Select all"
-        />
-      </div>
-    ),
-    cell: ({ row }) => (
-      <div className="flex items-center justify-center">
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
-        />
-      </div>
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
-    accessorKey: "item",
-    header: "Item",
-    cell: ({ row }) => {
-      return <MaterialCellViewer item={row.original} />
-    },
-    enableHiding: false,
-  },
-  {
-    accessorKey: "description",
-    header: "Medida / Descripción",
-    cell: ({ row }) => (
-      <div className="max-w-60 truncate text-muted-foreground text-xs italic">{row.original.description}</div>
-    ),
-  },
-  {
-    accessorKey: "unit",
-    header: "Unidad",
-    cell: ({ row }) => <div className="text-center text-sm">{row.original.unit}</div>,
-  },
-  {
-    accessorKey: "quantity",
-    header: () => <div className="w-full text-right">Cantidad</div>,
-    cell: ({ row }) => (
-      <form
-        onSubmit={(e) => {
-          e.preventDefault()
-          toast.promise(new Promise((resolve) => setTimeout(resolve, 1000)), {
-            loading: `Guardando ${row.original.item}`,
-            success: "Guardado",
-            error: "Error",
-          })
-        }}
-      >
-        <Label htmlFor={`${row.original.id}-quantity`} className="sr-only">
-          Cantidad
-        </Label>
-        <Input
-          className="hover:bg-input/30 focus-visible:bg-background dark:hover:bg-input/30 dark:focus-visible:bg-input/30 h-8 w-20 border-transparent bg-transparent text-right shadow-none focus-visible:border dark:bg-transparent"
-          defaultValue={row.original.quantity}
-          id={`${row.original.id}-quantity`}
-        />
-      </form>
-    ),
-  },
-  {
-    accessorKey: "category",
-    header: "Rubro / Categoría",
-    cell: ({ row }) => (
-      <div className="min-w-32 space-y-0.5 text-xs">
-        <p className="font-semibold">{row.original.category}</p>
-        <p className="text-muted-foreground">{row.original.subcategory}</p>
-      </div>
-    ),
-  },
-  {
-    accessorKey: "metricQuantity",
-    header: () => <div className="w-full text-right">Cantidad métrica</div>,
-    cell: ({ row }) => <div className="text-center">{row.original.metricQuantity}</div>,
-  },
-  {
-    accessorKey: "updatedQuantity",
-    header: () => <div className="w-full text-right">Actualizada</div>,
-    cell: ({ row }) => (
-      <form
-        onSubmit={(e) => {
-          e.preventDefault()
-          toast.promise(new Promise((resolve) => setTimeout(resolve, 1000)), {
-            loading: `Guardando ${row.original.item}`,
-            success: "Guardado",
-            error: "Error",
-          })
-        }}
-      >
-        <Label htmlFor={`${row.original.id}-updated`} className="sr-only">
-          Cantidad actualizada
-        </Label>
-        <Input
-          className="hover:bg-input/30 focus-visible:bg-background dark:hover:bg-input/30 dark:focus-visible:bg-input/30 h-8 w-20 border-transparent bg-transparent text-right shadow-none focus-visible:border dark:bg-transparent font-semibold text-primary"
-          defaultValue={row.original.updatedQuantity}
-          id={`${row.original.id}-updated`}
-        />
-      </form>
-    ),
-  },
-  {
-    accessorKey: "finalUnit",
-    header: "Unidad final",
-    cell: ({ row }) => <div className="text-center text-primary">{row.original.finalUnit}</div>,
-  },
-  {
-    accessorKey: "status",
-    header: "Estado",
-    cell: ({ row }) => (
-      <Badge variant="outline" className="text-xs rounded-md px-2 py-0.5">
-        {row.original.status}
-      </Badge>
-    ),
-  },
-  {
-    id: "actions",
-    cell: () => (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="data-[state=open]:bg-muted text-muted-foreground flex size-8" size="icon">
-            <MoreHorizontal />
-            <span className="sr-only">Open menu</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-32">
-          <DropdownMenuItem>Editar</DropdownMenuItem>
-          <DropdownMenuItem>Duplicar</DropdownMenuItem>
-          <DropdownMenuItem>Favorito</DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem variant="destructive">Eliminar</DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    ),
-  },
+export const statusOptions = [
+  { value: "Presupuestado", label: "Presupuestado" },
+  { value: "En proceso", label: "En proceso" },
+  { value: "Pendiente", label: "Pendiente" },
+  { value: "Completado", label: "Completado" },
 ]
 
-function DraggableRow({ row }: { row: Row<Material> }) {
-  const { transform, transition, setNodeRef, isDragging } = useSortable({
-    id: row.original.id,
-  })
+export const categoryOptions = [
+  { value: "MAMPOSTERÍA Y TABIQUERÍA", label: "MAMPOSTERÍA Y TABIQUERÍA" },
+  { value: "HORMIGÓN ARMADO", label: "HORMIGÓN ARMADO" },
+  { value: "INSTALACIONES", label: "INSTALACIONES" },
+  { value: "TERMINACIONES", label: "TERMINACIONES" },
+]
 
-  return (
-    <TableRow
-      data-state={row.getIsSelected() && "selected"}
-      data-dragging={isDragging}
-      ref={setNodeRef}
-      className="relative z-0 data-[dragging=true]:z-10 data-[dragging=true]:opacity-80"
-      style={{
-        transform: CSS.Transform.toString(transform),
-        transition: transition,
-      }}
-    >
-      {row.getVisibleCells().map((cell) => (
-        <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
-      ))}
-    </TableRow>
-  )
-}
-
-export function MaterialsTable({
-  data: initialData = sampleMaterialsData,
-}: {
+interface MaterialsTableProps {
   data?: Material[]
-}) {
+}
+export function MaterialsTable({ data: initialData = [] }: MaterialsTableProps) {
+
   const [data, setData] = React.useState(() => initialData)
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
@@ -373,10 +88,223 @@ export function MaterialsTable({
     pageIndex: 0,
     pageSize: 10,
   })
+  const [isAddingMaterial, setIsAddingMaterial] = React.useState(false)
+
+  const updateMaterial = (id: number, field: keyof Material, value: string | number) => {
+    setData(prev => prev.map(item => 
+      item.id === id ? { ...item, [field]: value } : item
+    ))
+  }
+
+  const addNewMaterial = (materialData: Omit<Material, 'id'>) => {
+    const newId = Math.max(...data.map(item => item.id), 0) + 1
+    const newMaterial: Material = {
+      id: newId,
+      ...materialData,
+    }
+    setData(prev => [...prev, newMaterial])
+    setIsAddingMaterial(false)
+  }
+
+  const deleteMaterial = (id: number) => {
+    setData(prev => prev.filter(item => item.id !== id))
+    toast.success("Material eliminado")
+  }
+
+  const materialsColumns: ColumnDef<Material>[] = [
+    {
+      id: "drag",
+      header: () => null,
+      cell: ({ row }) => <DragHandle id={row.original.id} />,
+    },
+    {
+      id: "select",
+      header: ({ table }) => (
+        <div className="flex items-center justify-center">
+          <Checkbox 
+            checked={
+              table.getIsAllPageRowsSelected()
+                ? true
+                : table.getIsSomePageRowsSelected()
+                ? "indeterminate"
+                : false
+            }
+            onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+            aria-label="Select all"
+          />
+        </div>
+      ),
+      cell: ({ row }) => (
+        <div className="flex items-center justify-center">
+          <Checkbox
+            checked={row.getIsSelected()}
+            onCheckedChange={(value) => row.toggleSelected(!!value)}
+            aria-label="Select row"
+          />
+        </div>
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    },
+    {
+      accessorKey: "item",
+      header: "Item",
+      cell: ({ row }) => (
+        <EditableCell
+          value={row.original.item}
+          onSave={(value) => updateMaterial(row.original.id, "item", value)}
+          className="font-semibold min-w-32"
+          placeholder="Nombre del material"
+        />
+      ),
+      enableHiding: false,
+    },
+    {
+      accessorKey: "description",
+      header: "Medida / Descripción",
+      cell: ({ row }) => (
+        <EditableCell
+          value={row.original.description}
+          onSave={(value) => updateMaterial(row.original.id, "description", value)}
+          type="textarea"
+          placeholder="Descripción del material"
+        />
+      ),
+    },
+    {
+      accessorKey: "unit",
+      header: "Unidad",
+      cell: ({ row }) => (
+        <div className="text-center">
+          <EditableSelect
+            value={row.original.unit}
+            onSave={(value) => updateMaterial(row.original.id, "unit", value)}
+            options={unitOptions}
+            className="text-sm"
+          />
+        </div>
+      ),
+    },
+    {
+      accessorKey: "quantity",
+      header: () => <div className="w-full text-right">Cantidad</div>,
+      cell: ({ row }) => (
+        <EditableCell
+          value={row.original.quantity}
+          onSave={(value) => updateMaterial(row.original.id, "quantity", value)}
+          type="number"
+          className="w-20 text-right"
+          placeholder="0"
+        />
+      ),
+    },
+    {
+      accessorKey: "category",
+      header: "Rubro / Categoría",
+      cell: ({ row }) => (
+        <div className="min-w-32 space-y-1">
+          <EditableSelect
+            value={row.original.category}
+            onSave={(value) => updateMaterial(row.original.id, "category", value)}
+            options={categoryOptions}
+            className="text-xs font-semibold"
+          />
+          <EditableCell
+            value={row.original.subcategory}
+            onSave={(value) => updateMaterial(row.original.id, "subcategory", value)}
+            className="text-xs text-muted-foreground"
+            placeholder="Subcategoría"
+          />
+        </div>
+      ),
+    },
+    {
+      accessorKey: "metricQuantity",
+      header: () => <div className="w-full text-right">Cantidad métrica</div>,
+      cell: ({ row }) => (
+        <EditableCell
+          value={row.original.metricQuantity}
+          onSave={(value) => updateMaterial(row.original.id, "metricQuantity", value)}
+          type="number"
+          className="w-20 text-center"
+          placeholder="0"
+        />
+      ),
+    },
+    {
+      accessorKey: "updatedQuantity",
+      header: () => <div className="w-full text-right">Actualizada</div>,
+      cell: ({ row }) => (
+        <EditableCell
+          value={row.original.updatedQuantity}
+          onSave={(value) => updateMaterial(row.original.id, "updatedQuantity", value)}
+          type="number"
+          className="w-20 text-right font-semibold text-primary"
+          placeholder="0"
+        />
+      ),
+    },
+    {
+      accessorKey: "finalUnit",
+      header: "Unidad final",
+      cell: ({ row }) => (
+        <div className="text-center">
+          <EditableSelect
+            value={row.original.finalUnit}
+            onSave={(value) => updateMaterial(row.original.id, "finalUnit", value)}
+            options={unitOptions}
+            className="text-primary"
+          />
+        </div>
+      ),
+    },
+    {
+      accessorKey: "status",
+      header: "Estado",
+      cell: ({ row }) => (
+        <EditableSelect
+          value={row.original.status}
+          onSave={(value) => updateMaterial(row.original.id, "status", value)}
+          options={statusOptions}
+          className="text-xs"
+        />
+      ),
+    },
+    {
+      id: "actions",
+      cell: ({ row }) => (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="data-[state=open]:bg-muted text-muted-foreground flex size-8" size="icon">
+              <MoreHorizontal />
+              <span className="sr-only">Open menu</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-32">
+            <DropdownMenuItem onClick={() => {
+              const material = row.original
+              const duplicated = { ...material, id: Math.max(...data.map(item => item.id)) + 1 }
+              setData(prev => [...prev, duplicated])
+              toast.success("Material duplicado")
+            }}>
+              Duplicar
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem 
+              className="text-destructive focus:text-destructive"
+              onClick={() => deleteMaterial(row.original.id)}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Eliminar
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ),
+    },
+  ]
 
   const sortableId = React.useId()
   const sensors = useSensors(useSensor(MouseSensor, {}), useSensor(TouchSensor, {}), useSensor(KeyboardSensor, {}))
-
   const dataIds = React.useMemo<UniqueIdentifier[]>(() => data?.map(({ id }) => id) || [], [data])
 
   const table = useReactTable({
@@ -427,33 +355,6 @@ export function MaterialsTable({
             <AvatarFallback className="text-xs">U</AvatarFallback>
           </Avatar>
         </div>
-
-        <Label htmlFor="view-selector" className="sr-only">
-          Vista
-        </Label>
-        <Select defaultValue="materials">
-          <SelectTrigger className="flex w-fit @4xl/main:hidden"  id="view-selector">
-            <SelectValue placeholder="Seleccionar vista" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="materials">Materiales</SelectItem>
-            <SelectItem value="budget">Presupuesto</SelectItem>
-            <SelectItem value="suppliers">Proveedores</SelectItem>
-            <SelectItem value="reports">Reportes</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <TabsList className="**:data-[slot=badge]:bg-muted-foreground/30 hidden **:data-[slot=badge]:size-5 **:data-[slot=badge]:rounded-full **:data-[slot=badge]:px-1 @4xl/main:flex">
-          <TabsTrigger value="materials">Materiales</TabsTrigger>
-          <TabsTrigger value="budget">
-            Presupuesto <Badge variant="secondary">5</Badge>
-          </TabsTrigger>
-          <TabsTrigger value="suppliers">
-            Proveedores <Badge variant="secondary">3</Badge>
-          </TabsTrigger>
-          <TabsTrigger value="reports">Reportes</TabsTrigger>
-        </TabsList>
-
         <div className="flex items-center gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -482,18 +383,27 @@ export function MaterialsTable({
                 })}
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button className="bg-primary hover:bg-primary/90" size="sm">
+          <Button 
+            className="bg-primary hover:bg-primary/90" 
+            size="sm" 
+            onClick={() => setIsAddingMaterial(true)}
+            disabled={isAddingMaterial}
+          >
             <Plus />
             <span className="hidden lg:inline">Agregar Material</span>
           </Button>
         </div>
       </div>
-
+      
       <div className="flex items-center gap-2 px-4 lg:px-6 text-sm text-muted-foreground">
         <Calendar className="w-4 h-4" />
         <span>Generado el 24 de julio de 2025, 02:11 p. m.</span>
+        <Badge variant="secondary" className="ml-4">
+          <Save className="w-3 h-3 mr-1" />
+          Edición inline habilitada
+        </Badge>
       </div>
-
+      
       <TabsContent value="materials" className="relative flex flex-col gap-4 overflow-auto px-4 lg:px-6">
         <div className="overflow-hidden rounded-lg border">
           <DndContext
@@ -520,6 +430,12 @@ export function MaterialsTable({
                 ))}
               </TableHeader>
               <TableBody className="**:data-[slot=table-cell]:first:w-8">
+                {isAddingMaterial && (
+                  <AddMaterialRow
+                    onAdd={addNewMaterial}
+                    onCancel={() => setIsAddingMaterial(false)}
+                  />
+                )}
                 {table.getRowModel().rows?.length ? (
                   <SortableContext items={dataIds} strategy={verticalListSortingStrategy}>
                     {table.getRowModel().rows.map((row) => (
@@ -537,7 +453,7 @@ export function MaterialsTable({
             </Table>
           </DndContext>
         </div>
-
+        
         <div className="flex items-center justify-between px-4">
           <div className="text-muted-foreground hidden flex-1 text-sm lg:flex">
             {table.getFilteredSelectedRowModel().rows.length} de {table.getFilteredRowModel().rows.length} fila(s)
@@ -554,7 +470,7 @@ export function MaterialsTable({
                   table.setPageSize(Number(value))
                 }}
               >
-                <SelectTrigger  className="w-20" id="rows-per-page">
+                <SelectTrigger className="w-20" id="rows-per-page">
                   <SelectValue placeholder={table.getState().pagination.pageSize} />
                 </SelectTrigger>
                 <SelectContent side="top">
@@ -613,191 +529,6 @@ export function MaterialsTable({
           </div>
         </div>
       </TabsContent>
-
-      <TabsContent value="budget" className="flex flex-col px-4 lg:px-6">
-        <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
-      </TabsContent>
-
-      <TabsContent value="suppliers" className="flex flex-col px-4 lg:px-6">
-        <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
-      </TabsContent>
-
-      <TabsContent value="reports" className="flex flex-col px-4 lg:px-6">
-        <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
-      </TabsContent>
     </Tabs>
-  )
-}
-
-const chartData = [
-  { month: "Enero", usage: 186, cost: 80 },
-  { month: "Febrero", usage: 305, cost: 200 },
-  { month: "Marzo", usage: 237, cost: 120 },
-  { month: "Abril", usage: 73, cost: 190 },
-  { month: "Mayo", usage: 209, cost: 130 },
-  { month: "Junio", usage: 214, cost: 140 },
-]
-
-const chartConfig = {
-  usage: {
-    label: "Uso",
-    color: "var(--primary)",
-  },
-  cost: {
-    label: "Costo",
-    color: "var(--primary)",
-  },
-} satisfies ChartConfig
-
-function MaterialCellViewer({ item }: { item: Material }) {
-  const isMobile = useIsMobile()
-
-  return (
-    <Drawer direction={isMobile ? "bottom" : "right"}>
-      <DrawerTrigger asChild>
-        <Button variant="link" className="text-foreground w-fit px-0 text-left font-semibold">
-          {item.item}
-        </Button>
-      </DrawerTrigger>
-      <DrawerContent>
-        <DrawerHeader className="gap-1">
-          <DrawerTitle>{item.item}</DrawerTitle>
-          <DrawerDescription>Detalles del material y estadísticas de uso</DrawerDescription>
-        </DrawerHeader>
-        <div className="flex flex-col gap-4 overflow-y-auto px-4 text-sm">
-          {!isMobile && (
-            <>
-              <ChartContainer config={chartConfig}>
-                <AreaChart
-                  accessibilityLayer
-                  data={chartData}
-                  margin={{
-                    left: 0,
-                    right: 10,
-                  }}
-                >
-                  <CartesianGrid vertical={false} />
-                  <XAxis
-                    dataKey="month"
-                    tickLine={false}
-                    axisLine={false}
-                    tickMargin={8}
-                    tickFormatter={(value) => value.slice(0, 3)}
-                    hide
-                  />
-                  <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
-                  <Area
-                    dataKey="cost"
-                    type="natural"
-                    fill="var(--color-cost)"
-                    fillOpacity={0.6}
-                    stroke="var(--color-cost)"
-                    stackId="a"
-                  />
-                  <Area
-                    dataKey="usage"
-                    type="natural"
-                    fill="var(--color-usage)"
-                    fillOpacity={0.4}
-                    stroke="var(--color-usage)"
-                    stackId="a"
-                  />
-                </AreaChart>
-              </ChartContainer>
-              <Separator />
-              <div className="grid gap-2">
-                <div className="flex gap-2 leading-none font-medium">
-                  Incremento del 5.2% este mes <TrendingUp className="size-4" />
-                </div>
-                <div className="text-muted-foreground">
-                  Mostrando uso total del material en los últimos 6 meses. Datos basados en proyectos anteriores y
-                  estimaciones actuales.
-                </div>
-              </div>
-              <Separator />
-            </>
-          )}
-          <form className="flex flex-col gap-4">
-            <div className="flex flex-col gap-3">
-              <Label htmlFor="item">Material</Label>
-              <Input id="item" defaultValue={item.item} />
-            </div>
-            <div className="flex flex-col gap-3">
-              <Label htmlFor="description">Descripción</Label>
-              <Input id="description" defaultValue={item.description} />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-3">
-                <Label htmlFor="unit">Unidad</Label>
-                <Select defaultValue={item.unit}>
-                  <SelectTrigger id="unit" className="w-full">
-                    <SelectValue placeholder="Seleccionar unidad" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="kg">kg</SelectItem>
-                    <SelectItem value="u">u</SelectItem>
-                    <SelectItem value="m3">m3</SelectItem>
-                    <SelectItem value="m2">m2</SelectItem>
-                    <SelectItem value="m">m</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex flex-col gap-3">
-                <Label htmlFor="status">Estado</Label>
-                <Select defaultValue={item.status}>
-                  <SelectTrigger id="status" className="w-full">
-                    <SelectValue placeholder="Seleccionar estado" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Presupuestado">Presupuestado</SelectItem>
-                    <SelectItem value="En proceso">En proceso</SelectItem>
-                    <SelectItem value="Pendiente">Pendiente</SelectItem>
-                    <SelectItem value="Completado">Completado</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-3">
-                <Label htmlFor="quantity">Cantidad</Label>
-                <Input id="quantity" defaultValue={item.quantity} type="number" />
-              </div>
-              <div className="flex flex-col gap-3">
-                <Label htmlFor="updatedQuantity">Cantidad Actualizada</Label>
-                <Input id="updatedQuantity" defaultValue={item.updatedQuantity} type="number" />
-              </div>
-            </div>
-            <div className="flex flex-col gap-3">
-              <Label htmlFor="category">Categoría</Label>
-              <Select defaultValue={item.category}>
-                <SelectTrigger id="category" className="w-full">
-                  <SelectValue placeholder="Seleccionar categoría" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="MAMPOSTERÍA Y TABIQUERÍA">MAMPOSTERÍA Y TABIQUERÍA</SelectItem>
-                  <SelectItem value="HORMIGÓN ARMADO">HORMIGÓN ARMADO</SelectItem>
-                  <SelectItem value="INSTALACIONES">INSTALACIONES</SelectItem>
-                  <SelectItem value="TERMINACIONES">TERMINACIONES</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </form>
-        </div>
-        <DrawerFooter>
-          <Button>Guardar cambios</Button>
-          <DrawerClose asChild>
-            <Button variant="outline">Cerrar</Button>
-          </DrawerClose>
-        </DrawerFooter>
-      </DrawerContent>
-    </Drawer>
-  )
-}
-
-export default function Component() {
-  return (
-    <div className="w-full max-w-7xl mx-auto p-6">
-      <MaterialsTable />
-    </div>
   )
 }

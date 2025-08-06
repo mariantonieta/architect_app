@@ -98,14 +98,14 @@ const [selectedFile, setSelectedFile] = useState<string | null>(null);
 
   if (isLoading)
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <p className="text-lg">Loading project...</p>
       </div>
     );
 
   if (isError || !project)
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-scree flex items-center justify-center">
         <p className="text-lg">Project not found.</p>
       </div>
     );
@@ -476,17 +476,17 @@ const [selectedFile, setSelectedFile] = useState<string | null>(null);
           </TabsContent>
         </Tabs>
       </div>
+ 
       <AlertDialog open={openDeleteModal} onOpenChange={setOpenDeleteModal}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Project</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this project? This action cannot
-              be undone.
+              Are you sure you want to delete this project? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setOpenDeleteModal(false)}>
+            <AlertDialogCancel disabled={isDeleting}>
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
@@ -499,6 +499,7 @@ const [selectedFile, setSelectedFile] = useState<string | null>(null);
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
     </div>
   );
 }

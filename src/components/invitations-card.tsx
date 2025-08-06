@@ -92,39 +92,39 @@ export function InvitationsCard({
           </div>
 
           <div className="flex justify-end">
-            <AlertDialog open={openDeleteModal} onOpenChange={setOpenDeleteModal}>
-              <AlertDialogTrigger asChild>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => setOpenDeleteModal(true)}
-                  disabled={deleteMutation.isPending}
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete Invitation</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Are you sure you want to delete this invitation? This action cannot be undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel onClick={() => setOpenDeleteModal(false)}>
-                    Cancel
-                  </AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={handleDelete}
-                    disabled={deleteMutation.isPending}
-                    className="bg-red-600 text-white hover:bg-red-700"
-                  >
-                    {deleteMutation.isPending ? "Deleting..." : "Delete"}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+           <AlertDialog>
+  <AlertDialogTrigger asChild>
+    <Button
+      variant="destructive"
+      size="sm"
+      disabled={deleteMutation.isPending}
+    >
+      <Trash2 className="h-4 w-4 mr-2" />
+      Delete
+    </Button>
+  </AlertDialogTrigger>
+  <AlertDialogContent>
+    <AlertDialogHeader>
+      <AlertDialogTitle>Delete Invitation</AlertDialogTitle>
+      <AlertDialogDescription>
+        Are you sure you want to delete this invitation? This action cannot be undone.
+      </AlertDialogDescription>
+    </AlertDialogHeader>
+    <AlertDialogFooter>
+      <AlertDialogCancel>
+        Cancel
+      </AlertDialogCancel>
+      <AlertDialogAction
+        onClick={() => deleteMutation.mutate(id)}
+        disabled={deleteMutation.isPending}
+        className="bg-red-600 text-white hover:bg-red-700"
+      >
+        {deleteMutation.isPending ? "Deleting..." : "Delete"}
+      </AlertDialogAction>
+    </AlertDialogFooter>
+  </AlertDialogContent>
+</AlertDialog>
+
           </div>
         </CardContent>
       </Card>
