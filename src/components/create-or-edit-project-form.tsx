@@ -54,8 +54,6 @@ export function CreateOrEditProjectForm({
   const queryClient = useQueryClient();
   const [step, setStep] = useState<1 | 2>(1);
 
-
-
   const [existingBim, setExistingBim] = useState<ExistingFile[]>(
     initialData?.existingBlueprints || []
   );
@@ -85,11 +83,11 @@ export function CreateOrEditProjectForm({
     setExistingReports(files.filter((f): f is ExistingFile => "id" in f));
     setNewReports(files.filter((f): f is File => f instanceof File));
   };
- const normalizeEmails = (emails: unknown): string[] => {
-  if (Array.isArray(emails)) return emails.filter(Boolean);
-  if (typeof emails === "string" && emails.trim()) return [emails.trim()];
-  return [];
-};
+  const normalizeEmails = (emails: unknown): string[] => {
+    if (Array.isArray(emails)) return emails.filter(Boolean);
+    if (typeof emails === "string" && emails.trim()) return [emails.trim()];
+    return [];
+  };
 
   const {
     control,
@@ -118,53 +116,58 @@ export function CreateOrEditProjectForm({
     initialData?.id
   );
   function useRoleInvitationHandlers(role: RoleType) {
-  const inviteUser = useInviteUser(role);
+    const inviteUser = useInviteUser(role);
 
-  const handleEmailAdd = (() => {
-  let processing = false;
+    const handleEmailAdd = (() => {
+      let processing = false;
 
-  return async (email: string) => {
-    if (processing) return false;
-    processing = true;
+      return async (email: string) => {
+        if (processing) return false;
+        processing = true;
 
-    try {
-      const res = await inviteService.searchInvitationByEmailAndRole(email, role);
-      const alreadyExists = res.some(
-        (existingEmail) => existingEmail.toLowerCase() === email.toLowerCase()
-      );
-      if (alreadyExists)  return true;
-         if (role === "architect") {
-        setArchitectEmails((prev) => [...prev, email.toLowerCase()]);
-      } else if (role === "customer") {
-        setCustomerEmails((prev) => [...prev, email.toLowerCase()]);
-      } else if (role === "supplier") {
-        setSupplierEmails((prev) => [...prev, email.toLowerCase()]);
+        try {
+          const res = await inviteService.searchInvitationByEmailAndRole(
+            email,
+            role
+          );
+          const alreadyExists = res.some(
+            (existingEmail) =>
+              existingEmail.toLowerCase() === email.toLowerCase()
+          );
+          if (alreadyExists) return true;
+          if (role === "architect") {
+            setArchitectEmails((prev) => [...prev, email.toLowerCase()]);
+          } else if (role === "customer") {
+            setCustomerEmails((prev) => [...prev, email.toLowerCase()]);
+          } else if (role === "supplier") {
+            setSupplierEmails((prev) => [...prev, email.toLowerCase()]);
+          }
+
+          return true;
+        } catch (error) {
+          console.error("Error agregando email:", error);
+          return false;
+        } finally {
+          processing = false;
+        }
+      };
+    })();
+
+    const handleSearch = async (query: string) => {
+      try {
+        const res = await inviteService.searchInvitationByEmailAndRole(
+          query,
+          role
+        );
+        return res;
+      } catch (error) {
+        console.error("Error buscando emails:", error);
+        return [];
       }
-      
+    };
 
-      return true;
-    } catch (error) {
-      console.error("Error agregando email:", error);
-      return false;
-    } finally {
-      processing = false;
-    }
-  };
-})();
-
-
-  const handleSearch = async (query: string) => {
-    try {
-      const res = await inviteService.searchInvitationByEmailAndRole(query, role);
-      return res;
-    } catch (error) {
-      console.error("Error buscando emails:", error);
-      return [];
-    }
-  };
-
-  return { handleEmailAdd, handleSearch };
-}
+    return { handleEmailAdd, handleSearch };
+  }
 
   const { handleEmailAdd: handleArchitectAdd, handleSearch: searchArchitect } =
     useRoleInvitationHandlers("architect");
@@ -174,13 +177,13 @@ export function CreateOrEditProjectForm({
     useRoleInvitationHandlers("supplier");
 
   const handleSubmitProject = async (data: ProjectFormData) => {
-    
     const formData = new FormData();
     //console.log("Datos enviados0", data)
     formData.append("name", data.name);
     formData.append("project_type", data.project_type);
     if (data.currency) formData.append("currency", data.currency);
-    if (data.estimated_budget != null) formData.append("estimated_budget", data.estimated_budget.toString());
+    if (data.estimated_budget != null)
+      formData.append("estimated_budget", data.estimated_budget.toString());
     if (data.location) formData.append("location", data.location);
     formData.append("status", data.status || "idea");
     if (data.description) formData.append("description", data.description);
@@ -228,35 +231,33 @@ export function CreateOrEditProjectForm({
       console.error("Error saving project", err);
     }
   };
- 
-useEffect(() => {
-  if (initialData) {
-    //console.log("initialData", initialData);
 
-    reset({
-      name: initialData.name || "",
-         customerEmail: normalizeEmails(initialData.customerEmail),
-      supplierEmail: normalizeEmails(initialData.supplierEmail),
-      architectEmail: normalizeEmails(initialData.architectEmail),
-      project_type: initialData.project_type || "",
-      currency: initialData.currency || "ars",
-      estimated_budget: initialData.estimated_budget,
-      location: initialData.location || "",
-      status: initialData.status || "idea",
-      description: initialData.description || "",
-    });
+  useEffect(() => {
+    if (initialData) {
+      //console.log("initialData", initialData);
 
-    setExistingBim(initialData.existingBlueprints || []);
-    setExistingRenders(initialData.existingRenders || []);
-    setExistingReports(initialData.existingReports || []);
-    setNewBim([]);
-    setNewRenders([]);
-    setNewReports([]);
+      reset({
+        name: initialData.name || "",
+        customerEmail: normalizeEmails(initialData.customerEmail),
+        supplierEmail: normalizeEmails(initialData.supplierEmail),
+        architectEmail: normalizeEmails(initialData.architectEmail),
+        project_type: initialData.project_type || "",
+        currency: initialData.currency || "ars",
+        estimated_budget: initialData.estimated_budget,
+        location: initialData.location || "",
+        status: initialData.status || "idea",
+        description: initialData.description || "",
+      });
+
+      setExistingBim(initialData.existingBlueprints || []);
+      setExistingRenders(initialData.existingRenders || []);
+      setExistingReports(initialData.existingReports || []);
+      setNewBim([]);
+      setNewRenders([]);
+      setNewReports([]);
       setArchitectEmails(normalizeEmails(initialData.architectEmail));
-    setCustomerEmails(normalizeEmails(initialData.customerEmail));
-    setSupplierEmails(normalizeEmails(initialData.supplierEmail));
-
-      
+      setCustomerEmails(normalizeEmails(initialData.customerEmail));
+      setSupplierEmails(normalizeEmails(initialData.supplierEmail));
     } else if (open) {
       // Resetear todo si es creación nueva
       reset();
@@ -269,25 +270,23 @@ useEffect(() => {
       setArchitectEmails([]);
       setCustomerEmails([]);
       setSupplierEmails([]);
-    
-  }
-}, [initialData, reset, open]);
-useEffect(() => {
-  if (Object.keys(errors).length > 0) {
-    const timeout = setTimeout(() => {
-      clearErrors(); 
-    }, 4000); 
+    }
+  }, [initialData, reset, open]);
+  useEffect(() => {
+    if (Object.keys(errors).length > 0) {
+      const timeout = setTimeout(() => {
+        clearErrors();
+      }, 4000);
 
-    return () => clearTimeout(timeout); 
-  }
-}, [errors, clearErrors]);
-
+      return () => clearTimeout(timeout);
+    }
+  }, [errors, clearErrors]);
 
   return (
     <Dialog
       open={open}
       onOpenChange={(val) => {
-     //   console.log("Initial data on open:", initialData);
+        //   console.log("Initial data on open:", initialData);
         onOpenChange(val);
         if (!val) setStep(1);
         if (val && initialData) {
@@ -336,56 +335,61 @@ useEffect(() => {
               )}
             />
           </FormField>
-<FormField
-  label="Type"
-  id="project_type"
-  error={errors.project_type?.message}
-  required
->
-  <Controller
-    control={control}
-    name="project_type"
-    rules={{ required: "Project type is required" }}
-    render={({ field }) => (
-      <Select value={field.value} onValueChange={field.onChange}>
-        <SelectTrigger id="project_type"  className="w-full">
-          <SelectValue placeholder="Select project type" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="single_family_home">Single Family Home</SelectItem>
-          <SelectItem value="residential_building">Residential Building</SelectItem>
-          <SelectItem value="commercial_building">Commercial Building</SelectItem>
-          <SelectItem value="industrial">Industrial</SelectItem>
-          <SelectItem value="renovation">Renovation</SelectItem>
-          <SelectItem value="recreational">Recreational</SelectItem>
-          <SelectItem value="other">Other</SelectItem>
-        </SelectContent>
-      </Select>
-    )}
-  />
-</FormField>
+          <FormField
+            label="Type"
+            id="project_type"
+            error={errors.project_type?.message}
+            required
+          >
+            <Controller
+              control={control}
+              name="project_type"
+              rules={{ required: "Project type is required" }}
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger id="project_type" className="w-full">
+                    <SelectValue placeholder="Select project type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="single_family_home">
+                      Single Family Home
+                    </SelectItem>
+                    <SelectItem value="residential_building">
+                      Residential Building
+                    </SelectItem>
+                    <SelectItem value="commercial_building">
+                      Commercial Building
+                    </SelectItem>
+                    <SelectItem value="industrial">Industrial</SelectItem>
+                    <SelectItem value="renovation">Renovation</SelectItem>
+                    <SelectItem value="recreational">Recreational</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            />
+          </FormField>
 
-
-       <FormField label="Status" id="status" required className="w-full">
-  <Controller
-    control={control}
-    name="status"
-    rules={{ required: "Status is required" }}
-    render={({ field }) => (
-      <Select value={field.value} onValueChange={field.onChange}>
-        <SelectTrigger id="status" className="w-full" size="default">
-          <SelectValue placeholder="Select status" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="idea">Idea</SelectItem>
-          <SelectItem value="budgeting">Budgeting</SelectItem>
-          <SelectItem value="in_progress">In Progress</SelectItem>
-          <SelectItem value="finished">Finished</SelectItem>
-        </SelectContent>
-      </Select>
-    )}
-  />
-</FormField>
+          <FormField label="Status" id="status" required className="w-full">
+            <Controller
+              control={control}
+              name="status"
+              rules={{ required: "Status is required" }}
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger id="status" className="w-full" size="default">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="idea">Idea</SelectItem>
+                    <SelectItem value="budgeting">Budgeting</SelectItem>
+                    <SelectItem value="in_progress">In Progress</SelectItem>
+                    <SelectItem value="finished">Finished</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            />
+          </FormField>
 
           <div className="flex space-x-4">
             <FormField label="Budget" id="estimated_budget" className="flex-1">
@@ -416,15 +420,18 @@ useEffect(() => {
                 control={control}
                 name="currency"
                 render={({ field }) => (
-                
-                          <Select value={field.value} onValueChange={field.onChange}>
-                            <SelectTrigger id="currency" className="w-full" size="default">
-          <SelectValue placeholder="Select status" />
-        </SelectTrigger>
-         <SelectContent>
-                    <SelectItem value="ars">ARS</SelectItem>
-                    <SelectItem value="usd">USD</SelectItem>
-                    <SelectItem value="eur">EUR</SelectItem>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger
+                      id="currency"
+                      className="w-full"
+                      size="default"
+                    >
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ars">ARS</SelectItem>
+                      <SelectItem value="usd">USD</SelectItem>
+                      <SelectItem value="eur">EUR</SelectItem>
                     </SelectContent>
                   </Select>
                 )}
@@ -496,7 +503,7 @@ useEffect(() => {
                   setNewBim((prev) => prev.filter((f) => f !== fileToRemove));
                 }
               }}
-                    onInvalidFiles={(invalid) => {
+              onInvalidFiles={(invalid) => {
                 setError("filesBimModels", {
                   type: "manual",
                   message: `Invalid bimModels file(s): ${invalid
@@ -584,7 +591,8 @@ useEffect(() => {
               name="architectEmail"
               rules={{
                 validate: (emails: string[]) => {
-                   if (!Array.isArray(emails) || emails.length === 0) return true;
+                  if (!Array.isArray(emails) || emails.length === 0)
+                    return true;
                   const invalids = emails.filter(
                     (email) => !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
                   );
@@ -602,8 +610,7 @@ useEffect(() => {
                   role="architect"
                   onSearch={searchArchitect}
                   onEmailAdd={handleArchitectAdd}
-                    showInput={!!(field.value && field.value.length > 0)}
-
+                  showInput={!!(field.value && field.value.length > 0)}
                 />
               )}
             />
@@ -619,7 +626,8 @@ useEffect(() => {
               name="customerEmail"
               rules={{
                 validate: (emails: string[]) => {
-                  if (!Array.isArray(emails) || emails.length === 0) return true;
+                  if (!Array.isArray(emails) || emails.length === 0)
+                    return true;
                   const invalids = emails.filter(
                     (email) => !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
                   );
@@ -637,8 +645,7 @@ useEffect(() => {
                   role="customer"
                   onSearch={searchCustomer}
                   onEmailAdd={handleCustomerAdd}
-                   showInput={!!(field.value && field.value.length > 0)}
-
+                  showInput={!!(field.value && field.value.length > 0)}
                 />
               )}
             />
@@ -653,7 +660,8 @@ useEffect(() => {
               name="supplierEmail"
               rules={{
                 validate: (emails: string[]) => {
-                if (!Array.isArray(emails) || emails.length === 0) return true;
+                  if (!Array.isArray(emails) || emails.length === 0)
+                    return true;
                   const invalids = emails.filter(
                     (email) => !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
                   );
@@ -671,9 +679,8 @@ useEffect(() => {
                   role="supplier"
                   onSearch={searchSupplier}
                   onEmailAdd={handleSupplierAdd}
-                 showInput={!!(field.value && field.value.length > 0)}
-
-                  />
+                  showInput={!!(field.value && field.value.length > 0)}
+                />
               )}
             />
           </FormField>
@@ -683,7 +690,7 @@ useEffect(() => {
               type="button"
               variant="secondary"
               onClick={() => {
-                onOpenChange(false)
+                onOpenChange(false);
               }}
               disabled={isCreating || isUpdating}
             >

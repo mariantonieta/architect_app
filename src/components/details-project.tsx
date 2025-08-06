@@ -47,16 +47,15 @@ export function ProjectDetails() {
     isError,
     deleteProject,
     isDeleting,
-        updateProject,
-
+    updateProject,
   } = useProject(id);
   const [menuOpen, setMenuOpen] = useState(false);
-const [deleted, setDeleted] = useState(false);
-  
+  const [deleted, setDeleted] = useState(false);
+
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const [editOpen, setEditOpen] = useState(false);
-const [selectedFile, setSelectedFile] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<string | null>(null);
 
   const [editForm, setEditForm] = useState({
     name: "",
@@ -119,7 +118,7 @@ const [selectedFile, setSelectedFile] = useState<string | null>(null);
     project.files?.filter((file) =>
       file.original_name.match(/\.(pdf|jpe?g)$/i)
     ) || [];
-    
+
   const bimFiles =
     project.files?.filter((file) => file.original_name.match(/\.ifc$/i)) || [];
   const formattedCreateDate = project?.create_date
@@ -133,7 +132,7 @@ const [selectedFile, setSelectedFile] = useState<string | null>(null);
     { id: "plans", label: "Plans" },
     { id: "3d-model", label: "3D Model" },
     { id: "materials-computation", label: "Materials Computation" },
-    {id: "materials", label: "Materials" },
+    { id: "materials", label: "Materials" },
     { id: "budgets", label: "Budgets" },
     // { id: "roles", label: "Roles" },
     // { id: "history", label: "History" },
@@ -289,9 +288,7 @@ const [selectedFile, setSelectedFile] = useState<string | null>(null);
                     ))}
                   </Accordion>
                 ) : (
-                  <p className="text-sm ">
-                    No plan files uploaded.
-                  </p>
+                  <p className="text-sm ">No plan files uploaded.</p>
                 )}
               </CardContent>
             </Card>
@@ -310,9 +307,7 @@ const [selectedFile, setSelectedFile] = useState<string | null>(null);
                         <User className="h-4 w-4 sm:h-5 sm:w-5 " />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs sm:text-sm ">
-                          Client
-                        </p>
+                        <p className="text-xs sm:text-sm ">Client</p>
                         <div className="font-medium text-sm sm:text-base  truncate">
                           <p>
                             {(project.customerEmail || []).join(", ") ||
@@ -331,9 +326,7 @@ const [selectedFile, setSelectedFile] = useState<string | null>(null);
                         <MapPin className="h-4 w-4 sm:h-5 sm:w-5" />
                       </div>
                       <div>
-                        <p className="text-xs sm:text-sm ">
-                          Location
-                        </p>
+                        <p className="text-xs sm:text-sm ">Location</p>
                         <p className="font-medium text-sm sm:text-base">
                           {project.location}
                         </p>
@@ -349,9 +342,7 @@ const [selectedFile, setSelectedFile] = useState<string | null>(null);
                         <Building2 className="h-4 w-4 sm:h-5 sm:w-5 " />
                       </div>
                       <div>
-                        <p className="text-xs sm:text-sm ">
-                          Project Type
-                        </p>
+                        <p className="text-xs sm:text-sm ">Project Type</p>
                         <p className="font-medium text-sm sm:text-base ">
                           {project.project_type
                             .split("_")
@@ -392,9 +383,7 @@ const [selectedFile, setSelectedFile] = useState<string | null>(null);
                         <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 " />
                       </div>
                       <div>
-                        <p className="text-xs sm:text-sm">
-                          Budget
-                        </p>
+                        <p className="text-xs sm:text-sm">Budget</p>
                         <p className="font-medium text-sm sm:text-base">
                           ${project.estimated_budget?.toLocaleString() || "0"}
                         </p>
@@ -410,9 +399,7 @@ const [selectedFile, setSelectedFile] = useState<string | null>(null);
                         <Users className="h-4 w-4 sm:h-5 sm:w-5" />
                       </div>
                       <div>
-                        <p className="text-xs sm:text-sm">
-                          Team Size
-                        </p>
+                        <p className="text-xs sm:text-sm">Team Size</p>
                         <p className="font-medium text-sm sm:text-base">
                           {[
                             ...(project.supplierEmail || []),
@@ -425,9 +412,7 @@ const [selectedFile, setSelectedFile] = useState<string | null>(null);
                 </Card>
                 <Card className="sm:col-span-2 lg:col-span-3">
                   <CardContent className="p-4 sm:p-6">
-                    <p className="text-xs sm:text-sm mb-1">
-                      Description
-                    </p>
+                    <p className="text-xs sm:text-sm mb-1">Description</p>
                     <p className="text-sm sm:text-base whitespace-pre-line">
                       {project.description || "No description provided."}
                     </p>
@@ -457,10 +442,10 @@ const [selectedFile, setSelectedFile] = useState<string | null>(null);
           </TabsContent>
 
           <TabsContent value="materials-computation" className="mt-6">
-          Materials computation
+            Materials computation
           </TabsContent>
-                    <TabsContent value="materials" className="mt-6">
-            <MaterialsTable/>
+          <TabsContent value="materials" className="mt-6">
+            <MaterialsTable />
           </TabsContent>
 
           <TabsContent value="budgets" className="mt-6">
@@ -476,19 +461,18 @@ const [selectedFile, setSelectedFile] = useState<string | null>(null);
           </TabsContent>
         </Tabs>
       </div>
- 
+
       <AlertDialog open={openDeleteModal} onOpenChange={setOpenDeleteModal}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Project</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this project? This action cannot be undone.
+              Are you sure you want to delete this project? This action cannot
+              be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>
-              Cancel
-            </AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               disabled={isDeleting}
@@ -499,7 +483,6 @@ const [selectedFile, setSelectedFile] = useState<string | null>(null);
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
     </div>
   );
 }

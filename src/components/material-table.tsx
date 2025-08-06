@@ -1,4 +1,4 @@
-import * as React from "react"
+import * as React from "react";
 import {
   DndContext,
   KeyboardSensor,
@@ -9,10 +9,26 @@ import {
   useSensors,
   type DragEndEvent,
   type UniqueIdentifier,
-} from "@dnd-kit/core"
-import { restrictToVerticalAxis } from "@dnd-kit/modifiers"
-import { SortableContext, arrayMove, verticalListSortingStrategy } from "@dnd-kit/sortable"
-import { Edit, Calendar, Plus, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, MoreHorizontal, Columns, Save, Trash2 } from 'lucide-react'
+} from "@dnd-kit/core";
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import {
+  Plus,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  MoreHorizontal,
+  Columns,
+  Trash2,
+} from "lucide-react";
+import { useForm, useFieldArray, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import {
   type ColumnDef,
   type ColumnFiltersState,
@@ -26,11 +42,10 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
-} from "@tanstack/react-table"
-import { toast } from "sonner"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
+} from "@tanstack/react-table";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -38,19 +53,30 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { type Material, } from "../types/material"
-import { DragHandle } from "./drag-handle"
-import { EditableCell } from "./editable-cell"
-import { EditableSelect } from "./editable-select"
-import { DraggableRow } from "./draggable-row"
-import { AddMaterialRow } from "./add-material-row"
-
+} from "@/components/ui/dropdown-menu";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { type Material } from "../types/material";
+import { DragHandle } from "./drag-handle";
+import { EditableCell } from "./editable-cell";
+import { EditableSelect } from "./editable-select";
+import { DraggableRow } from "./draggable-row";
+import { AddMaterialRow } from "./add-material-row";
+import { useTranslation } from "react-i18next";
 
 export const unitOptions = [
   { value: "kg", label: "kg" },
@@ -58,70 +84,161 @@ export const unitOptions = [
   { value: "m3", label: "m³" },
   { value: "m2", label: "m²" },
   { value: "m", label: "m" },
-]
+];
 
 export const statusOptions = [
   { value: "Presupuestado", label: "Presupuestado" },
   { value: "En proceso", label: "En proceso" },
   { value: "Pendiente", label: "Pendiente" },
   { value: "Completado", label: "Completado" },
-]
+];
 
 export const categoryOptions = [
   { value: "MAMPOSTERÍA Y TABIQUERÍA", label: "MAMPOSTERÍA Y TABIQUERÍA" },
   { value: "HORMIGÓN ARMADO", label: "HORMIGÓN ARMADO" },
   { value: "INSTALACIONES", label: "INSTALACIONES" },
   { value: "TERMINACIONES", label: "TERMINACIONES" },
-]
+];
 
-interface MaterialsTableProps {
-  data?: Material[]
-}
-export function MaterialsTable({ data: initialData = [] }: MaterialsTableProps) {
+// Schema for the entire budget form
+export const budgetFormSchema = z.object({
+  budgetName: z.string().min(1, "El nombre del presupuesto es requerido"),
+  currency: z.enum(["ars", "usd", "eur"], {
+    required_error: "La moneda es requerida",
+  }),
+  suppliers: z.array(z.string()).default([]),
+  materials: z
+    .array(
+      z.object({
+        id: z.number(),
+        item: z.string().min(1, "El nombre del material es requerido"),
+        description: z.string().default(""),
+        unit: z.string().min(1, "La unidad es requerida"),
+        quantity: z
+          .number()
+          .min(0, "La cantidad debe ser mayor a 0")
+          .default(0),
+      })
+    )
+    .default([]),
+});
 
-  const [data, setData] = React.useState(() => initialData)
-  const [rowSelection, setRowSelection] = React.useState({})
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
-  const [sorting, setSorting] = React.useState<SortingState>([])
+export type BudgetFormData = z.infer<typeof budgetFormSchema>;
+
+export function MaterialsTable() {
+  const { t } = useTranslation();
+  const [rowSelection, setRowSelection] = React.useState({});
+  const [columnVisibility, setColumnVisibility] =
+    React.useState<VisibilityState>({});
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
+    []
+  );
+  const [sorting, setSorting] = React.useState<SortingState>([]);
   const [pagination, setPagination] = React.useState({
     pageIndex: 0,
     pageSize: 10,
-  })
-  const [isAddingMaterial, setIsAddingMaterial] = React.useState(false)
+  });
+  const [isAddingMaterial, setIsAddingMaterial] = React.useState(false);
 
-  const updateMaterial = (id: number, field: keyof Material, value: string | number) => {
-    setData(prev => prev.map(item => 
-      item.id === id ? { ...item, [field]: value } : item
-    ))
-  }
+  // Hook form setup
+  const form = useForm<BudgetFormData>({
+    resolver: zodResolver(budgetFormSchema),
+    mode: "onChange",
+    defaultValues: {
+      budgetName: "",
+      currency: undefined,
+      suppliers: [],
+      materials: [],
+    },
+  });
 
-  const addNewMaterial = (materialData: Omit<Material, 'id'>) => {
-    const newId = Math.max(...data.map(item => item.id), 0) + 1
+  const {
+    fields: materialFields,
+    append: appendMaterial,
+    remove: removeMaterial,
+    move: moveMaterial,
+  } = useFieldArray({
+    control: form.control,
+    name: "materials",
+  });
+
+  const { watch, control, setValue, getValues, formState: { errors } } = form;
+  const materials = watch("materials");
+
+  // Mostrar errores si hay errores del form
+  const shouldShowErrors = !!errors.budgetName || !!errors.currency;
+
+  // Función para validar un material individual
+  const validateMaterial = React.useCallback((material: Material) => {
+    return {
+      isValid: material.item?.trim() && material.unit && material.quantity > 0,
+      errors: {
+        item: !material.item?.trim(),
+        unit: !material.unit,
+        quantity: material.quantity <= 0
+      }
+    };
+  }, []);
+
+  const updateMaterial = React.useCallback((
+    index: number,
+    field: keyof Material,
+    value: string | number
+  ) => {
+    setValue(`materials.${index}.${field}` as any, value);
+    
+    // Validar el material después de actualizar
+    const updatedMaterials = [...materials];
+    updatedMaterials[index] = { ...updatedMaterials[index], [field]: value };
+    const validation = validateMaterial(updatedMaterials[index]);
+    
+    if (!validation.isValid) {
+      // Mostrar advertencias específicas sin bloquear la edición
+      if (field === 'item' && validation.errors.item) {
+        setTimeout(() => toast.warning("El nombre del material es requerido"), 100);
+      } else if (field === 'quantity' && validation.errors.quantity) {
+        setTimeout(() => toast.warning("La cantidad debe ser mayor a 0"), 100);
+      }
+    }
+  }, [materials, setValue, validateMaterial]);
+
+  const addNewMaterial = React.useCallback((materialData: Omit<Material, "id">) => {
+    const newId = Math.max(...materials.map((item) => item.id), 0) + 1;
     const newMaterial: Material = {
       id: newId,
       ...materialData,
-    }
-    setData(prev => [...prev, newMaterial])
-    setIsAddingMaterial(false)
-  }
+    };
+    appendMaterial(newMaterial);
+    setIsAddingMaterial(false);
+  }, [materials, appendMaterial]);
 
-  const deleteMaterial = (id: number) => {
-    setData(prev => prev.filter(item => item.id !== id))
-    toast.success("Material eliminado")
-  }
+  const deleteMaterial = React.useCallback((index: number) => {
+    removeMaterial(index);
+    toast.success("Material eliminado");
+  }, [removeMaterial]);
+
+  const onSubmit = async (data: BudgetFormData) => {
+    console.log("Budget data:", data);
+    toast.success("Presupuesto guardado");
+  };
 
   const materialsColumns: ColumnDef<Material>[] = [
     {
       id: "drag",
       header: () => null,
-      cell: ({ row }) => <DragHandle id={row.original.id} />,
+      cell: ({ row }) => (
+        <div className="flex items-center justify-center h-8">
+          <DragHandle id={row.original.id} />
+        </div>
+      ),
+      size: 40,
+      enableResizing: false,
     },
     {
       id: "select",
       header: ({ table }) => (
         <div className="flex items-center justify-center">
-          <Checkbox 
+          <Checkbox
             checked={
               table.getIsAllPageRowsSelected()
                 ? true
@@ -129,13 +246,15 @@ export function MaterialsTable({ data: initialData = [] }: MaterialsTableProps) 
                 ? "indeterminate"
                 : false
             }
-            onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+            onCheckedChange={(value) =>
+              table.toggleAllPageRowsSelected(!!value)
+            }
             aria-label="Select all"
           />
         </div>
       ),
       cell: ({ row }) => (
-        <div className="flex items-center justify-center">
+        <div className="flex items-center justify-center h-8">
           <Checkbox
             checked={row.getIsSelected()}
             onCheckedChange={(value) => row.toggleSelected(!!value)}
@@ -143,172 +262,162 @@ export function MaterialsTable({ data: initialData = [] }: MaterialsTableProps) 
           />
         </div>
       ),
+      size: 50,
       enableSorting: false,
       enableHiding: false,
+      enableResizing: false,
     },
     {
       accessorKey: "item",
       header: "Item",
-      cell: ({ row }) => (
-        <EditableCell
-          value={row.original.item}
-          onSave={(value) => updateMaterial(row.original.id, "item", value)}
-          className="font-semibold min-w-32"
-          placeholder="Nombre del material"
-        />
-      ),
+      cell: ({ row }) => {
+        const index = materials.findIndex((m) => m.id === row.original.id);
+        return (
+          <EditableCell
+            value={row.original.item}
+            onSave={(value) => updateMaterial(index, "item", value)}
+            className="font-semibold w-full"
+            placeholder="Nombre del material*"
+            required={true}
+          />
+        );
+      },
+      size: 200,
       enableHiding: false,
     },
     {
       accessorKey: "description",
       header: "Medida / Descripción",
-      cell: ({ row }) => (
-        <EditableCell
-          value={row.original.description}
-          onSave={(value) => updateMaterial(row.original.id, "description", value)}
-          type="textarea"
-          placeholder="Descripción del material"
-        />
-      ),
+      cell: ({ row }) => {
+        const index = materials.findIndex((m) => m.id === row.original.id);
+        return (
+          <div className="w-full h-8 flex items-center">
+            <EditableCell
+              value={row.original.description}
+              onSave={(value) => updateMaterial(index, "description", value)}
+              type="textarea"
+              className="w-full"
+              placeholder="Descripción del material"
+            />
+          </div>
+        );
+      },
+      size: 250,
     },
     {
       accessorKey: "unit",
       header: "Unidad",
-      cell: ({ row }) => (
-        <div className="text-center">
-          <EditableSelect
-            value={row.original.unit}
-            onSave={(value) => updateMaterial(row.original.id, "unit", value)}
-            options={unitOptions}
-            className="text-sm"
-          />
-        </div>
-      ),
+      cell: ({ row }) => {
+        const index = materials.findIndex((m) => m.id === row.original.id);
+        return (
+          <div className="flex items-center justify-center h-8">
+            <EditableSelect
+              value={row.original.unit}
+              onSave={(value) => updateMaterial(index, "unit", value)}
+              options={unitOptions}
+              className="text-sm"
+            />
+          </div>
+        );
+      },
+      size: 100,
     },
     {
       accessorKey: "quantity",
       header: () => <div className="w-full text-right">Cantidad</div>,
-      cell: ({ row }) => (
-        <EditableCell
-          value={row.original.quantity}
-          onSave={(value) => updateMaterial(row.original.id, "quantity", value)}
-          type="number"
-          className="w-20 text-right"
-          placeholder="0"
-        />
-      ),
-    },
-    {
-      accessorKey: "category",
-      header: "Rubro / Categoría",
-      cell: ({ row }) => (
-        <div className="min-w-32 space-y-1">
-          <EditableSelect
-            value={row.original.category}
-            onSave={(value) => updateMaterial(row.original.id, "category", value)}
-            options={categoryOptions}
-            className="text-xs font-semibold"
-          />
-          <EditableCell
-            value={row.original.subcategory}
-            onSave={(value) => updateMaterial(row.original.id, "subcategory", value)}
-            className="text-xs text-muted-foreground"
-            placeholder="Subcategoría"
-          />
-        </div>
-      ),
-    },
-    {
-      accessorKey: "metricQuantity",
-      header: () => <div className="w-full text-right">Cantidad métrica</div>,
-      cell: ({ row }) => (
-        <EditableCell
-          value={row.original.metricQuantity}
-          onSave={(value) => updateMaterial(row.original.id, "metricQuantity", value)}
-          type="number"
-          className="w-20 text-center"
-          placeholder="0"
-        />
-      ),
-    },
-    {
-      accessorKey: "updatedQuantity",
-      header: () => <div className="w-full text-right">Actualizada</div>,
-      cell: ({ row }) => (
-        <EditableCell
-          value={row.original.updatedQuantity}
-          onSave={(value) => updateMaterial(row.original.id, "updatedQuantity", value)}
-          type="number"
-          className="w-20 text-right font-semibold text-primary"
-          placeholder="0"
-        />
-      ),
-    },
-    {
-      accessorKey: "finalUnit",
-      header: "Unidad final",
-      cell: ({ row }) => (
-        <div className="text-center">
-          <EditableSelect
-            value={row.original.finalUnit}
-            onSave={(value) => updateMaterial(row.original.id, "finalUnit", value)}
-            options={unitOptions}
-            className="text-primary"
-          />
-        </div>
-      ),
-    },
-    {
-      accessorKey: "status",
-      header: "Estado",
-      cell: ({ row }) => (
-        <EditableSelect
-          value={row.original.status}
-          onSave={(value) => updateMaterial(row.original.id, "status", value)}
-          options={statusOptions}
-          className="text-xs"
-        />
-      ),
+      cell: ({ row }) => {
+        const index = materials.findIndex((m) => m.id === row.original.id);
+        return (
+          <div className="w-full h-8 flex justify-end items-center">
+            <EditableCell
+              value={row.original.quantity}
+              onSave={(value) => updateMaterial(index, "quantity", value)}
+              type="number"
+              className="text-right w-full"
+              placeholder="0*"
+              required={true}
+              minValue={0}
+            />
+          </div>
+        );
+      },
+      size: 120,
     },
     {
       id: "actions",
+      header: () => null,
       cell: ({ row }) => (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="data-[state=open]:bg-muted text-muted-foreground flex size-8" size="icon">
-              <MoreHorizontal />
-              <span className="sr-only">Open menu</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-32">
-            <DropdownMenuItem onClick={() => {
-              const material = row.original
-              const duplicated = { ...material, id: Math.max(...data.map(item => item.id)) + 1 }
-              setData(prev => [...prev, duplicated])
-              toast.success("Material duplicado")
-            }}>
-              Duplicar
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem 
-              className="text-destructive focus:text-destructive"
-              onClick={() => deleteMaterial(row.original.id)}
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Eliminar
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex justify-center items-center h-8">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                className="data-[state=open]:bg-muted text-muted-foreground flex size-8"
+                size="icon"
+              >
+                <MoreHorizontal />
+                <span className="sr-only">Open menu</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-32">
+              <DropdownMenuItem
+                onClick={() => {
+                  const material = row.original;
+                  const duplicated = {
+                    ...material,
+                    id: Math.max(...materials.map((item) => item.id)) + 1,
+                  };
+                  appendMaterial(duplicated);
+                  toast.success("Material duplicado");
+                }}
+              >
+                Duplicar
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive"
+                onClick={() => {
+                  const index = materials.findIndex(
+                    (m) => m.id === row.original.id
+                  );
+                  deleteMaterial(index);
+                }}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Eliminar
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       ),
+      size: 64,
+      enableSorting: false,
+      enableHiding: false,
     },
-  ]
+  ];
 
-  const sortableId = React.useId()
-  const sensors = useSensors(useSensor(MouseSensor, {}), useSensor(TouchSensor, {}), useSensor(KeyboardSensor, {}))
-  const dataIds = React.useMemo<UniqueIdentifier[]>(() => data?.map(({ id }) => id) || [], [data])
+  const sortableId = React.useId();
+  const sensors = useSensors(
+    useSensor(MouseSensor, {
+      activationConstraint: {
+        distance: 10,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 250,
+        tolerance: 5,
+      },
+    }),
+    useSensor(KeyboardSensor, {})
+  );
+  const dataIds = React.useMemo<UniqueIdentifier[]>(
+    () => materials?.map(({ id }) => id) || [],
+    [materials]
+  );
 
   const table = useReactTable({
-    data,
+    data: materials,
     columns: materialsColumns,
     state: {
       sorting,
@@ -319,6 +428,8 @@ export function MaterialsTable({ data: initialData = [] }: MaterialsTableProps) 
     },
     getRowId: (row) => row.id.toString(),
     enableRowSelection: true,
+    enableColumnResizing: false,
+    columnResizeMode: "onChange",
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -330,32 +441,172 @@ export function MaterialsTable({ data: initialData = [] }: MaterialsTableProps) 
     getSortedRowModel: getSortedRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
-  })
+  });
 
   function handleDragEnd(event: DragEndEvent) {
-    const { active, over } = event
+    const { active, over } = event;
     if (active && over && active.id !== over.id) {
-      setData((data) => {
-        const oldIndex = dataIds.indexOf(active.id)
-        const newIndex = dataIds.indexOf(over.id)
-        return arrayMove(data, oldIndex, newIndex)
-      })
+      const oldIndex = dataIds.indexOf(active.id);
+      const newIndex = dataIds.indexOf(over.id);
+      moveMaterial(oldIndex, newIndex);
     }
   }
 
+  // Función para eliminar materiales seleccionados
+  const deleteSelectedMaterials = React.useCallback(() => {
+    const selectedRows = table.getFilteredSelectedRowModel().rows;
+    const selectedIds = selectedRows.map(row => row.original.id);
+    
+    // Eliminar en orden inverso para no afectar los índices
+    const indicesToDelete = selectedIds
+      .map(id => materials.findIndex(m => m.id === id))
+      .sort((a, b) => b - a);
+    
+    indicesToDelete.forEach(index => {
+      if (index !== -1) {
+        removeMaterial(index);
+      }
+    });
+    
+    // Limpiar selección
+    setRowSelection({});
+    toast.success(`${selectedRows.length} materiales eliminados`);
+  }, [table, materials, removeMaterial]);
+
+  // Función para validar todo el formulario antes del envío
+  const validateAndSubmitWithSelection = React.useCallback(async (useSelectedOnly = false) => {
+    // Trigger validation para campos principales
+    const isValidMain = await form.trigger(['budgetName', 'currency']);
+    
+    if (!isValidMain) {
+      if (errors.budgetName) toast.error("El nombre del presupuesto es requerido");
+      if (errors.currency) toast.error("La moneda es requerida");
+      return false;
+    }
+    
+    const formData = form.getValues();
+    let materialsToValidate = formData.materials;
+    
+    // Si se requiere usar solo seleccionados, filtrar
+    if (useSelectedOnly) {
+      const selectedRows = table.getFilteredSelectedRowModel().rows;
+      if (selectedRows.length === 0) {
+        toast.error("Debe seleccionar al menos un material para solicitar presupuesto");
+        return false;
+      }
+      const selectedIds = selectedRows.map(row => row.original.id);
+      materialsToValidate = formData.materials.filter(m => selectedIds.includes(m.id));
+    }
+    
+    // Validar que hay materiales
+    if (!materialsToValidate || materialsToValidate.length === 0) {
+      toast.error(useSelectedOnly 
+        ? "Debe seleccionar al menos un material para solicitar presupuesto" 
+        : "Debe agregar al menos un material al presupuesto"
+      );
+      return false;
+    }
+    
+    // Validar que todos los materiales están completos
+    const invalidMaterials = materialsToValidate.filter(
+      material => !validateMaterial(material).isValid
+    );
+    
+    if (invalidMaterials.length > 0) {
+      toast.error("Todos los materiales deben tener nombre, unidad y cantidad mayor a 0");
+      return false;
+    }
+    
+    return { isValid: true, materials: materialsToValidate };
+  }, [form, errors, validateMaterial, table]);
+
   return (
-    <Tabs defaultValue="materials" className="w-full flex-col justify-start gap-6">
-      <div className="flex items-center justify-between px-4 lg:px-6">
-        <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold tracking-tight">Lista de Materiales Calculados</h1>
-          <Button variant="ghost" size="icon" className="h-6 w-6">
-            <Edit className="h-4 w-4" />
-          </Button>
-          <Avatar className="w-6 h-6">
-            <AvatarFallback className="text-xs">U</AvatarFallback>
-          </Avatar>
+    <form onSubmit={form.handleSubmit(onSubmit)}>
+      <div className="w-full flex-col justify-start gap-6">
+        <div className="flex items-center justify-between px-4 lg:px-6">
+          <div className="flex items-center gap-3">
+            <Controller
+              control={control}
+              name="budgetName"
+              render={({ field }) => (
+                <EditableCell
+                  value={field.value}
+                  onSave={(value) => field.onChange(value)}
+                  className="text-2xl font-bold tracking-tight"
+                  placeholder="Nombre del presupuesto*"
+                  required={true}
+                />
+              )}
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center">
+              <Controller
+                control={control}
+                name="currency"
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger
+                      id="currency"
+                      className={`w-full ${errors.currency ? 'border-2 border-red-500' : ''}`}
+                      size="default"
+                    >
+                      <SelectValue placeholder="Seleccionar moneda*" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ars">ARS</SelectItem>
+                      <SelectItem value="usd">USD</SelectItem>
+                      <SelectItem value="eur">EUR</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+            <Button
+              type="button"
+              className="bg-primary hover:bg-primary/90"
+              size="sm"
+              onClick={async () => {
+                const result = await validateAndSubmitWithSelection(true);
+                if (result && typeof result === 'object' && result.isValid) {
+                  const formData = form.getValues();
+                  console.log("Solicitar Presupuesto - Materiales seleccionados:", { ...formData, materials: result.materials });
+                  toast.success(`Presupuesto enviado para ${result.materials.length} materiales seleccionados`);
+                }
+              }}
+              disabled={isAddingMaterial || table.getFilteredSelectedRowModel().rows.length === 0}
+            >
+              <Plus />
+              <span className="hidden lg:inline">
+                Solicitar Presupuesto Seleccionados ({table.getFilteredSelectedRowModel().rows.length})
+              </span>
+              <span className="lg:hidden">
+                Solicitar ({table.getFilteredSelectedRowModel().rows.length})
+              </span>
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                const result = await validateAndSubmitWithSelection(false);
+                if (result && typeof result === 'object' && result.isValid) {
+                  const formData = form.getValues();
+                  console.log("Solicitar Presupuesto - Todos los materiales:", { ...formData, materials: result.materials });
+                  toast.success("Presupuesto enviado para todos los materiales");
+                }
+              }}
+              disabled={isAddingMaterial || materials.length === 0}
+            >
+              <Plus />
+              <span className="hidden lg:inline">
+                Solicitar Todos
+              </span>
+            </Button>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
+
+        <div className="flex items-center justify-between px-4 py-4 lg:px-6">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
@@ -368,167 +619,219 @@ export function MaterialsTable({ data: initialData = [] }: MaterialsTableProps) 
             <DropdownMenuContent align="end" className="w-56">
               {table
                 .getAllColumns()
-                .filter((column) => typeof column.accessorFn !== "undefined" && column.getCanHide())
+                .filter(
+                  (column) =>
+                    typeof column.accessorFn !== "undefined" &&
+                    column.getCanHide()
+                )
                 .map((column) => {
                   return (
                     <DropdownMenuCheckboxItem
                       key={column.id}
                       className="capitalize"
                       checked={column.getIsVisible()}
-                      onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                      onCheckedChange={(value) =>
+                        column.toggleVisibility(!!value)
+                      }
                     >
                       {column.id}
                     </DropdownMenuCheckboxItem>
-                  )
+                  );
                 })}
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button 
-            className="bg-primary hover:bg-primary/90" 
-            size="sm" 
-            onClick={() => setIsAddingMaterial(true)}
-            disabled={isAddingMaterial}
-          >
-            <Plus />
-            <span className="hidden lg:inline">Agregar Material</span>
-          </Button>
-        </div>
-      </div>
-      
-      <div className="flex items-center gap-2 px-4 lg:px-6 text-sm text-muted-foreground">
-        <Calendar className="w-4 h-4" />
-        <span>Generado el 24 de julio de 2025, 02:11 p. m.</span>
-        <Badge variant="secondary" className="ml-4">
-          <Save className="w-3 h-3 mr-1" />
-          Edición inline habilitada
-        </Badge>
-      </div>
-      
-      <TabsContent value="materials" className="relative flex flex-col gap-4 overflow-auto px-4 lg:px-6">
-        <div className="overflow-hidden rounded-lg border">
-          <DndContext
-            collisionDetection={closestCenter}
-            modifiers={[restrictToVerticalAxis]}
-            onDragEnd={handleDragEnd}
-            sensors={sensors}
-            id={sortableId}
-          >
-            <Table>
-              <TableHeader className="bg-muted sticky top-0 z-10">
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => {
-                      return (
-                        <TableHead key={header.id} colSpan={header.colSpan}>
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(header.column.columnDef.header, header.getContext())}
-                        </TableHead>
-                      )
-                    })}
-                  </TableRow>
-                ))}
-              </TableHeader>
-              <TableBody className="**:data-[slot=table-cell]:first:w-8">
-                {isAddingMaterial && (
-                  <AddMaterialRow
-                    onAdd={addNewMaterial}
-                    onCancel={() => setIsAddingMaterial(false)}
-                  />
-                )}
-                {table.getRowModel().rows?.length ? (
-                  <SortableContext items={dataIds} strategy={verticalListSortingStrategy}>
-                    {table.getRowModel().rows.map((row) => (
-                      <DraggableRow key={row.id} row={row} />
-                    ))}
-                  </SortableContext>
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={materialsColumns.length} className="h-24 text-center">
-                      No hay materiales.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </DndContext>
-        </div>
-        
-        <div className="flex items-center justify-between px-4">
-          <div className="text-muted-foreground hidden flex-1 text-sm lg:flex">
-            {table.getFilteredSelectedRowModel().rows.length} de {table.getFilteredRowModel().rows.length} fila(s)
-            seleccionadas.
-          </div>
-          <div className="flex w-full items-center gap-8 lg:w-fit">
-            <div className="hidden items-center gap-2 lg:flex">
-              <Label htmlFor="rows-per-page" className="text-sm font-medium">
-                Filas por página
-              </Label>
-              <Select
-                value={`${table.getState().pagination.pageSize}`}
-                onValueChange={(value) => {
-                  table.setPageSize(Number(value))
-                }}
+          <div className="flex items-center gap-2">
+            {table.getFilteredSelectedRowModel().rows.length > 0 && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={deleteSelectedMaterials}
               >
-                <SelectTrigger className="w-20" id="rows-per-page">
-                  <SelectValue placeholder={table.getState().pagination.pageSize} />
-                </SelectTrigger>
-                <SelectContent side="top">
-                  {[10, 20, 30, 40, 50].map((pageSize) => (
-                    <SelectItem key={pageSize} value={`${pageSize}`}>
-                      {pageSize}
-                    </SelectItem>
+                <Trash2 className="h-4 w-4 mr-2" />
+                <span className="hidden lg:inline">
+                  Eliminar {table.getFilteredSelectedRowModel().rows.length} seleccionados
+                </span>
+                <span className="lg:hidden">
+                  Eliminar ({table.getFilteredSelectedRowModel().rows.length})
+                </span>
+              </Button>
+            )}
+            {materials.some(material => !validateMaterial(material).isValid) && (
+              <span className="text-sm text-yellow-600 bg-yellow-100 px-2 py-1 rounded-md">
+                ⚠️ Hay materiales incompletos
+              </span>
+            )}
+            <Button
+              type="button"
+              className="bg-primary hover:bg-primary/90"
+              size="sm"
+              onClick={() => setIsAddingMaterial(true)}
+              disabled={isAddingMaterial}
+            >
+              <Plus />
+              <span className="hidden lg:inline">Agregar Material</span>
+            </Button>
+          </div>
+        </div>
+
+        <div className="relative flex flex-col gap-4 overflow-auto px-4 lg:px-6">
+          <div className="overflow-hidden rounded-lg border">
+            <DndContext
+              collisionDetection={closestCenter}
+              modifiers={[restrictToVerticalAxis]}
+              onDragEnd={handleDragEnd}
+              sensors={sensors}
+              id={sortableId}
+            >
+              <Table className="w-full table-fixed">
+                <colgroup>
+                  <col className="w-10" />
+                  <col className="w-12" />
+                  <col className="w-[200px]" />
+                  <col className="w-[250px]" />
+                  <col className="w-[100px]" />
+                  <col className="w-[120px]" />
+                  <col className="w-16" />
+                </colgroup>
+                <TableHeader className="bg-muted sticky top-0 z-10">
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <TableRow key={headerGroup.id}>
+                      {headerGroup.headers.map((header) => {
+                        return (
+                          <TableHead 
+                            key={header.id} 
+                            colSpan={header.colSpan}
+                            className="px-2 py-3"
+                          >
+                            {header.isPlaceholder
+                              ? null
+                              : flexRender(
+                                  header.column.columnDef.header,
+                                  header.getContext()
+                                )}
+                          </TableHead>
+                        );
+                      })}
+                    </TableRow>
                   ))}
-                </SelectContent>
-              </Select>
+                </TableHeader>
+                <TableBody>
+                  {isAddingMaterial && (
+                    <AddMaterialRow
+                      onAdd={addNewMaterial}
+                      onCancel={() => setIsAddingMaterial(false)}
+                    />
+                  )}
+                  {table.getRowModel().rows?.length ? (
+                    <SortableContext
+                      items={dataIds}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      {table.getRowModel().rows.map((row) => {
+                        const materialValidation = validateMaterial(row.original);
+                        return (
+                          <DraggableRow 
+                            key={row.id} 
+                            row={row} 
+                            isValid={materialValidation.isValid}
+                          />
+                        );
+                      })}
+                    </SortableContext>
+                  ) : (
+                    <TableRow>
+                      <TableCell
+                        colSpan={materialsColumns.length}
+                        className="h-24 text-center px-2 py-3"
+                      >
+                        No hay materiales.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </DndContext>
+          </div>
+
+          <div className="flex items-center justify-between px-4">
+            <div className="text-muted-foreground hidden flex-1 text-sm lg:flex">
+              {table.getFilteredSelectedRowModel().rows.length} de{" "}
+              {table.getFilteredRowModel().rows.length} fila(s) seleccionadas.
             </div>
-            <div className="flex w-fit items-center justify-center text-sm font-medium">
-              Página {table.getState().pagination.pageIndex + 1} de {table.getPageCount()}
-            </div>
-            <div className="ml-auto flex items-center gap-2 lg:ml-0">
-              <Button
-                variant="outline"
-                className="hidden h-8 w-8 p-0 lg:flex bg-transparent"
-                onClick={() => table.setPageIndex(0)}
-                disabled={!table.getCanPreviousPage()}
-              >
-                <span className="sr-only">Ir a la primera página</span>
-                <ChevronsLeft />
-              </Button>
-              <Button
-                variant="outline"
-                className="size-8 bg-transparent"
-                size="icon"
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-              >
-                <span className="sr-only">Ir a la página anterior</span>
-                <ChevronLeft />
-              </Button>
-              <Button
-                variant="outline"
-                className="size-8 bg-transparent"
-                size="icon"
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-              >
-                <span className="sr-only">Ir a la página siguiente</span>
-                <ChevronRight />
-              </Button>
-              <Button
-                variant="outline"
-                className="hidden size-8 lg:flex bg-transparent"
-                size="icon"
-                onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                disabled={!table.getCanNextPage()}
-              >
-                <span className="sr-only">Ir a la última página</span>
-                <ChevronsRight />
-              </Button>
+            <div className="flex w-full items-center gap-8 lg:w-fit">
+              <div className="hidden items-center gap-2 lg:flex">
+                <Label htmlFor="rows-per-page" className="text-sm font-medium">
+                  Filas por página
+                </Label>
+                <Select
+                  value={`${table.getState().pagination.pageSize}`}
+                  onValueChange={(value) => {
+                    table.setPageSize(Number(value));
+                  }}
+                >
+                  <SelectTrigger className="w-20" id="rows-per-page">
+                    <SelectValue
+                      placeholder={table.getState().pagination.pageSize}
+                    />
+                  </SelectTrigger>
+                  <SelectContent side="top">
+                    {[10, 20, 30, 40, 50].map((pageSize) => (
+                      <SelectItem key={pageSize} value={`${pageSize}`}>
+                        {pageSize}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex w-fit items-center justify-center text-sm font-medium">
+                Página {table.getState().pagination.pageIndex + 1} de{" "}
+                {table.getPageCount()}
+              </div>
+              <div className="ml-auto flex items-center gap-2 lg:ml-0">
+                <Button
+                  variant="outline"
+                  className="hidden h-8 w-8 p-0 lg:flex bg-transparent"
+                  onClick={() => table.setPageIndex(0)}
+                  disabled={!table.getCanPreviousPage()}
+                >
+                  <span className="sr-only">Ir a la primera página</span>
+                  <ChevronsLeft />
+                </Button>
+                <Button
+                  variant="outline"
+                  className="size-8 bg-transparent"
+                  size="icon"
+                  onClick={() => table.previousPage()}
+                  disabled={!table.getCanPreviousPage()}
+                >
+                  <span className="sr-only">Ir a la página anterior</span>
+                  <ChevronLeft />
+                </Button>
+                <Button
+                  variant="outline"
+                  className="size-8 bg-transparent"
+                  size="icon"
+                  onClick={() => table.nextPage()}
+                  disabled={!table.getCanNextPage()}
+                >
+                  <span className="sr-only">Ir a la página siguiente</span>
+                  <ChevronRight />
+                </Button>
+                <Button
+                  variant="outline"
+                  className="hidden size-8 lg:flex bg-transparent"
+                  size="icon"
+                  onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                  disabled={!table.getCanNextPage()}
+                >
+                  <span className="sr-only">Ir a la última página</span>
+                  <ChevronsRight />
+                </Button>
+              </div>
             </div>
           </div>
         </div>
-      </TabsContent>
-    </Tabs>
-  )
+      </div>
+    </form>
+  );
 }

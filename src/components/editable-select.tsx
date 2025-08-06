@@ -27,7 +27,7 @@ export function EditableSelect({
 
   if (isEditing) {
     return (
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1 w-full">
         <Select value={value} onValueChange={handleSave}>
           <SelectTrigger className="h-8 w-full">
             <SelectValue />
@@ -40,7 +40,7 @@ export function EditableSelect({
             ))}
           </SelectContent>
         </Select>
-        <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setIsEditing(false)}>
+        <Button size="icon" variant="ghost" className="h-6 w-6 flex-shrink-0" onClick={() => setIsEditing(false)}>
           <X className="h-3 w-3" />
         </Button>
       </div>
@@ -49,11 +49,11 @@ export function EditableSelect({
 
   return (
     <div 
-      className={`cursor-pointer hover:bg-muted/50 rounded px-2 py-1 ${className}`}
+      className={`cursor-pointer hover:bg-muted/50 rounded px-1 py-1 w-full h-8 flex items-center justify-center ${className}`}
       onClick={() => setIsEditing(true)}
       title="Click para editar"
     >
-      {value}
+      <span className="truncate">{value}</span>
     </div>
   )
 }

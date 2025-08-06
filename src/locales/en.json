@@ -115,5 +115,18 @@
     "logout": "Logout",
     "account": "Account",
     "notifications": "Notifications"
+  },
+  "detailsProject": {
+    "materialsComputation": "Materials Computation",
+    "materials": "Materials",
+    "addMaterial": "Add Material",
+    "editMaterial": "Edit Material",
+    "deleteMaterial": "Delete Material",
+    "materialName": "Material Name",
+    "materialQuantity": "Material Quantity",
+    "materialUnit": "Material Unit",
+    "materialCost": "Material Cost",
+    "noMaterials": "No materials found",
+    "requestBudget": "Request Budget"
   }
 }

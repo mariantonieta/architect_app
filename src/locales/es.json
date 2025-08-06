@@ -115,5 +115,21 @@
     "logout": "Cerrar Sesión",
     "account": "Cuenta",
     "notifications": "Notificaciones"
+  },
+  "detailsProject": {
+    "title": "Materiales",
+    "addMaterial": "Agregar Material",
+    "materialName": "Nombre del Material",
+    "materialType": "Tipo de Material",
+    "quantity": "Cantidad",
+    "unit": "Unidad",
+    "noMaterials": "No se encontraron materiales",
+    "materialDetails": "Detalles del Material",
+    "editMaterial": "Editar Material",
+    "deleteMaterial": "Eliminar Material",
+    "materialAdded": "Material agregado exitosamente",
+    "materialUpdated": "Material actualizado exitosamente",
+    "materialDeleted": "Material eliminado exitosamente",
+    "requestBudget": "Solicitar Presupuesto"
   }
 }
