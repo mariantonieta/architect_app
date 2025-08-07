@@ -1,6 +1,17 @@
 import api from "./api";
 
-export type Currency = "ars" | "usd" | "eur";
+export enum Currency {
+    ARS = "ars",
+    USD = "usd",
+    EUR = "eur",
+    YEN = "yen",
+    PEPE = "pepe",
+}
+export enum MaterialListItemStatus {
+    REQUESTED = "requested",
+    NO_REQUESTED = "no_requested",
+    QUOTED = "quoted",
+}
 
 export type MaterialListItem = {
     id: string;
@@ -8,6 +19,7 @@ export type MaterialListItem = {
     quantity: number;
     unity: string;
     description?: string;
+    status?: MaterialListItemStatus;
 };
 
 export type MaterialList = {
@@ -21,7 +33,7 @@ export type MaterialList = {
 
 export type CreateMaterialListInput = {
     name: string;
-    currency: "ars" | "usd" | "eur";
+    currency: Currency;
     project_id: string;
     material_list_items: {
         name: string;

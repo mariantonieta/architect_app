@@ -15,9 +15,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { type Material } from "@/types/material";
 import {
   unitOptions,
-  statusOptions,
-  categoryOptions,
 } from "@/components/material-table";
+import { MaterialListItemStatus } from "@/services/materialServices";
 
 interface AddMaterialRowProps {
   onAdd: (material: Omit<Material, "id">) => void;
@@ -34,6 +33,7 @@ export function AddMaterialRow({ onAdd, onCancel }: AddMaterialRowProps) {
     description: "",
     unit: "u",
     quantity: 0,
+    status: MaterialListItemStatus.NO_REQUESTED,
   });
 
   const handleSave = () => {
@@ -97,7 +97,9 @@ export function AddMaterialRow({ onAdd, onCancel }: AddMaterialRowProps) {
           onChange={(e) => updateField("item", e.target.value)}
           placeholder="Nombre del material*"
           className={`w-full ${
-            !newMaterial.item.trim() ? "border-red-300 focus:border-red-500" : ""
+            !newMaterial.item.trim()
+              ? "border-red-300 focus:border-red-500"
+              : ""
           }`}
           autoFocus
         />
@@ -122,9 +124,11 @@ export function AddMaterialRow({ onAdd, onCancel }: AddMaterialRowProps) {
             value={newMaterial.unit}
             onValueChange={(value) => updateField("unit", value)}
           >
-            <SelectTrigger className={`h-8 w-full ${
-              !newMaterial.unit ? "border-red-300 focus:border-red-500" : ""
-            }`}>
+            <SelectTrigger
+              className={`h-8 w-full ${
+                !newMaterial.unit ? "border-red-300 focus:border-red-500" : ""
+              }`}
+            >
               <SelectValue placeholder="Unidad*" />
             </SelectTrigger>
             <SelectContent>
@@ -149,10 +153,19 @@ export function AddMaterialRow({ onAdd, onCancel }: AddMaterialRowProps) {
             }
             placeholder="0*"
             className={`w-full text-right h-8 ${
-              newMaterial.quantity <= 0 ? "border-red-300 focus:border-red-500" : ""
+              newMaterial.quantity <= 0
+                ? "border-red-300 focus:border-red-500"
+                : ""
             }`}
           />
         </div>
+      </TableCell>
+
+      {/* Status */}
+      <TableCell className="px-2 py-3 items-center">
+        <span className="rounded-full px-2 py-1 bg-muted text-xs font-medium text-muted-foreground items-center">
+          {newMaterial.status}
+        </span>
       </TableCell>
 
       {/* Actions */}
@@ -162,8 +175,8 @@ export function AddMaterialRow({ onAdd, onCancel }: AddMaterialRowProps) {
             size="icon"
             variant="ghost"
             className={`h-6 w-6 ${
-              isFormValid() 
-                ? "hover:bg-green-100 hover:text-green-700" 
+              isFormValid()
+                ? "hover:bg-green-100 hover:text-green-700"
                 : "opacity-50 cursor-not-allowed"
             }`}
             onClick={handleSave}

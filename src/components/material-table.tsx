@@ -78,8 +78,8 @@ import { DraggableRow } from "./draggable-row";
 import { AddMaterialRow } from "./add-material-row";
 import { useTranslation } from "react-i18next";
 import { useMaterialList, useMaterialListByProject } from "@/hooks/useMaterial";
-import { useParams} from "react-router-dom";
-
+import { useParams } from "react-router-dom";
+import { MaterialListItemStatus, Currency } from "@/services/materialServices";
 
 export const unitOptions = [
   { value: "kg", label: "kg" },
@@ -89,11 +89,9 @@ export const unitOptions = [
   { value: "m", label: "m" },
 ];
 
-
-
 export const budgetFormSchema = z.object({
   budgetName: z.string().min(1, "El nombre del presupuesto es requerido"),
-  currency: z.enum(["ars", "usd", "eur"], {
+  currency: z.enum(Object.values(Currency) as [Currency, ...Currency[]], {
     required_error: "La moneda es requerida",
   }),
   suppliers: z.array(z.string()).default([]),
@@ -108,6 +106,14 @@ export const budgetFormSchema = z.object({
           .number()
           .min(0, "La cantidad debe ser mayor a 0")
           .default(0),
+        status: z
+          .enum(
+            Object.values(MaterialListItemStatus) as [
+              MaterialListItemStatus,
+              ...MaterialListItemStatus[]
+            ]
+          )
+          .default(MaterialListItemStatus.NO_REQUESTED),
       })
     )
     .default([]),
@@ -116,42 +122,35 @@ export const budgetFormSchema = z.object({
 export type BudgetFormData = z.infer<typeof budgetFormSchema>;
 
 export function MaterialsTable() {
-  
-  const { id: projectId } = useParams<{ id: string;}>();
- const [materialListId, setMaterialListId] = useState<string | undefined>(undefined);
+  const { id: projectId } = useParams<{ id: string }>();
+  const [materialListId, setMaterialListId] = useState<string | undefined>(
+    undefined
+  );
 
   const { data: materialList, isLoading } = useMaterialListByProject(projectId);
 
+  console.log("materialList: ", materialList);
+  const { createMaterialList, isCreating, updateMaterialList, isUpdating } =
+    useMaterialList(materialListId);
 
-  const {
-    createMaterialList,
-    isCreating,
-    updateMaterialList,
-    isUpdating,
-  
-  } = useMaterialList(materialListId);
-
-  
   const { t } = useTranslation();
   const [rowSelection, setRowSelection] = useState({});
-  const [columnVisibility, setColumnVisibility] =
-    useState<VisibilityState>({});
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(
-    []
-  );
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [pagination, setPagination] = useState({
     pageIndex: 0,
     pageSize: 10,
   });
   const [isAddingMaterial, setIsAddingMaterial] = useState(false);
-const { deleteMaterialListItem } = useMaterialList(materialListId);
+  const { deleteMaterialListItem } = useMaterialList(materialListId);
   // Hook form setup
   const form = useForm<BudgetFormData>({
     resolver: zodResolver(budgetFormSchema),
     mode: "onChange",
     defaultValues: {
       budgetName: "",
+      currency: undefined,
       suppliers: [],
       materials: [],
     },
@@ -167,11 +166,14 @@ const { deleteMaterialListItem } = useMaterialList(materialListId);
     name: "materials",
   });
 
-  const { watch, control, setValue, getValues, formState: { errors } } = form;
+  const {
+    watch,
+    control,
+    setValue,
+    getValues,
+    formState: { errors },
+  } = form;
   const materials = watch("materials");
-
-  // Mostrar errores si hay errores del form
-  const shouldShowErrors = !!errors.budgetName || !!errors.currency;
 
   // Función para validar un material individual
   const validateMaterial = useCallback((material: Material) => {
@@ -180,83 +182,108 @@ const { deleteMaterialListItem } = useMaterialList(materialListId);
       errors: {
         item: !material.item?.trim(),
         unit: !material.unit,
-        quantity: material.quantity <= 0
-      }
+        quantity: material.quantity <= 0,
+      },
     };
   }, []);
 
-  const updateMaterial = useCallback((
-    index: number,
-    field: keyof Material,
-    value: string | number
-  ) => {
-    setValue(`materials.${index}.${field}` as any, value);
-    
-    // Validar el material después de actualizar
-    const updatedMaterials = [...materials];
-    updatedMaterials[index] = { ...updatedMaterials[index], [field]: value };
-    const validation = validateMaterial(updatedMaterials[index]);
-    
-    if (!validation.isValid) {
-      // Mostrar advertencias específicas sin bloquear la edición
-      if (field === 'item' && validation.errors.item) {
-        setTimeout(() => toast.warning("El nombre del material es requerido"), 100);
-      } else if (field === 'quantity' && validation.errors.quantity) {
-        setTimeout(() => toast.warning("La cantidad debe ser mayor a 0"), 100);
+  const updateMaterial = useCallback(
+    (index: number, field: keyof Material, value: string | number) => {
+      setValue(`materials.${index}.${field}` as any, value);
+
+      // Validar el material después de actualizar
+      const updatedMaterials = [...materials];
+      updatedMaterials[index] = { ...updatedMaterials[index], [field]: value };
+      const validation = validateMaterial(updatedMaterials[index]);
+
+      if (!validation.isValid) {
+        // Mostrar advertencias específicas sin bloquear la edición
+        if (field === "item" && validation.errors.item) {
+          setTimeout(
+            () => toast.warning("El nombre del material es requerido"),
+            100
+          );
+        } else if (field === "quantity" && validation.errors.quantity) {
+          setTimeout(
+            () => toast.warning("La cantidad debe ser mayor a 0"),
+            100
+          );
+        }
       }
-    }
-  }, [materials, setValue, validateMaterial]);
+    },
+    [materials, setValue, validateMaterial]
+  );
 
-  const addNewMaterial = useCallback((materialData: Omit<Material, "id">) => {
-    const newId = Math.max(...materials.map((item) => item.id), 0) + 1;
-    const newMaterial: Material = {
-      id: newId,
-      ...materialData,
-    };
-    appendMaterial(newMaterial);
-    setIsAddingMaterial(false);
-  }, [materials, appendMaterial]);
+  const addNewMaterial = useCallback(
+    (materialData: Omit<Material, "id">) => {
+      const newId = Math.max(...materials.map((item) => item.id), 0) + 1;
+      const newMaterial: Material = {
+        id: newId,
+        ...materialData,
+      };
+      appendMaterial(newMaterial);
+      setIsAddingMaterial(false);
+    },
+    [materials, appendMaterial]
+  );
 
- const deleteMaterial = useCallback((index: number) => {
-    removeMaterial(index);
-    toast.success("Material eliminado");
-  }, [removeMaterial]);
+  const deleteMaterial = useCallback(
+    (index: number) => {
+      removeMaterial(index);
+      toast.success("Material eliminado");
+    },
+    [removeMaterial]
+  );
+
   const onSubmit = async (data: BudgetFormData) => {
-  const { budgetName, currency, materials, suppliers } = data;
+    const { budgetName, currency, materials, suppliers } = data;
 
-  const payload = {
-    name: budgetName,
-    currency: currency,
-    project_id: projectId,
-    material_list_items: materials.map((m) => ({
-      name: m.item,
-      description: m.description,
-      unity: m.unit,
-      quantity: m.quantity,
-    })),
-    supplier_emails: suppliers,
-  };
+    const payload = {
+      name: budgetName,
+      currency: currency,
+      project_id: projectId,
+      material_list_items: materials.map((m) => ({
+        name: m.item,
+        description: m.description,
+        unity: m.unit,
+        quantity: m.quantity,
+        status: "requested",
+      })),
+      supplier_emails: suppliers,
+    };
 
-  try {
-    if (materialList) {
-      await updateMaterialList({ projectId, data: payload });
-      toast.success("Lista de materiales actualizada correctamente");
-    } else {
-      const created = await createMaterialList(payload);
-      toast.success("Lista de materiales creada correctamente");
-      setMaterialListId(created.id); 
-      console.log("Lista creada:", created);
+    try {
+      if (materialList) {
+        await updateMaterialList({ projectId, data: payload });
+        toast.success("Lista de materiales actualizada correctamente");
+      } else {
+        const created = await createMaterialList({
+          ...payload,
+          material_list_items: materials.map((m) => ({
+            name: m.item,
+            description: m.description,
+            unity: m.unit,
+            quantity: m.quantity,
+            status: MaterialListItemStatus.REQUESTED,
+          })),
+        });
+        toast.success("Lista de materiales creada correctamente");
+        setMaterialListId(created.id);
+        console.log("Lista creada:", created);
+      }
+    } catch (error) {
+      toast.error("Error al crear o actualizar la lista");
+      console.error(error);
     }
-  } catch (error) {
-    toast.error("Error al crear o actualizar la lista");
-    console.error(error);
-  }
-};
+  };
 
   useEffect(() => {
     if (materialList) {
+      console.log(
+        "Materiales cargados del proyecto:",
+        materialList.material_list_items
+      );
 
-    console.log("Materiales cargados del proyecto:", materialList.material_list_items);
       form.reset({
         budgetName: materialList.name,
         currency: materialList.currency,
@@ -265,12 +292,14 @@ const { deleteMaterialListItem } = useMaterialList(materialListId);
           id: index + 1,
           item: item.name,
           description: item.description,
-          unit: item.unity, 
+          unit: item.unity,
           quantity: item.quantity,
+          status: item.status || MaterialListItemStatus.REQUESTED, // Default to 'requested' if not set
         })),
       });
     }
   }, [materialList, form]);
+
   const materialsColumns: ColumnDef<Material>[] = [
     {
       id: "drag",
@@ -327,8 +356,7 @@ const { deleteMaterialListItem } = useMaterialList(materialListId);
             onSave={(value) => updateMaterial(index, "item", value)}
             className="font-semibold w-full"
             placeholder="Nombre del material*"
-            required={true} 
-            
+            required={true}
           />
         );
       },
@@ -388,6 +416,20 @@ const { deleteMaterialListItem } = useMaterialList(materialListId);
               required={true}
               minValue={0}
             />
+          </div>
+        );
+      },
+      size: 120,
+    },
+    {
+      accessorKey: "status",
+      header: () => <div className="w-full text-center">Estado</div>,
+      cell: ({ row }) => {
+        return (
+          <div className="w-full h-8 flex justify-end items-center">
+            <span className="rounded-full px-2 py-1 bg-muted text-xs font-medium text-muted-foreground">
+              {row.original.status}
+            </span>
           </div>
         );
       },
@@ -505,74 +547,84 @@ const { deleteMaterialListItem } = useMaterialList(materialListId);
   // Función para eliminar materiales seleccionados
   const deleteSelectedMaterials = useCallback(() => {
     const selectedRows = table.getFilteredSelectedRowModel().rows;
-    const selectedIds = selectedRows.map(row => row.original.id);
-    
+    const selectedIds = selectedRows.map((row) => row.original.id);
+
     // Eliminar en orden inverso para no afectar los índices
     const indicesToDelete = selectedIds
-      .map(id => materials.findIndex(m => m.id === id))
+      .map((id) => materials.findIndex((m) => m.id === id))
       .sort((a, b) => b - a);
-    
-    indicesToDelete.forEach(index => {
+
+    indicesToDelete.forEach((index) => {
       if (index !== -1) {
         removeMaterial(index);
       }
     });
-    
+
     // Limpiar selección
     setRowSelection({});
     toast.success(`${selectedRows.length} materiales eliminados`);
   }, [table, materials, removeMaterial]);
 
   // Función para validar todo el formulario antes del envío
-  const validateAndSubmitWithSelection = useCallback(async (useSelectedOnly = false) => {
-    // Trigger validation para campos principales
-    const isValidMain = await form.trigger(['budgetName', 'currency']);
-    
-    if (!isValidMain) {
-      if (errors.budgetName) toast.error("El nombre del presupuesto es requerido");
-      if (errors.currency) toast.error("La moneda es requerida");
-      return false;
-    }
-    
-    const formData = form.getValues();
-    let materialsToValidate = formData.materials;
-    
-    // Si se requiere usar solo seleccionados, filtrar
-    if (useSelectedOnly) {
-      const selectedRows = table.getFilteredSelectedRowModel().rows;
-      if (selectedRows.length === 0) {
-        toast.error("Debe seleccionar al menos un material para solicitar presupuesto");
+  const validateAndSubmitWithSelection = useCallback(
+    async (useSelectedOnly = false) => {
+      // Trigger validation para campos principales
+      const isValidMain = await form.trigger(["budgetName", "currency"]);
+
+      if (!isValidMain) {
+        if (errors.budgetName)
+          toast.error("El nombre del presupuesto es requerido");
+        if (errors.currency) toast.error("La moneda es requerida");
         return false;
       }
-      const selectedIds = selectedRows.map(row => row.original.id);
-      materialsToValidate = formData.materials.filter(m => selectedIds.includes(m.id));
-    }
-    
-    // Validar que hay materiales
-    if (!materialsToValidate || materialsToValidate.length === 0) {
-      toast.error(useSelectedOnly 
-        ? "Debe seleccionar al menos un material para solicitar presupuesto" 
-        : "Debe agregar al menos un material al presupuesto"
+
+      const formData = form.getValues();
+      let materialsToValidate = formData.materials;
+
+      // Si se requiere usar solo seleccionados, filtrar
+      if (useSelectedOnly) {
+        const selectedRows = table.getFilteredSelectedRowModel().rows;
+        if (selectedRows.length === 0) {
+          toast.error(
+            "Debe seleccionar al menos un material para solicitar presupuesto"
+          );
+          return false;
+        }
+        const selectedIds = selectedRows.map((row) => row.original.id);
+        materialsToValidate = formData.materials.filter((m) =>
+          selectedIds.includes(m.id)
+        );
+      }
+
+      // Validar que hay materiales
+      if (!materialsToValidate || materialsToValidate.length === 0) {
+        toast.error(
+          useSelectedOnly
+            ? "Debe seleccionar al menos un material para solicitar presupuesto"
+            : "Debe agregar al menos un material al presupuesto"
+        );
+        return false;
+      }
+
+      // Validar que todos los materiales están completos
+      const invalidMaterials = materialsToValidate.filter(
+        (material) => !validateMaterial(material).isValid
       );
-      return false;
-    }
-    
-    // Validar que todos los materiales están completos
-    const invalidMaterials = materialsToValidate.filter(
-      material => !validateMaterial(material).isValid
-    );
-    
-    if (invalidMaterials.length > 0) {
-      toast.error("Todos los materiales deben tener nombre, unidad y cantidad mayor a 0");
-      return false;
-    }
-    
-    return { isValid: true, materials: materialsToValidate };
-  }, [form, errors, validateMaterial, table]);
+
+      if (invalidMaterials.length > 0) {
+        toast.error(
+          "Todos los materiales deben tener nombre, unidad y cantidad mayor a 0"
+        );
+        return false;
+      }
+
+      return { isValid: true, materials: materialsToValidate };
+    },
+    [form, errors, validateMaterial, table]
+  );
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)}>
-
       <div className="w-full flex-col justify-start gap-6">
         <div className="flex items-center justify-between px-4 lg:px-6">
           <div className="flex items-center gap-3">
@@ -595,23 +647,36 @@ const { deleteMaterialListItem } = useMaterialList(materialListId);
               <Controller
                 control={control}
                 name="currency"
-                render={({ field }) => (
-                  <Select value={field.value} onValueChange={(value) => field.onChange(value)} defaultValue={field.value}>
-                    <SelectTrigger
-                    key={field.value}
-                      id="currency"
-                      className={`w-full ${errors.currency ? 'border-2 border-red-500' : ''}`}
-                      size="default"
+                render={({ field }) => {
+                  return (
+                    <Select
+                      value={field.value}
+                      onValueChange={(value) => {
+                        // Solo permitir valores válidos
+                        if (["ars", "usd", "eur"].includes(value)) {
+                          field.onChange(value);
+                        }
+                      }}
                     >
-                      <SelectValue placeholder="Seleccionar moneda*" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ars">ARS</SelectItem>
-                      <SelectItem value="usd">USD</SelectItem>
-                      <SelectItem value="eur">EUR</SelectItem>
-                    </SelectContent>
-                  </Select>
-                )}
+                      <SelectTrigger
+                        id="currency"
+                        className={`w-full ${
+                          errors.currency ? "border-2 border-red-500" : ""
+                        }`}
+                        size="default"
+                      >
+                        <SelectValue placeholder="Seleccionar moneda*" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(Currency).map(([key, value]) => (
+                          <SelectItem key={key} value={value}>
+                            {key}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  );
+                }}
               />
             </div>
             <Button
@@ -620,44 +685,44 @@ const { deleteMaterialListItem } = useMaterialList(materialListId);
               size="sm"
               onClick={async () => {
                 const result = await validateAndSubmitWithSelection(true);
-                if (result && typeof result === 'object' && result.isValid) {
-                 await onSubmit({
-  ...form.getValues(),
-  materials: result.materials,
-});
+                if (result && typeof result === "object" && result.isValid) {
+                  await onSubmit({
+                    ...form.getValues(),
+                    materials: result.materials,
+                  });
                 }
               }}
-              disabled={isAddingMaterial || table.getFilteredSelectedRowModel().rows.length === 0}
+              disabled={
+                isAddingMaterial ||
+                table.getFilteredSelectedRowModel().rows.length === 0
+              }
             >
               <Plus />
               <span className="hidden lg:inline">
-                Solicitar Presupuesto Seleccionados ({table.getFilteredSelectedRowModel().rows.length})
+                Solicitar Presupuesto Seleccionados (
+                {table.getFilteredSelectedRowModel().rows.length})
               </span>
               <span className="lg:hidden">
                 Solicitar ({table.getFilteredSelectedRowModel().rows.length})
               </span>
             </Button>
-           <Button
-  type="button"
-  variant="outline"
-  size="sm"
-  onClick={async () => {
-    const result = await validateAndSubmitWithSelection(false);
-    if (result && typeof result === "object" && result.isValid) {
-    
-      await onSubmit({
-        ...form.getValues(),
-        materials: result.materials,
-      });
-    }
-  }}
-   disabled={isAddingMaterial || isCreating || isUpdating}
-  
->
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                const result = await validateAndSubmitWithSelection(false);
+                if (result && typeof result === "object" && result.isValid) {
+                  await onSubmit({
+                    ...form.getValues(),
+                    materials: result.materials,
+                  });
+                }
+              }}
+              disabled={isAddingMaterial || isCreating || isUpdating}
+            >
               <Plus />
-              <span className="hidden lg:inline">
-                    {materialListId ? "Actualizar Todos" : "Solicitar Todos"}
-              </span>
+              <span className="hidden lg:inline">Solicitar Todos</span>
             </Button>
           </div>
         </div>
@@ -705,14 +770,17 @@ const { deleteMaterialListItem } = useMaterialList(materialListId);
               >
                 <Trash2 className="h-4 w-4 mr-2" />
                 <span className="hidden lg:inline">
-                  Eliminar {table.getFilteredSelectedRowModel().rows.length} seleccionados
+                  Eliminar {table.getFilteredSelectedRowModel().rows.length}{" "}
+                  seleccionados
                 </span>
                 <span className="lg:hidden">
                   Eliminar ({table.getFilteredSelectedRowModel().rows.length})
                 </span>
               </Button>
             )}
-            {materials.some(material => !validateMaterial(material).isValid) && (
+            {materials.some(
+              (material) => !validateMaterial(material).isValid
+            ) && (
               <span className="text-sm text-yellow-600 bg-yellow-100 px-2 py-1 rounded-md">
                 ⚠️ Hay materiales incompletos
               </span>
@@ -747,6 +815,7 @@ const { deleteMaterialListItem } = useMaterialList(materialListId);
                   <col className="w-[250px]" />
                   <col className="w-[100px]" />
                   <col className="w-[120px]" />
+                  <col className="w-[120px]" />
                   <col className="w-16" />
                 </colgroup>
                 <TableHeader className="bg-muted sticky top-0 z-10">
@@ -754,8 +823,8 @@ const { deleteMaterialListItem } = useMaterialList(materialListId);
                     <TableRow key={headerGroup.id}>
                       {headerGroup.headers.map((header) => {
                         return (
-                          <TableHead 
-                            key={header.id} 
+                          <TableHead
+                            key={header.id}
                             colSpan={header.colSpan}
                             className="px-2 py-3"
                           >
@@ -784,11 +853,13 @@ const { deleteMaterialListItem } = useMaterialList(materialListId);
                       strategy={verticalListSortingStrategy}
                     >
                       {table.getRowModel().rows.map((row) => {
-                        const materialValidation = validateMaterial(row.original);
+                        const materialValidation = validateMaterial(
+                          row.original
+                        );
                         return (
-                          <DraggableRow 
-                            key={row.id} 
-                            row={row} 
+                          <DraggableRow
+                            key={row.id}
+                            row={row}
                             isValid={materialValidation.isValid}
                           />
                         );
