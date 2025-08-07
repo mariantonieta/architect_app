@@ -1,4 +1,4 @@
-import * as React from "react";
+import { useCallback, useEffect, useId, useMemo, useState } from "react";
 import {
   DndContext,
   KeyboardSensor,
@@ -77,6 +77,10 @@ import { EditableSelect } from "./editable-select";
 import { DraggableRow } from "./draggable-row";
 import { AddMaterialRow } from "./add-material-row";
 import { useTranslation } from "react-i18next";
+import { useMaterialList, useMaterialListByProject } from "@/hooks/useMaterial";
+import { useParams} from "react-router-dom";
+import { InviteModal } from "./invite-modal";
+
 
 export const unitOptions = [
   { value: "kg", label: "kg" },
@@ -86,21 +90,8 @@ export const unitOptions = [
   { value: "m", label: "m" },
 ];
 
-export const statusOptions = [
-  { value: "Presupuestado", label: "Presupuestado" },
-  { value: "En proceso", label: "En proceso" },
-  { value: "Pendiente", label: "Pendiente" },
-  { value: "Completado", label: "Completado" },
-];
 
-export const categoryOptions = [
-  { value: "MAMPOSTERÍA Y TABIQUERÍA", label: "MAMPOSTERÍA Y TABIQUERÍA" },
-  { value: "HORMIGÓN ARMADO", label: "HORMIGÓN ARMADO" },
-  { value: "INSTALACIONES", label: "INSTALACIONES" },
-  { value: "TERMINACIONES", label: "TERMINACIONES" },
-];
 
-// Schema for the entire budget form
 export const budgetFormSchema = z.object({
   budgetName: z.string().min(1, "El nombre del presupuesto es requerido"),
   currency: z.enum(["ars", "usd", "eur"], {
@@ -126,27 +117,44 @@ export const budgetFormSchema = z.object({
 export type BudgetFormData = z.infer<typeof budgetFormSchema>;
 
 export function MaterialsTable() {
+  const [inviteOpen, setInviteOpen] = useState(false);
+const [pendingMaterials, setPendingMaterials] = useState<Material[]>([]);
+
+  const { id: projectId } = useParams<{ id: string;}>();
+ const [materialListId, setMaterialListId] = useState<string | undefined>(undefined);
+
+  const { data: materialList, isLoading } = useMaterialListByProject(projectId);
+
+
+  const {
+    createMaterialList,
+    isCreating,
+    updateMaterialList,
+    isUpdating,
+  
+  } = useMaterialList(materialListId);
+
+  
   const { t } = useTranslation();
-  const [rowSelection, setRowSelection] = React.useState({});
+  const [rowSelection, setRowSelection] = useState({});
   const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({});
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
+    useState<VisibilityState>({});
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(
     []
   );
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [pagination, setPagination] = React.useState({
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [pagination, setPagination] = useState({
     pageIndex: 0,
     pageSize: 10,
   });
-  const [isAddingMaterial, setIsAddingMaterial] = React.useState(false);
-
+  const [isAddingMaterial, setIsAddingMaterial] = useState(false);
+const { deleteMaterialListItem } = useMaterialList(materialListId);
   // Hook form setup
   const form = useForm<BudgetFormData>({
     resolver: zodResolver(budgetFormSchema),
     mode: "onChange",
     defaultValues: {
       budgetName: "",
-      currency: undefined,
       suppliers: [],
       materials: [],
     },
@@ -169,7 +177,7 @@ export function MaterialsTable() {
   const shouldShowErrors = !!errors.budgetName || !!errors.currency;
 
   // Función para validar un material individual
-  const validateMaterial = React.useCallback((material: Material) => {
+  const validateMaterial = useCallback((material: Material) => {
     return {
       isValid: material.item?.trim() && material.unit && material.quantity > 0,
       errors: {
@@ -180,7 +188,7 @@ export function MaterialsTable() {
     };
   }, []);
 
-  const updateMaterial = React.useCallback((
+  const updateMaterial = useCallback((
     index: number,
     field: keyof Material,
     value: string | number
@@ -202,7 +210,7 @@ export function MaterialsTable() {
     }
   }, [materials, setValue, validateMaterial]);
 
-  const addNewMaterial = React.useCallback((materialData: Omit<Material, "id">) => {
+  const addNewMaterial = useCallback((materialData: Omit<Material, "id">) => {
     const newId = Math.max(...materials.map((item) => item.id), 0) + 1;
     const newMaterial: Material = {
       id: newId,
@@ -212,16 +220,60 @@ export function MaterialsTable() {
     setIsAddingMaterial(false);
   }, [materials, appendMaterial]);
 
-  const deleteMaterial = React.useCallback((index: number) => {
+ const deleteMaterial = useCallback((index: number) => {
     removeMaterial(index);
     toast.success("Material eliminado");
   }, [removeMaterial]);
-
   const onSubmit = async (data: BudgetFormData) => {
-    console.log("Budget data:", data);
-    toast.success("Presupuesto guardado");
+  const { budgetName, currency, materials, suppliers } = data;
+
+  const payload = {
+    name: budgetName,
+    currency: currency,
+    project_id: projectId,
+    material_list_items: materials.map((m) => ({
+      name: m.item,
+      description: m.description,
+      unity: m.unit,
+      quantity: m.quantity,
+    })),
+    supplier_emails: suppliers,
   };
 
+  try {
+    if (materialList) {
+      await updateMaterialList({ projectId, data: payload });
+      toast.success("Lista de materiales actualizada correctamente");
+    } else {
+      const created = await createMaterialList(payload);
+      toast.success("Lista de materiales creada correctamente");
+      setMaterialListId(created.id); 
+      console.log("Lista creada:", created);
+    }
+  } catch (error) {
+    toast.error("Error al crear o actualizar la lista");
+    console.error(error);
+  }
+};
+
+  useEffect(() => {
+    if (materialList) {
+
+    console.log("Materiales cargados del proyecto:", materialList.material_list_items);
+      form.reset({
+        budgetName: materialList.name,
+        currency: materialList.currency,
+        suppliers: materialList.supplier_emails ?? [],
+        materials: materialList.material_list_items.map((item, index) => ({
+          id: index + 1,
+          item: item.name,
+          description: item.description,
+          unit: item.unity, 
+          quantity: item.quantity,
+        })),
+      });
+    }
+  }, [materialList, form]);
   const materialsColumns: ColumnDef<Material>[] = [
     {
       id: "drag",
@@ -278,7 +330,8 @@ export function MaterialsTable() {
             onSave={(value) => updateMaterial(index, "item", value)}
             className="font-semibold w-full"
             placeholder="Nombre del material*"
-            required={true}
+            required={true} 
+            
           />
         );
       },
@@ -396,7 +449,7 @@ export function MaterialsTable() {
     },
   ];
 
-  const sortableId = React.useId();
+  const sortableId = useId();
   const sensors = useSensors(
     useSensor(MouseSensor, {
       activationConstraint: {
@@ -411,7 +464,7 @@ export function MaterialsTable() {
     }),
     useSensor(KeyboardSensor, {})
   );
-  const dataIds = React.useMemo<UniqueIdentifier[]>(
+  const dataIds = useMemo<UniqueIdentifier[]>(
     () => materials?.map(({ id }) => id) || [],
     [materials]
   );
@@ -453,7 +506,7 @@ export function MaterialsTable() {
   }
 
   // Función para eliminar materiales seleccionados
-  const deleteSelectedMaterials = React.useCallback(() => {
+  const deleteSelectedMaterials = useCallback(() => {
     const selectedRows = table.getFilteredSelectedRowModel().rows;
     const selectedIds = selectedRows.map(row => row.original.id);
     
@@ -474,7 +527,7 @@ export function MaterialsTable() {
   }, [table, materials, removeMaterial]);
 
   // Función para validar todo el formulario antes del envío
-  const validateAndSubmitWithSelection = React.useCallback(async (useSelectedOnly = false) => {
+  const validateAndSubmitWithSelection = useCallback(async (useSelectedOnly = false) => {
     // Trigger validation para campos principales
     const isValidMain = await form.trigger(['budgetName', 'currency']);
     
@@ -522,6 +575,7 @@ export function MaterialsTable() {
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)}>
+
       <div className="w-full flex-col justify-start gap-6">
         <div className="flex items-center justify-between px-4 lg:px-6">
           <div className="flex items-center gap-3">
@@ -545,8 +599,9 @@ export function MaterialsTable() {
                 control={control}
                 name="currency"
                 render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
+                  <Select value={field.value} onValueChange={(value) => field.onChange(value)} defaultValue={field.value}>
                     <SelectTrigger
+                    key={field.value}
                       id="currency"
                       className={`w-full ${errors.currency ? 'border-2 border-red-500' : ''}`}
                       size="default"
@@ -562,48 +617,47 @@ export function MaterialsTable() {
                 )}
               />
             </div>
-            <Button
-              type="button"
-              className="bg-primary hover:bg-primary/90"
-              size="sm"
-              onClick={async () => {
-                const result = await validateAndSubmitWithSelection(true);
-                if (result && typeof result === 'object' && result.isValid) {
-                  const formData = form.getValues();
-                  console.log("Solicitar Presupuesto - Materiales seleccionados:", { ...formData, materials: result.materials });
-                  toast.success(`Presupuesto enviado para ${result.materials.length} materiales seleccionados`);
-                }
-              }}
-              disabled={isAddingMaterial || table.getFilteredSelectedRowModel().rows.length === 0}
-            >
-              <Plus />
-              <span className="hidden lg:inline">
-                Solicitar Presupuesto Seleccionados ({table.getFilteredSelectedRowModel().rows.length})
-              </span>
-              <span className="lg:hidden">
-                Solicitar ({table.getFilteredSelectedRowModel().rows.length})
-              </span>
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={async () => {
-                const result = await validateAndSubmitWithSelection(false);
-                if (result && typeof result === 'object' && result.isValid) {
-                  const formData = form.getValues();
-                  console.log("Solicitar Presupuesto - Todos los materiales:", { ...formData, materials: result.materials });
-                  toast.success("Presupuesto enviado para todos los materiales");
-                }
-              }}
-              disabled={isAddingMaterial || materials.length === 0}
-            >
-              <Plus />
-              <span className="hidden lg:inline">
-                Solicitar Todos
-              </span>
-            </Button>
-          </div>
+        <Button
+  type="button"
+  className="bg-primary hover:bg-primary/90"
+  size="sm"
+  onClick={async () => {
+    const result = await validateAndSubmitWithSelection(true);
+    if (result && typeof result === 'object' && result.isValid) {
+      setPendingMaterials(result.materials);
+      setInviteOpen(true);
+    }
+  }}
+  disabled={isAddingMaterial || table.getFilteredSelectedRowModel().rows.length === 0}
+>
+  <Plus />
+  <span className="hidden lg:inline">
+    Solicitar Presupuesto Seleccionados ({table.getFilteredSelectedRowModel().rows.length})
+  </span>
+  <span className="lg:hidden">
+    Solicitar ({table.getFilteredSelectedRowModel().rows.length})
+  </span>
+</Button>
+
+<Button
+  type="button"
+  variant="outline"
+  size="sm"
+  onClick={async () => {
+    const result = await validateAndSubmitWithSelection(false);
+    if (result && typeof result === "object" && result.isValid) {
+      setPendingMaterials(result.materials);
+      setInviteOpen(true);
+    }
+  }}
+  disabled={isAddingMaterial || isCreating || isUpdating}
+>
+  <Plus />
+  <span className="hidden lg:inline">
+    {materialListId ? "Actualizar Todos" : "Solicitar Todos"}
+  </span>
+</Button>
+  </div>
         </div>
 
         <div className="flex items-center justify-between px-4 py-4 lg:px-6">

@@ -14,6 +14,7 @@ import SupplierAgenda from "./pages/agenda-supplier";
 import { Budgets } from "./pages/budgets";
 import ArchitectAgenda from "./pages/agenda-architect";
 import CustomerAgenda from "./pages/agenda-customer";
+import { MaterialsTable } from "./components/material-table";
 
 export function Router() {
   return (
@@ -291,7 +292,10 @@ export function Router() {
                 </RoleBasedAccess>
               }
             />
+            <Route path="/projects/:id/material-lists/:listId?" element={<MaterialsTable />} />
+
           </Route>
+          
         </Route>
 
         <Route path="*" element={<NotFound />} />
