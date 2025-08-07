@@ -79,7 +79,6 @@ import { AddMaterialRow } from "./add-material-row";
 import { useTranslation } from "react-i18next";
 import { useMaterialList, useMaterialListByProject } from "@/hooks/useMaterial";
 import { useParams} from "react-router-dom";
-import { InviteModal } from "./invite-modal";
 
 
 export const unitOptions = [
@@ -117,9 +116,7 @@ export const budgetFormSchema = z.object({
 export type BudgetFormData = z.infer<typeof budgetFormSchema>;
 
 export function MaterialsTable() {
-  const [inviteOpen, setInviteOpen] = useState(false);
-const [pendingMaterials, setPendingMaterials] = useState<Material[]>([]);
-
+  
   const { id: projectId } = useParams<{ id: string;}>();
  const [materialListId, setMaterialListId] = useState<string | undefined>(undefined);
 
@@ -617,47 +614,52 @@ const { deleteMaterialListItem } = useMaterialList(materialListId);
                 )}
               />
             </div>
-        <Button
-  type="button"
-  className="bg-primary hover:bg-primary/90"
-  size="sm"
-  onClick={async () => {
-    const result = await validateAndSubmitWithSelection(true);
-    if (result && typeof result === 'object' && result.isValid) {
-      setPendingMaterials(result.materials);
-      setInviteOpen(true);
-    }
-  }}
-  disabled={isAddingMaterial || table.getFilteredSelectedRowModel().rows.length === 0}
->
-  <Plus />
-  <span className="hidden lg:inline">
-    Solicitar Presupuesto Seleccionados ({table.getFilteredSelectedRowModel().rows.length})
-  </span>
-  <span className="lg:hidden">
-    Solicitar ({table.getFilteredSelectedRowModel().rows.length})
-  </span>
-</Button>
-
-<Button
+            <Button
+              type="button"
+              className="bg-primary hover:bg-primary/90"
+              size="sm"
+              onClick={async () => {
+                const result = await validateAndSubmitWithSelection(true);
+                if (result && typeof result === 'object' && result.isValid) {
+                 await onSubmit({
+  ...form.getValues(),
+  materials: result.materials,
+});
+                }
+              }}
+              disabled={isAddingMaterial || table.getFilteredSelectedRowModel().rows.length === 0}
+            >
+              <Plus />
+              <span className="hidden lg:inline">
+                Solicitar Presupuesto Seleccionados ({table.getFilteredSelectedRowModel().rows.length})
+              </span>
+              <span className="lg:hidden">
+                Solicitar ({table.getFilteredSelectedRowModel().rows.length})
+              </span>
+            </Button>
+           <Button
   type="button"
   variant="outline"
   size="sm"
   onClick={async () => {
     const result = await validateAndSubmitWithSelection(false);
     if (result && typeof result === "object" && result.isValid) {
-      setPendingMaterials(result.materials);
-      setInviteOpen(true);
+    
+      await onSubmit({
+        ...form.getValues(),
+        materials: result.materials,
+      });
     }
   }}
-  disabled={isAddingMaterial || isCreating || isUpdating}
+   disabled={isAddingMaterial || isCreating || isUpdating}
+  
 >
-  <Plus />
-  <span className="hidden lg:inline">
-    {materialListId ? "Actualizar Todos" : "Solicitar Todos"}
-  </span>
-</Button>
-  </div>
+              <Plus />
+              <span className="hidden lg:inline">
+                    {materialListId ? "Actualizar Todos" : "Solicitar Todos"}
+              </span>
+            </Button>
+          </div>
         </div>
 
         <div className="flex items-center justify-between px-4 py-4 lg:px-6">
