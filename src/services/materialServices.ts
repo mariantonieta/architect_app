@@ -20,6 +20,8 @@ export type MaterialListItem = {
     unity: string;
     description?: string;
     status?: MaterialListItemStatus;
+    unitPrice?: number;
+    comment?: string;
 };
 
 export type MaterialList = {

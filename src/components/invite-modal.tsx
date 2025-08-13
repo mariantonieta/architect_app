@@ -17,6 +17,10 @@ interface InviteModalProps {
   title?: string;
   placeholder?: string;
   buttonText?: string;
+  onSearch?: (
+    query: string,
+    role: "customer" | "supplier" | "architect"
+  ) => Promise<string[]>;
   role: "customer" | "supplier" | "architect";
   inviteFn: (
     emails: string[],
@@ -25,6 +29,7 @@ interface InviteModalProps {
       onError: (error: any) => void;
     }
   ) => void;
+  emailAddValidator?: (email: string, data: string[]) => boolean;
 }
 
 export function InviteModal({
@@ -33,8 +38,10 @@ export function InviteModal({
   title = "Invite",
   placeholder = "email@example.com",
   buttonText = "Send Invitations",
+  onSearch,
   role,
   inviteFn,
+  emailAddValidator,
 }: InviteModalProps) {
   const [emails, setEmails] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -72,13 +79,20 @@ export function InviteModal({
             onChange={setEmails}
             placeholder={placeholder}
             role={role}
-            onEmailAdd={(email) => {
-  const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const alreadyExists = emails.includes(email);
-  return isValid && !alreadyExists;
-}}
-
-        
+            onSearch={onSearch}
+            onEmailAdd={async (email) => {
+              const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+              const alreadyExists = emails.includes(email);
+              // Si hay validador externo, usarlo
+              if (typeof emailAddValidator === "function") {
+                // Obtener los datos actuales del input (emails sugeridos)
+                const data = (await onSearch?.(email, role)) || [];
+                return (
+                  isValid && !alreadyExists && emailAddValidator(email, data)
+                );
+              }
+              return isValid && !alreadyExists;
+            }}
           />
         </div>
 

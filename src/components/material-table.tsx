@@ -80,6 +80,8 @@ import { useTranslation } from "react-i18next";
 import { useMaterialList, useMaterialListByProject } from "@/hooks/useMaterial";
 import { useParams } from "react-router-dom";
 import { MaterialListItemStatus, Currency } from "@/services/materialServices";
+import { InviteModal } from "./invite-modal";
+import { searchSuppliers } from "@/services/inviteServices";
 
 export const unitOptions = [
   { value: "kg", label: "kg" },
@@ -94,7 +96,7 @@ export const budgetFormSchema = z.object({
   currency: z.enum(Object.values(Currency) as [Currency, ...Currency[]], {
     required_error: "La moneda es requerida",
   }),
-  suppliers: z.array(z.string()).default([]),
+  supplier_emails: z.array(z.string()).default([]),
   materials: z
     .array(
       z.object({
@@ -122,13 +124,19 @@ export const budgetFormSchema = z.object({
 export type BudgetFormData = z.infer<typeof budgetFormSchema>;
 
 export function MaterialsTable() {
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [pendingRequest, setPendingRequest] = useState<{
+    materials: Material[];
+    all: boolean;
+  } | null>(null);
+
   const { id: projectId } = useParams<{ id: string }>();
+
   const [materialListId, setMaterialListId] = useState<string | undefined>(
     undefined
   );
 
   const { data: materialList, isLoading } = useMaterialListByProject(projectId);
-
   console.log("materialList: ", materialList);
   const { createMaterialList, isCreating, updateMaterialList, isUpdating } =
     useMaterialList(materialListId);
@@ -143,7 +151,7 @@ export function MaterialsTable() {
     pageSize: 10,
   });
   const [isAddingMaterial, setIsAddingMaterial] = useState(false);
-  const { deleteMaterialListItem } = useMaterialList(materialListId);
+
   // Hook form setup
   const form = useForm<BudgetFormData>({
     resolver: zodResolver(budgetFormSchema),
@@ -151,7 +159,7 @@ export function MaterialsTable() {
     defaultValues: {
       budgetName: "",
       currency: undefined,
-      suppliers: [],
+      supplier_emails: [],
       materials: [],
     },
   });
@@ -234,22 +242,30 @@ export function MaterialsTable() {
     },
     [removeMaterial]
   );
+  const handleSupplierSearch = async (
+    query: string,
+    role: "customer" | "supplier" | "architect"
+  ) => {
+    if (role !== "supplier") return [];
+    const suppliers = await searchSuppliers(query);
+    return suppliers.map((s) => s.email);
+  };
 
   const onSubmit = async (data: BudgetFormData) => {
-    const { budgetName, currency, materials, suppliers } = data;
+    const { budgetName, currency, materials, supplier_emails } = data;
 
     const payload = {
       name: budgetName,
       currency: currency,
       project_id: projectId,
-      material_list_items: materials.map((m) => ({
+      material_list_items: pendingRequest.materials.map((m) => ({
         name: m.item,
         description: m.description,
         unity: m.unit,
         quantity: m.quantity,
-        status: "requested",
+        status: m.status,
       })),
-      supplier_emails: suppliers,
+      supplier_emails: supplier_emails || [],
     };
 
     try {
@@ -287,14 +303,14 @@ export function MaterialsTable() {
       form.reset({
         budgetName: materialList.name,
         currency: materialList.currency,
-        suppliers: materialList.supplier_emails ?? [],
+        supplier_emails: materialList.supplier_emails ?? [],
         materials: materialList.material_list_items.map((item, index) => ({
           id: index + 1,
           item: item.name,
           description: item.description,
           unit: item.unity,
           quantity: item.quantity,
-          status: item.status || MaterialListItemStatus.REQUESTED, // Default to 'requested' if not set
+          status: item.status || MaterialListItemStatus.REQUESTED,
         })),
       });
     }
@@ -686,10 +702,14 @@ export function MaterialsTable() {
               onClick={async () => {
                 const result = await validateAndSubmitWithSelection(true);
                 if (result && typeof result === "object" && result.isValid) {
-                  await onSubmit({
-                    ...form.getValues(),
+                  //</div> await onSubmit({
+                  // ...form.getValues(),
+                  //materials: result.materials,
+                  setPendingRequest({
                     materials: result.materials,
+                    all: false,
                   });
+                  setInviteModalOpen(true);
                 }
               }}
               disabled={
@@ -713,10 +733,11 @@ export function MaterialsTable() {
               onClick={async () => {
                 const result = await validateAndSubmitWithSelection(false);
                 if (result && typeof result === "object" && result.isValid) {
-                  await onSubmit({
-                    ...form.getValues(),
-                    materials: result.materials,
-                  });
+                  setPendingRequest({ materials: result.materials, all: true });
+                  setInviteModalOpen(true);
+                  //</div>await onSubmit({
+                  //...form.getValues(),
+                  //materials: result.materials,
                 }
               }}
               disabled={isAddingMaterial || isCreating || isUpdating}
@@ -959,6 +980,34 @@ export function MaterialsTable() {
           </div>
         </div>
       </div>
+      <InviteModal
+        open={inviteModalOpen}
+        setOpen={setInviteModalOpen}
+        title="Agregar proveedores"
+        placeholder="proveedor@example.com"
+        buttonText="Solicitar presupuesto"
+        role="supplier"
+        onSearch={handleSupplierSearch}
+        inviteFn={(emails, { onSuccess, onError }) => {
+          if (!pendingRequest) return;
+          form.setValue("supplier_emails", emails);
+          const formData = form.getValues();
+
+          onSubmit({
+            ...formData,
+            supplier_emails: emails,
+            materials: pendingRequest.materials,
+          })
+            .then(() => {
+              onSuccess({ msg: "Solicitud enviada" });
+              setPendingRequest(null);
+            })
+            .catch((err) => {
+              onError(err);
+            });
+        }}
+        emailAddValidator={(email, data) => data.includes(email)}
+      />
     </form>
   );
 }

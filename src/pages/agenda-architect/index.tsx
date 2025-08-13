@@ -7,7 +7,6 @@ import { Agenda } from "@/components/agenda";
 import { useUser } from "@/hooks/useUser";
 import { toast } from "sonner";
 
-
 type RoleName = "supplier" | "customer" | "architect";
 
 type Invitation = {
@@ -24,7 +23,9 @@ type Invitation = {
   };
 };
 
-function mapInvitations(rawInvitations: any[] | undefined): Invitation[] | undefined {
+function mapInvitations(
+  rawInvitations: any[] | undefined
+): Invitation[] | undefined {
   if (!rawInvitations) return undefined;
   const validRoles: RoleName[] = ["supplier", "customer", "architect"];
 
@@ -45,7 +46,11 @@ function mapInvitations(rawInvitations: any[] | undefined): Invitation[] | undef
 export default function ArchitectAgenda() {
   const role = "architect";
 
-  const { data: currentUser, isLoading: userLoading, isError: userError } = useUser();
+  const {
+    data: currentUser,
+    isLoading: userLoading,
+    isError: userError,
+  } = useUser();
   const inviter_name = currentUser?.first_name || "Inviter";
 
   const { data: rawData, isLoading, isError } = useInvitations(role);
@@ -53,36 +58,39 @@ export default function ArchitectAgenda() {
   const [openInviteModal, setOpenInviteModal] = useState(false);
 
   const data = mapInvitations(rawData);
-const { mutate: inviteArchitect } = useInviteAgendaUser(role);
+  const { mutate: inviteArchitect } = useInviteAgendaUser(role);
 
-const inviteFn = (
-  emails: string[],
-  { onSuccess, onError }: { onSuccess: (data: any) => void; onError: (error: any) => void }
-) => {
-  if (!currentUser) {
-    const err = new Error("Current user not loaded");
-    toast.error(err.message);
-    onError(err);
-    return;
-  }
-
-  inviteArchitect(
+  const inviteFn = (
+    emails: string[],
     {
-      emails,
-      inviter_name,
-    },
-    {
-      onSuccess: () => {
-        toast.success("Invitations sent!");
-          setOpenInviteModal(false);
-      },
-      onError: (err) => {
-        toast.error("Failed to send invitations.");
-        onError(err);
-      },
+      onSuccess,
+      onError,
+    }: { onSuccess: (data: any) => void; onError: (error: any) => void }
+  ) => {
+    if (!currentUser) {
+      const err = new Error("Current user not loaded");
+      toast.error(err.message);
+      onError(err);
+      return;
     }
-  );
-};
+
+    inviteArchitect(
+      {
+        emails,
+        inviter_name,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Invitations sent!");
+          setOpenInviteModal(false);
+        },
+        onError: (err) => {
+          toast.error("Failed to send invitations.");
+          onError(err);
+        },
+      }
+    );
+  };
 
   if (userLoading) return <p>Loading user...</p>;
   if (userError) return <p>Error loading user.</p>;

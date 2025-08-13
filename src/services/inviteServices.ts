@@ -93,3 +93,22 @@ export const inviteService = {
     }
 
 };
+export async function searchSuppliers(query: string): Promise<User[]> {
+    if (!query || query.trim().length < 2) {
+        return [];
+    }
+
+    // Esto devuelve un array de strings (emails)
+    const emails = await inviteService.searchInvitationByEmailAndRole(query, "supplier");
+
+    // Lo convertimos a User[] básico
+    return emails.map((email) => ({
+        id: email, // si no hay ID real, usamos el email como ID temporal
+        email,
+        first_name: "",
+        last_name: "",
+        is_completed: false,
+        role_id: "supplier",
+        role_name: "supplier",
+    }));
+}

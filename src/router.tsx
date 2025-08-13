@@ -15,6 +15,7 @@ import { Budgets } from "./pages/budgets";
 import ArchitectAgenda from "./pages/agenda-architect";
 import CustomerAgenda from "./pages/agenda-customer";
 import { MaterialsTable } from "./components/material-table";
+import { MaterialListSupplierEdit } from "./components/material-list-supplier-edit";
 
 export function Router() {
   return (
@@ -292,10 +293,27 @@ export function Router() {
                 </RoleBasedAccess>
               }
             />
-            <Route path="/projects/:id/material-lists/:listId?" element={<MaterialsTable />} />
 
+            {/* Ruta protegida para supplier: edición de lista de materiales */}
+            <Route
+              element={
+                <AuthValidationMiddleware
+                  to="/login"
+                  storageKey={AUTH_STORAGE}
+                />
+              }
+            >
+              <Route
+                path="/material-list/project/:id"
+                element={<MaterialListSupplierEdit />}
+              />
+              <Route path="/material-list/:id" element={<MaterialsTable />} />
+            </Route>
+            <Route
+              path="/projects/:id/material-lists/:listId?"
+              element={<MaterialsTable />}
+            />
           </Route>
-          
         </Route>
 
         <Route path="*" element={<NotFound />} />

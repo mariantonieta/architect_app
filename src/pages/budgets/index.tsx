@@ -1,4 +1,3 @@
-
 export function Budgets() {
   return (
     <div className="flex flex-col px-4 lg:px-6">

@@ -23,7 +23,9 @@ type Invitation = {
   };
 };
 
-function mapInvitations(rawInvitations: any[] | undefined): Invitation[] | undefined {
+function mapInvitations(
+  rawInvitations: any[] | undefined
+): Invitation[] | undefined {
   if (!rawInvitations) return undefined;
   const validRoles: RoleName[] = ["supplier", "customer", "architect"];
 
@@ -47,14 +49,21 @@ export default function SupplierAgenda() {
   const { data: rawData, isLoading, isError } = useInvitations(role);
   const { mutate: inviteSupplier } = useInviteAgendaUser(role);
   const [openInviteModal, setOpenInviteModal] = useState(false);
-  const { data: currentUser, isLoading: userLoading, isError: userError } = useUser();
+  const {
+    data: currentUser,
+    isLoading: userLoading,
+    isError: userError,
+  } = useUser();
   const inviter_name = currentUser?.first_name || "Inviter";
 
   const data = mapInvitations(rawData);
 
   const inviteFn = (
     emails: string[],
-    { onSuccess, onError }: { onSuccess: (data: any) => void; onError: (error: any) => void }
+    {
+      onSuccess,
+      onError,
+    }: { onSuccess: (data: any) => void; onError: (error: any) => void }
   ) => {
     if (!currentUser) {
       const err = new Error("Current user not loaded");
@@ -71,14 +80,13 @@ export default function SupplierAgenda() {
       {
         onSuccess: () => {
           toast.success("Invitations sent!");
+          setOpenInviteModal(false);
+          window.location.reload();
         },
         onError: (err) => {
           toast.error("Failed to send invitations.");
           onError(err);
         },
-        onSettled: () => {
-          setOpenInviteModal(false);
-        }
       }
     );
   };

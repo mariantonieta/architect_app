@@ -13,7 +13,7 @@ interface EmailSelectorProps {
     query: string,
     role: "customer" | "supplier" | "architect"
   ) => Promise<string[]>;
-  showInput?: boolean; 
+  showInput?: boolean;
   onInputToggle?: () => void;
 }
 
@@ -24,7 +24,7 @@ export function EmailSelector({
   onEmailAdd,
   role = "customer",
   onSearch,
-    showInput = false,
+  showInput = false,
   onInputToggle,
 }: EmailSelectorProps) {
   const safeValue = Array.isArray(value) ? value : [];
@@ -35,7 +35,7 @@ export function EmailSelector({
   const [loading, setLoading] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
- const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
   const handleAddClick = () => {
     if (onInputToggle) {
@@ -206,8 +206,7 @@ export function EmailSelector({
           {email}
         </Badge>
       ))}
-      
-     
+
       <Input
         value={input}
         onChange={(e) => setInput(e.target.value)}
@@ -219,12 +218,10 @@ export function EmailSelector({
         }}
         autoComplete="off"
       />
-        
-      
 
       {/* {loading && <div className="absolute right-2 top-3">Loading...</div>} */}
       {showData && (
-        <ul className="absolute z-10 left-0 top-full mt-1 max-h-40 w-full overflow-auto rounded border bg-white shadow-md">
+        <ul className="absolute z-10 left-0 top-full mt-1 max-h-40 w-full overflow-auto rounded border  shadow-md">
           {data.length === 0 && !loading && (
             <li className="px-3 py-2 text-center text-gray-500">
               No results found.

@@ -1,21 +1,37 @@
-import type React from "react"
-import { useState } from "react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Clock, Send, CheckCircle, TrendingUp, TrendingDown, Building2, User, Grid3X3, List } from "lucide-react"
-import { cn } from "@/lib/utils"
+import type React from "react";
+import { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Clock,
+  Send,
+  CheckCircle,
+  TrendingUp,
+  TrendingDown,
+  Building2,
+  User,
+  Grid3X3,
+  List,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
 // MetricCard Component
 interface MetricCardProps {
-  title: string
-  value: number
-  change: string
-  changeType: "positive" | "negative" | "neutral"
-  icon: React.ReactNode
+  title: string;
+  value: number;
+  change: string;
+  changeType: "positive" | "negative" | "neutral";
+  icon: React.ReactNode;
 }
 
-function MetricCard({ title, value, change, changeType, icon }: MetricCardProps) {
+function MetricCard({
+  title,
+  value,
+  change,
+  changeType,
+  icon,
+}: MetricCardProps) {
   return (
     <Card className="bg-white">
       <CardContent className="p-6">
@@ -29,14 +45,18 @@ function MetricCard({ title, value, change, changeType, icon }: MetricCardProps)
           </div>
         </div>
         <div className="mt-4 flex items-center gap-1">
-          {changeType === "positive" && <TrendingUp className="h-4 w-4 text-green-600" />}
-          {changeType === "negative" && <TrendingDown className="h-4 w-4 text-red-600" />}
+          {changeType === "positive" && (
+            <TrendingUp className="h-4 w-4 text-green-600" />
+          )}
+          {changeType === "negative" && (
+            <TrendingDown className="h-4 w-4 text-red-600" />
+          )}
           <span
             className={cn(
               "text-sm",
               changeType === "positive" && "text-green-600",
               changeType === "negative" && "text-red-600",
-              changeType === "neutral" && "text-gray-600",
+              changeType === "neutral" && "text-gray-600"
             )}
           >
             {change}
@@ -44,22 +64,22 @@ function MetricCard({ title, value, change, changeType, icon }: MetricCardProps)
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 // RequestCard Component
 interface RequestCardProps {
-  title: string
-  client: string
-  status: "new" | "draft" | "sent"
-  priority?: "high" | "medium" | "low"
+  title: string;
+  client: string;
+  status: "new" | "draft" | "sent";
+  priority?: "high" | "medium" | "low";
 }
 
 const statusConfig = {
   new: { label: "New", color: "bg-blue-100 text-blue-800" },
   draft: { label: "Draft", color: "bg-yellow-100 text-yellow-800" },
   sent: { label: "Sent", color: "bg-green-100 text-green-800" },
-}
+};
 
 function RequestCard({ title, client, status, priority }: RequestCardProps) {
   return (
@@ -68,18 +88,26 @@ function RequestCard({ title, client, status, priority }: RequestCardProps) {
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-2">
             <Building2 className="h-4 w-4 text-gray-500" />
-            <Badge className={statusConfig[status].color}>{statusConfig[status].label}</Badge>
+            <Badge className={statusConfig[status].color}>
+              {statusConfig[status].label}
+            </Badge>
           </div>
           {priority && (
             <div
               className={`w-2 h-2 rounded-full ${
-                priority === "high" ? "bg-red-500" : priority === "medium" ? "bg-yellow-500" : "bg-green-500"
+                priority === "high"
+                  ? "bg-red-500"
+                  : priority === "medium"
+                  ? "bg-yellow-500"
+                  : "bg-green-500"
               }`}
             />
           )}
         </div>
 
-        <h4 className="font-semibold text-gray-900 mb-2 line-clamp-2">{title}</h4>
+        <h4 className="font-semibold text-gray-900 mb-2 line-clamp-2">
+          {title}
+        </h4>
 
         <div className="flex items-center gap-2 text-sm text-gray-600">
           <User className="h-3 w-3" />
@@ -87,16 +115,16 @@ function RequestCard({ title, client, status, priority }: RequestCardProps) {
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 // RequestsSection Component
 interface Request {
-  id: string
-  title: string
-  client: string
-  status: "new" | "draft" | "sent"
-  priority?: "high" | "medium" | "low"
+  id: string;
+  title: string;
+  client: string;
+  status: "new" | "draft" | "sent";
+  priority?: "high" | "medium" | "low";
 }
 
 const mockRequests: Request[] = [
@@ -135,14 +163,14 @@ const mockRequests: Request[] = [
     status: "sent",
     priority: "medium",
   },
-]
+];
 
 function RequestsSection() {
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-  const newRequests = mockRequests.filter((req) => req.status === "new")
-  const drafts = mockRequests.filter((req) => req.status === "draft")
-  const sent = mockRequests.filter((req) => req.status === "sent")
+  const newRequests = mockRequests.filter((req) => req.status === "new");
+  const drafts = mockRequests.filter((req) => req.status === "draft");
+  const sent = mockRequests.filter((req) => req.status === "sent");
 
   return (
     <div className="space-y-6">
@@ -240,7 +268,7 @@ function RequestsSection() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 // Main Component
@@ -249,7 +277,6 @@ export default function HomeSupplier() {
     <div className="flex h-screen bg-gray-50">
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-       
         {/* Content */}
         <main className="flex-1 overflow-auto p-6 space-y-8">
           {/* Metrics Cards */}
@@ -282,5 +309,5 @@ export default function HomeSupplier() {
         </main>
       </div>
     </div>
-  )
+  );
 }
