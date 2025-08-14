@@ -1,24 +1,10 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useMaterialListByProject } from "@/hooks/useMaterial";
-import { materialListService } from "@/services/materialServices";
-import { useEffect, useState } from "react";
-async function getQuotedItemsByMaterialList(materialListId: string) {
-  const response = await api.get(
-    `/material-list-quoted-items/material-list/${materialListId}`
-  );
-  return response.data;
-}
-import api from "@/services/api";
-
-async function bulkUpdateQuotedItems(materialListId: string, items: any[]) {
-  return api.patch(
-    `/material-list-quoted-items/material-list/${materialListId}`,
-    {
-      items,
-    }
-  );
-}
+import {
+  useQuotedItems,
+  useBulkUpdateQuotedItems,
+} from "@/hooks/useMaterialQuoted";
 import {
   Table,
   TableBody,
@@ -33,15 +19,26 @@ import { Input } from "@/components/ui/input";
 
 export function MaterialListSupplierEdit() {
   const { id: projectId } = useParams<{ id: string }>();
-  const { data: materialList, isLoading } = useMaterialListByProject(projectId);
+  const { data: materialList, isLoading: isMaterialListLoading } =
+    useMaterialListByProject(projectId);
   const { t } = useTranslation();
+
+  // Llamamos a React Query solo cuando tenemos el ID de la lista
+  const { data: quotedItems, isLoading: isQuotedLoading } = useQuotedItems(
+    materialList?.id ?? ""
+  );
+
+  // Para actualizar
+  const bulkUpdateMutation = useBulkUpdateQuotedItems(materialList?.id ?? "");
+
   const [rows, setRows] = useState<any[]>([]);
-  useEffect(() => {
-    if (!materialList?.id) return;
-    getQuotedItemsByMaterialList(materialList.id).then((items) => {
-      setRows(items.map((item: any) => ({ ...item })));
-    });
-  }, [materialList?.id]);
+
+  // Cuando cambia quotedItems, inicializamos los rows
+  React.useEffect(() => {
+    if (quotedItems) {
+      setRows(quotedItems.map((item) => ({ ...item })));
+    }
+  }, [quotedItems]);
 
   const columns = useMemo(
     () => [
@@ -51,10 +48,7 @@ export function MaterialListSupplierEdit() {
       { key: "quantity", label: t("material.quantity", "Cantidad") },
       { key: "price", label: t("material.price", "Precio por unidad") },
       { key: "subtotal", label: t("material.subtotal", "Subtotal") },
-      {
-        key: "comment",
-        label: t("material.comment", "Comentarios"),
-      },
+      { key: "comment", label: t("material.comment", "Comentarios") },
     ],
     [t]
   );
@@ -70,28 +64,25 @@ export function MaterialListSupplierEdit() {
     });
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!materialList) return;
-    try {
-      const itemsToSend = rows.map((item) => ({
-        id: item.id,
-        price: item.price,
-        comment: item.comment,
-      }));
-      console.log("PATCH bulk material-list-quoted-items:", {
-        materialListId: materialList.id,
-        items: itemsToSend,
-      });
-      await bulkUpdateQuotedItems(materialList.id, itemsToSend);
-      alert("Cambios guardados correctamente");
-    } catch (e) {
-      alert("Error al guardar cambios");
-    }
+
+    const itemsToSend = rows.map((item) => ({
+      id: item.id,
+      price: item.price,
+      comment: item.comment,
+    }));
+
+    bulkUpdateMutation.mutate({ items: itemsToSend });
   };
 
-  if (isLoading) return <div>{t("common.loading", "Cargando...")}</div>;
-  if (!materialList)
+  if (isMaterialListLoading || isQuotedLoading) {
+    return <div>{t("common.loading", "Cargando...")}</div>;
+  }
+
+  if (!materialList) {
     return <div>{t("material.noList", "No hay lista de materiales")}</div>;
+  }
 
   return (
     <div className="overflow-x-auto">
@@ -138,8 +129,14 @@ export function MaterialListSupplierEdit() {
         </TableBody>
       </Table>
       <div className="mt-4 flex justify-end">
-        <Button onClick={handleSave} className="bg-primary">
-          Guardar Cambios
+        <Button
+          onClick={handleSave}
+          className="bg-primary"
+          disabled={bulkUpdateMutation.isPending}
+        >
+          {bulkUpdateMutation.isPending
+            ? t("common.saving", "Guardando...")
+            : t("common.saveChanges", "Guardar Cambios")}
         </Button>
       </div>
     </div>

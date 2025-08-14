@@ -263,7 +263,7 @@ export function MaterialsTable() {
         description: m.description,
         unity: m.unit,
         quantity: m.quantity,
-        status: m.status,
+        status: MaterialListItemStatus.REQUESTED,
       })),
       supplier_emails: supplier_emails || [],
     };
