@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-
+import { useTranslation } from "react-i18next";
 import { useUser } from "@/hooks/useUser";
 
 type FormData = {
@@ -32,7 +32,7 @@ export function UserInfo() {
     deleteUser,
     deleteUserStatus,
   } = useUser();
-
+  const { t } = useTranslation();
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
@@ -110,8 +110,9 @@ export function UserInfo() {
     deleteUser();
   }
 
-  if (isLoading || !user) return <p>Loading...</p>;
-  const loading = updateUserStatus === "pending" || deleteUserStatus === "pending";
+  if (isLoading || !user) return <p>{t("common.loading")}</p>;
+  const loading =
+    updateUserStatus === "pending" || deleteUserStatus === "pending";
 
   return (
     <div className="max-w-lg mx-auto p-4">
@@ -124,7 +125,9 @@ export function UserInfo() {
               </AvatarFallback>
             </Avatar>
             <div>
-              <CardTitle className="text-lg font-bold">{user.first_name}</CardTitle>
+              <CardTitle className="text-lg font-bold">
+                {user.first_name}
+              </CardTitle>
               <p className="text-sm text-muted-foreground">{user.email}</p>
             </div>
           </div>
@@ -136,50 +139,79 @@ export function UserInfo() {
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid gap-1">
-              <Label htmlFor="first_name">First Name</Label>
-              <Input id="first_name" {...register("first_name")} disabled={loading} />
+              <Label htmlFor="first_name">{t("auth.firstName")}</Label>
+              <Input
+                id="first_name"
+                {...register("first_name")}
+                disabled={loading}
+              />
             </div>
 
             <div className="grid gap-1">
-              <Label htmlFor="last_name">Last Name</Label>
-              <Input id="last_name" {...register("last_name")} disabled={loading} />
+              <Label htmlFor="last_name">{t("auth.lastName")}</Label>
+              <Input
+                id="last_name"
+                {...register("last_name")}
+                disabled={loading}
+              />
             </div>
 
             <div className="grid gap-1">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" value={user.email} disabled readOnly />
+              <Label htmlFor="email">{t("auth.email")}</Label>
+              <Input
+                id="email"
+                type="email"
+                value={user.email}
+                disabled
+                readOnly
+              />
             </div>
 
-            {/* Si es architect, mostrar entity_type */}
             {user.role === "architect" && (
               <div className="grid gap-1">
-                <Label htmlFor="entity_type">Entity Type</Label>
-                <Input id="entity_type" {...register("entity_type")} disabled={loading} />
+                <Label htmlFor="entity_type">{t("auth.entityType")}</Label>
+                <Input
+                  id="entity_type"
+                  {...register("entity_type")}
+                  disabled={loading}
+                />
               </div>
             )}
 
-            {/* Si es supplier, mostrar company, phone y address */}
             {user.role === "supplier" && (
               <>
                 <div className="grid gap-1">
-                  <Label htmlFor="company">Company</Label>
-                  <Input id="company" {...register("company")} disabled={loading} />
+                  <Label htmlFor="company">{t("auth.company")}</Label>
+                  <Input
+                    id="company"
+                    {...register("company")}
+                    disabled={loading}
+                  />
                 </div>
                 <div className="grid gap-1">
-                  <Label htmlFor="phone">Phone</Label>
+                  <Label htmlFor="phone">{t("auth.phone")}</Label>
                   <Input id="phone" {...register("phone")} disabled={loading} />
                 </div>
                 <div className="grid gap-1">
-                  <Label htmlFor="address">Address</Label>
-                  <Input id="address" {...register("address")} disabled={loading} />
+                  <Label htmlFor="address">{t("auth.address")}</Label>
+                  <Input
+                    id="address"
+                    {...register("address")}
+                    disabled={loading}
+                  />
                 </div>
               </>
             )}
 
             {showPassword ? (
               <div className="grid gap-1">
-                <Label htmlFor="password">New Password</Label>
-                <Input id="password" type="password" {...register("password")} disabled={loading} />
+                <Label htmlFor="password">{t("auth.newPassword")}</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  {...register("password")}
+                  disabled={loading}
+                />
               </div>
             ) : (
               <Button
@@ -188,21 +220,25 @@ export function UserInfo() {
                 onClick={() => setShowPassword(true)}
                 disabled={loading}
               >
-                Change Password
+                {t("auth.changePassword")}
               </Button>
             )}
 
             <div className="grid gap-1">
-              <Label>Role</Label>
+              <Label>{t("users.userRole")}</Label>
               <Input value={user.role} disabled />
             </div>
 
             <div className="flex justify-between mt-6">
               <Button type="submit" disabled={loading}>
-                {loading ? "Updating..." : "Update Profile"}
+                {loading ? t("common.updating") : t("users.userUpdated")}
               </Button>
-              <Button variant="destructive" onClick={handleDelete} disabled={loading}>
-                {loading ? "Deleting..." : "Delete Account"}
+              <Button
+                variant="destructive"
+                onClick={handleDelete}
+                disabled={loading}
+              >
+                {loading ? t("common.deleting") : t("users.userDeleted")}
               </Button>
             </div>
           </form>
@@ -213,7 +249,7 @@ export function UserInfo() {
             onClick={() => navigate(-1)}
             type="button"
           >
-            Go Back
+            {t("common.back")}
           </Button>
         </CardContent>
       </Card>

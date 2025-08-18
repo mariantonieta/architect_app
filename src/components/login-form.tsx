@@ -15,6 +15,7 @@ import { authService } from "@/services/authServices";
 import { useNavigate } from "react-router-dom";
 import { useLoginWithToken } from "@/hooks/useLoginWithToken";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 type FormData = {
   email: string;
@@ -25,48 +26,29 @@ export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<FormData>();
-  // const [error, setError] = useState<string | null>(null);
 
   const loginWithToken = useLoginWithToken({
     onSuccess: () => {
       navigate("/");
     },
     onError: () => {
-      toast.error("Login failed. Please try again.");
-      // setError("Invalid credentialsss");
+      toast.error(t("errors.unauthorized"));
     },
   });
-
-  // useEffect(() => {
-  //   debugger
-  //   const params = new URLSearchParams(window.location.search);
-  //   const token = params.get("access_token");
-
-  //   if (token) {
-  //     loginWithToken.mutate(token);
-  //     params.delete("access_token");
-  //     const url =
-  //       window.location.pathname +
-  //       (params.toString() ? `?${params.toString()}` : "");
-  //     window.history.replaceState({}, document.title, url);
-  //   }
-  // }, []);
-
   const onSubmit = async (data: FormData) => {
-    // setError(null);
     try {
       const response = await authService.login(data.email, data.password);
       loginWithToken.mutate(response.access_token);
     } catch (err) {
       console.error(err);
-      toast.error("Login failed. Please try again.");
-      // setError("Invalid credentials");
+      toast.error(t("errors.unauthorized"));
     }
   };
 
@@ -88,12 +70,12 @@ export function LoginForm({
                     "http://localhost:8000/auth/google/login";
                 }}
               >
-                Sign in with Google
+                {t("auth.loginWithGoogle")}
               </Button>
             </CardDescription>
             <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
               <span className="bg-card text-muted-foreground relative z-10 px-2">
-                Or
+                {t("common.or")}
               </span>
             </div>
             <CardTitle className="text-xl">Login</CardTitle>
@@ -101,10 +83,9 @@ export function LoginForm({
           <CardContent>
             {loginWithToken.error && (
               <p className="text-red-600 mb-4 text-center">
-                Login failed. Please try again.
+                {t("errors.unauthorized")}
               </p>
             )}
-            {/* {error && <p className="text-red-600 mb-4 text-center">{error}</p>} */}
 
             <form onSubmit={handleSubmit(onSubmit)}>
               <div className="grid gap-6">
@@ -113,8 +94,10 @@ export function LoginForm({
                   <Input
                     id="email"
                     type="email"
-                    placeholder="m@example.com"
-                    {...register("email", { required: "Email is required" })}
+                    placeholder="your@example.com"
+                    {...register("email", {
+                      required: t("auth.emailRequired"),
+                    })}
                     aria-invalid={errors.email ? "true" : "false"}
                   />
                   {errors.email && (
@@ -124,12 +107,12 @@ export function LoginForm({
                   )}
                 </div>
                 <div className="grid gap-3">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">{t("auth.password")}</Label>
                   <Input
                     id="password"
                     type="password"
                     {...register("password", {
-                      required: "Password is required",
+                      required: t("auth.passwordRequired"),
                     })}
                     aria-invalid={errors.password ? "true" : "false"}
                   />
@@ -147,7 +130,7 @@ export function LoginForm({
                     navigate("/reset-password");
                   }}
                 >
-                  Forgot your password?
+                  {t("auth.forgotPassword")}
                 </a>
                 <Button
                   type="submit"
@@ -155,18 +138,18 @@ export function LoginForm({
                   disabled={isSubmitting || loginWithToken.isPending}
                 >
                   {isSubmitting || loginWithToken.isPending
-                    ? "Logging in..."
-                    : "Login"}
+                    ? t("common.loading")
+                    : t("auth.login")}
                 </Button>
               </div>
               <div className="text-center text-sm mt-4">
-                Don&apos;t have an account?{" "}
+                {t("auth.dontHaveAccount")}{" "}
                 <button
                   type="button"
                   onClick={() => navigate("/register")}
                   className="hover:underline underline-offset-4 text-blue-600 hover:text-blue-800 cursor-pointer"
                 >
-                  Sign up
+                  {t("auth.signUp")}
                 </button>
               </div>
             </form>

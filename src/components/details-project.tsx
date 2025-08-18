@@ -34,10 +34,12 @@ import { IFCViewer } from "./ifc-viewer/ifc-viewer";
 import { useCreateProjectModal } from "@/hooks/useCreateOrEditProjectModal";
 
 import { MaterialsTable } from "./material-table";
+import { useTranslation } from "react-i18next";
+import { MaterialListSupplierEdit } from "./material-list-supplier-edit";
 
 export function ProjectDetails() {
+  const { t } = useTranslation();
   const { toggleModal } = useCreateProjectModal();
-
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
@@ -98,14 +100,14 @@ export function ProjectDetails() {
   if (isLoading)
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-lg">Loading project...</p>
+        <p className="text-lg">{t("common.loading")}</p>
       </div>
     );
 
   if (isError || !project)
     return (
       <div className="min-h-scree flex items-center justify-center">
-        <p className="text-lg">Project not found.</p>
+        <p className="text-lg">{t("projects.projectsNotFound")}</p>
       </div>
     );
   const toggleMenu = () => setMenuOpen((v) => !v);
@@ -123,17 +125,20 @@ export function ProjectDetails() {
     project.files?.filter((file) => file.original_name.match(/\.ifc$/i)) || [];
   const formattedCreateDate = project?.create_date
     ? new Date(project.create_date).toLocaleDateString()
-    : "Not available";
-  console.log("create_date raw value:", project?.create_date);
-  console.log("formattedCreateDate:", formattedCreateDate);
+    : t("errors.notAvailable");
+  //  console.log("create_date raw value:", project?.create_date);
+  //console.log("formattedCreateDate:", formattedCreateDate);
 
   const tabs = [
-    { id: "overview", label: "Overview" },
-    { id: "plans", label: "Plans" },
-    { id: "3d-model", label: "3D Model" },
-    { id: "materials-computation", label: "Materials Computation" },
-    { id: "materials", label: "Materials" },
-    { id: "budgets", label: "Budgets" },
+    { id: "overview", label: t("detailsProject.overview") },
+    { id: "plans", label: t("detailsProject.plans") },
+    { id: "3d-model", label: t("detailsProject.3dModels") },
+    {
+      id: "materials-computation",
+      label: t("detailsProject.materialsComputation"),
+    },
+    { id: "materials", label: t("detailsProject.materials") },
+    { id: "budgets", label: t("detailsProject.budgets") },
     // { id: "roles", label: "Roles" },
     // { id: "history", label: "History" },
   ];
@@ -145,7 +150,7 @@ export function ProjectDetails() {
           <div className="flex items-center justify-between">
             <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
               <ArrowLeft className="h-4 w-4 mr-1 sm:mr-2" />
-              <span className="hidden sm:inline">Back</span>
+              <span className="hidden sm:inline">{t("common.back")}</span>
             </Button>
 
             <div className="flex items-center gap-2">
@@ -212,7 +217,7 @@ export function ProjectDetails() {
                         )
                       }
                     >
-                      Edit
+                      {t("projects.editProject")}
                     </button>
                     <button
                       className="block w-full text-left px-4 py-2  text-red-600"
@@ -222,7 +227,7 @@ export function ProjectDetails() {
                         setMenuOpen(false);
                       }}
                     >
-                      Delete
+                      {t("projects.deleteProject")}
                     </button>
                   </div>
                 )}
@@ -261,7 +266,9 @@ export function ProjectDetails() {
           <TabsContent value="plans">
             <Card>
               <CardContent className="p-6">
-                <h2 className="text-lg font-semibold mb-4">Plans</h2>
+                <h2 className="text-lg font-semibold mb-4">
+                  {t("detailsProject.plans")}
+                </h2>
                 {planFiles.length > 0 ? (
                   <Accordion type="multiple" className="w-full space-y-2">
                     {planFiles.map((file) => (
@@ -288,7 +295,7 @@ export function ProjectDetails() {
                     ))}
                   </Accordion>
                 ) : (
-                  <p className="text-sm ">No plan files uploaded.</p>
+                  <p className="text-sm ">{t("detailsProject.notPlan")}</p>
                 )}
               </CardContent>
             </Card>
@@ -296,7 +303,7 @@ export function ProjectDetails() {
           <TabsContent value="overview" className="mt-6">
             <div className="space-y-8">
               <h2 className="text-lg sm:text-xl font-semibold ">
-                Project Information
+                {t("detailsProject.projectInfo")}
               </h2>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
@@ -311,7 +318,7 @@ export function ProjectDetails() {
                         <div className="font-medium text-sm sm:text-base  truncate">
                           <p>
                             {(project.customerEmail || []).join(", ") ||
-                              "Not assigned"}
+                              t("detailsProject.notAssigned")}
                           </p>
                         </div>
                       </div>
@@ -326,7 +333,9 @@ export function ProjectDetails() {
                         <MapPin className="h-4 w-4 sm:h-5 sm:w-5" />
                       </div>
                       <div>
-                        <p className="text-xs sm:text-sm ">Location</p>
+                        <p className="text-xs sm:text-sm ">
+                          {t("projects.location")}
+                        </p>
                         <p className="font-medium text-sm sm:text-base">
                           {project.location}
                         </p>
@@ -342,7 +351,9 @@ export function ProjectDetails() {
                         <Building2 className="h-4 w-4 sm:h-5 sm:w-5 " />
                       </div>
                       <div>
-                        <p className="text-xs sm:text-sm ">Project Type</p>
+                        <p className="text-xs sm:text-sm ">
+                          {t("projects.type")}
+                        </p>
                         <p className="font-medium text-sm sm:text-base ">
                           {project.project_type
                             .split("_")
@@ -357,25 +368,6 @@ export function ProjectDetails() {
                     </div>
                   </CardContent>
                 </Card>
-
-                {/*  <Card>
-                  <CardContent className="p-4 sm:p-6">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-gray-100 rounded-lg flex-shrink-0">
-                        <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
-                      </div>
-                      <div>
-                        <p className="text-xs sm:text-sm text-gray-500">
-                          Start Date
-                        </p>
-                        <p className="font-medium text-sm sm:text-base text-gray-900">
-                          {formattedCreateDate}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              */}
                 <Card>
                   <CardContent className="p-4 sm:p-6">
                     <div className="flex items-center gap-3">
@@ -383,7 +375,9 @@ export function ProjectDetails() {
                         <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 " />
                       </div>
                       <div>
-                        <p className="text-xs sm:text-sm">Budget</p>
+                        <p className="text-xs sm:text-sm">
+                          {t("projects.budget")}
+                        </p>
                         <p className="font-medium text-sm sm:text-base">
                           ${project.estimated_budget?.toLocaleString() || "0"}
                         </p>
@@ -399,12 +393,14 @@ export function ProjectDetails() {
                         <Users className="h-4 w-4 sm:h-5 sm:w-5" />
                       </div>
                       <div>
-                        <p className="text-xs sm:text-sm">Team Size</p>
+                        <p className="text-xs sm:text-sm">
+                          {t("detailsProject.teamSize")}
+                        </p>
                         <p className="font-medium text-sm sm:text-base">
                           {[
                             ...(project.supplierEmail || []),
                             ...(project.architectEmail || []),
-                          ].join(", ") || "No emails"}
+                          ].join(", ") || t("detailsProject.notEmail")}
                         </p>
                       </div>
                     </div>
@@ -412,9 +408,12 @@ export function ProjectDetails() {
                 </Card>
                 <Card className="sm:col-span-2 lg:col-span-3">
                   <CardContent className="p-4 sm:p-6">
-                    <p className="text-xs sm:text-sm mb-1">Description</p>
+                    <p className="text-xs sm:text-sm mb-1">
+                      {t("detailsProject.description")}
+                    </p>
                     <p className="text-sm sm:text-base whitespace-pre-line">
-                      {project.description || "No description provided."}
+                      {project.description ||
+                        t("detailsProject.notDescription")}
                     </p>
                   </CardContent>
                 </Card>
@@ -437,19 +436,19 @@ export function ProjectDetails() {
                 ))}
               </Accordion>
             ) : (
-              <p className="text-sm">No 3D models available.</p>
+              <p className="text-sm">{t("detailsProject.not3dModels")}</p>
             )}
           </TabsContent>
 
           <TabsContent value="materials-computation" className="mt-6">
-            Materials computation
+            {t("detailsProject.materialsComputation")}
           </TabsContent>
           <TabsContent value="materials" className="mt-6">
             <MaterialsTable />
           </TabsContent>
 
           <TabsContent value="budgets" className="mt-6">
-            <p>Budgets details go here.</p>
+            <MaterialListSupplierEdit readOnly />
           </TabsContent>
 
           <TabsContent value="roles" className="mt-6">
@@ -465,20 +464,21 @@ export function ProjectDetails() {
       <AlertDialog open={openDeleteModal} onOpenChange={setOpenDeleteModal}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Project</AlertDialogTitle>
+            <AlertDialogTitle>{t("projects.deleteProject")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this project? This action cannot
-              be undone.
+              {t("projects.deleteDescription")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleting}>
+              {t("common.cancel")}
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               disabled={isDeleting}
               className="bg-red-600 text-white hover:bg-red-700"
             >
-              {isDeleting ? "Deleting..." : "Delete"}
+              {isDeleting ? t("common.deleting") : t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

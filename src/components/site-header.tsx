@@ -11,8 +11,8 @@ export function SiteHeader() {
 
   if (isLoading || !user) return null;
 
-  const userName = user.first_name || t('common.welcome');
-  const userRole = user.role || t('users.userRole');
+  const userName = user.first_name || t("common.welcome");
+  const userRole = user.role || t("users.userRole");
 
   return (
     <header className="mb-4 bg-background px-6 py-5 text-foreground shadow-sm">
@@ -22,20 +22,15 @@ export function SiteHeader() {
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
               <h1 className="text-2xl font-semibold ">
-                {t('common.welcome')}, <span className="text-primary">{userName}</span>
+                {t("common.welcome")},{" "}
+                <span className="text-primary">{userName}</span>
               </h1>
               <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
                 {userRole}
               </span>
             </div>
-         
           </div>
         </div>
-        
-        {/* Language Selector */}
-        {/* <div className="flex items-center gap-2">
-          <LanguageSelector size="sm" />
-        </div> */}
       </div>
     </header>
   );

@@ -5,8 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { authService } from "@/services/authServices";
+import { useTranslation } from "react-i18next";
 
 export function ResetPasswordForm() {
+  const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -33,12 +35,12 @@ export function ResetPasswordForm() {
     setError(null);
 
     if (newPassword !== confirmPassword) {
-      setError("Passwords do not match");
+      setError(t("auth.dontMatch"));
       return;
     }
 
     if (!token) {
-      setError("Token is required");
+      setError(t("auth.tokenRequired"));
       return;
     }
 
@@ -64,25 +66,29 @@ export function ResetPasswordForm() {
         <Card>
           <CardHeader>
             <CardTitle className="text-center text-xl font-bold ">
-              Reset your password
+              {t("auth.reset")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <Label htmlFor="token" className="mb-2">Token</Label>
+                <Label htmlFor="token" className="mb-2">
+                  Token
+                </Label>
                 <Input
                   id="token"
                   type="text"
                   value={token}
                   onChange={(e) => setToken(e.target.value)}
                   required
-                  placeholder="Token from email link"
+                  placeholder={t("auth.tokenEmail")}
                 />
               </div>
 
               <div>
-                <Label htmlFor="new-password" className="mb-2">New Password</Label>
+                <Label htmlFor="new-password" className="mb-2">
+                  {t("auth.newPassword")}
+                </Label>
                 <Input
                   id="new-password"
                   type="password"
@@ -90,12 +96,14 @@ export function ResetPasswordForm() {
                   onChange={(e) => setNewPassword(e.target.value)}
                   required
                   minLength={6}
-                  placeholder="Enter new password"
+                  placeholder={t("auth.newPassword")}
                 />
               </div>
 
               <div>
-                <Label htmlFor="confirm-password" className="mb-2">Confirm Password</Label>
+                <Label htmlFor="confirm-password" className="mb-2">
+                  {t("auth.confirmPassword ")}
+                </Label>
                 <Input
                   id="confirm-password"
                   type="password"
@@ -103,14 +111,14 @@ export function ResetPasswordForm() {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
                   minLength={6}
-                  placeholder="Confirm new password"
+                  placeholder={t("auth.confirmPassword")}
                 />
               </div>
 
               {error && <p className="text-red-600 text-center">{error}</p>}
 
               <Button type="submit" disabled={loading} className="w-full">
-                {loading ? "Resetting..." : "Reset Password"}
+                {loading ? t("auth.resetting") : t("auth.reset")}
               </Button>
             </form>
           </CardContent>

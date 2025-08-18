@@ -8,24 +8,23 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Building2, MapPin, LinkIcon, User, Eye, Plus } from "lucide-react";
+import { Building2, MapPin, LinkIcon, Eye, Plus } from "lucide-react";
 import type { Project } from "@/services/projectService";
 import { useNavigate } from "react-router-dom";
 import { useProjects } from "@/hooks/useProject";
 import { useCreateProjectModal } from "@/hooks/useCreateOrEditProjectModal";
 import { useState } from "react";
 import ShareProjectModal from "./share-prooject-form";
+import { useTranslation } from "react-i18next";
 
 export function ProjectsList() {
   const navigate = useNavigate();
   const { toggleModal } = useCreateProjectModal();
   const [openShareModal, setOpenShareModal] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-
+  const { t } = useTranslation();
   const { data: projects = [], isLoading, isError } = useProjects();
-    console.log("Proyectos recibidos del backend:", projects);
-
-
+  console.log("Proyectos recibidos del backend:", projects);
 
   if (isLoading) return <div className="p-6">Loading projects...</div>;
   if (isError)
@@ -79,12 +78,12 @@ export function ProjectsList() {
         <header className=" border-b px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold">Projects</h1>
-              <p className="text-sm mt-1">List of projects</p>
+              <h1 className="text-2xl font-bold">{t("projects.title")}</h1>
+              <p className="text-sm mt-1">{t("projects.subtitle")}</p>
             </div>
             <Button onClick={() => toggleModal(true)}>
               <Plus className="h-4 w-4 mr-2" />
-              New Project
+              {t("projects.createProject")}
             </Button>
           </div>
         </header>
@@ -127,30 +126,30 @@ export function ProjectsList() {
                     </div>
 
                     <div>
-                      <strong>Customers:</strong>{" "}
+                      <strong>{t("users.customer")}</strong>{" "}
                       {(project.customerEmail?.length ?? 0) > 0
                         ? project.customerEmail.join(", ")
-                        : "No customers"}
+                        : t("users.noCustomer")}
                     </div>
 
                     <div>
-                      <strong>Suppliers:</strong>{" "}
+                      <strong>{t("users.supplier")} </strong>{" "}
                       {(project.supplierEmail?.length ?? 0) > 0
                         ? project.supplierEmail.join(", ")
-                        : "No suppliers"}
+                        : t("users.noSupplier")}
                     </div>
 
                     <div>
-                      <strong>Architects:</strong>{" "}
+                      <strong>{t("users.architect")} </strong>{" "}
                       {(project.architectEmail?.length ?? 0) > 0
                         ? project.architectEmail.join(", ")
-                        : "No architects"}
+                        : t("users.noArchitect")}
                     </div>
 
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium text-gray-700">
-                          Progress
+                          {t("detailsProject.progress")}
                         </span>
                         <span className="text-sm font-bold text-gray-900">
                           {progress}%
@@ -160,10 +159,10 @@ export function ProjectsList() {
                     </div>
 
                     <div>
-                      <strong>Last updated:</strong>{" "}
+                      <strong>{t("detailsProject.lastUpdated")}</strong>{" "}
                       {project.update_date
                         ? new Date(project.update_date).toLocaleDateString()
-                        : "Not available"}
+                        : t("errors.notAvailable")}
                     </div>
                   </CardContent>
 
@@ -175,7 +174,7 @@ export function ProjectsList() {
                         className="flex items-center text-gray-600 hover:text-gray-800 hover:bg-gray-100"
                       >
                         <Eye className="h-4 w-4 mr-1" />
-                        View more details
+                        {t("detailsProject.viewMore")}
                       </Button>
 
                       <Button

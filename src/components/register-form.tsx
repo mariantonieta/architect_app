@@ -19,12 +19,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 import { authService } from "@/services/authServices";
 import { toast } from "sonner";
-
-const userTypes = [
-  { label: "Architect", value: "architect", icon: Building2 },
-  { label: "Supplier", value: "supplier", icon: Package },
-  { label: "Customer", value: "customer", icon: Users },
-];
+import { useTranslation } from "react-i18next";
 
 type RegisterFormData = {
   first_name: string;
@@ -55,7 +50,6 @@ export function RegisterForm({
   const [decodedRole, setDecodedRole] = useState<
     RegisterFormData["role"] | null
   >(null);
-
   const {
     register,
     handleSubmit,
@@ -70,9 +64,14 @@ export function RegisterForm({
 
   const [loading, setLoading] = useState(false);
   // const [error, setError] = useState<string | null>(null);
-
+  const { t } = useTranslation();
   const role = watch("role");
   const selectedRole = decodedRole ?? role;
+  const userTypes = [
+    { label: t("users.architect"), value: "architect", icon: Building2 },
+    { label: t("users.supplier"), value: "supplier", icon: Package },
+    { label: t("users.customer"), value: "customer", icon: Users },
+  ];
 
   const password = watch("password");
 
@@ -93,51 +92,50 @@ export function RegisterForm({
       await authService.register(submitData);
       console.log(JSON.stringify(submitData, null, 2));
       navigate("/login");
-      toast.success("Registration successful! Please log in.");
+      toast.success(t("auth.registration"));
     } catch (err) {
-      // setError("Registration failed");
-      console.error("Registration error:", err);
-      toast.error("Registration failed");
+      //  console.error("Registration error:", err);
+      toast.error(t("auth.registrationFailed"));
     } finally {
       setLoading(false);
     }
   };
 
   const token = searchParams.get("token");
-useEffect(() => {
-  if (token) {
-    try {
-      const decoded = jwtDecode<JwtPayload>(token);
-      console.log("Token decodificado:", decoded);
-      if (decoded.role) {
-        const roleValue = decoded.role as RegisterFormData["role"];
-        setValue("role", roleValue, {
-          shouldValidate: true,
-          shouldDirty: true,
-          shouldTouch: true,
-        });
-        setDecodedRole(roleValue);
+  useEffect(() => {
+    if (token) {
+      try {
+        const decoded = jwtDecode<JwtPayload>(token);
+        // console.log("Token ", decoded);
+        if (decoded.role) {
+          const roleValue = decoded.role as RegisterFormData["role"];
+          setValue("role", roleValue, {
+            shouldValidate: true,
+            shouldDirty: true,
+            shouldTouch: true,
+          });
+          setDecodedRole(roleValue);
+        }
+        if (decoded.sub) {
+          setValue("email", decoded.sub, {
+            shouldValidate: true,
+            shouldDirty: true,
+            shouldTouch: true,
+          });
+        }
+      } catch (error) {
+        //   console.error("Invalid token", error);
+        setDecodedRole("architect");
       }
-      if (decoded.sub) {
-        setValue("email", decoded.sub, {
-          shouldValidate: true,
-          shouldDirty: true,
-          shouldTouch: true,
-        });
-      }
-    } catch (error) {
-      console.error("Invalid token", error);
+    } else {
+      setValue("role", "architect", {
+        shouldValidate: true,
+        shouldDirty: true,
+        shouldTouch: true,
+      });
       setDecodedRole("architect");
     }
-  } else {
-    setValue("role", "architect", {
-      shouldValidate: true,
-      shouldDirty: true,
-      shouldTouch: true,
-    });
-    setDecodedRole("architect");
-  }
-}, [searchParams, setValue]);
+  }, [searchParams, setValue]);
 
   return (
     <div
@@ -150,13 +148,13 @@ useEffect(() => {
       <div className="w-full max-w-md flex flex-col gap-6">
         <Card>
           <CardHeader className="text-center">
-            <CardTitle className="text-xl">Create an Account</CardTitle>
-            <CardDescription>Sign up to get started</CardDescription>
+            <CardTitle className="text-xl">{t("auth.register")}</CardTitle>
+            <CardDescription>{t("auth.registerDescription")}</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit(onSubmit)} className="grid gap-6">
               <div className="grid gap-3">
-                <Label htmlFor="role">Role</Label>
+                <Label htmlFor="role">{t("users.userRole")}</Label>
                 <RadioGroup
                   id="role"
                   value={selectedRole}
@@ -183,12 +181,12 @@ useEffect(() => {
               </div>
 
               <div className="grid gap-3">
-                <Label htmlFor="first_name">First Name</Label>
+                <Label htmlFor="first_name">{t("auth.firstName")}</Label>
                 <Input
                   id="first_name"
                   type="text"
                   {...register("first_name", {
-                    required: "First name is required",
+                    required: t("auth.firstNameRequired"),
                   })}
                 />
                 {errors.first_name && (
@@ -199,12 +197,12 @@ useEffect(() => {
               </div>
 
               <div className="grid gap-3">
-                <Label htmlFor="last_name">Last Name</Label>
+                <Label htmlFor="last_name">{t("auth.lastName")}</Label>
                 <Input
                   id="last_name"
                   type="text"
                   {...register("last_name", {
-                    required: "Last name is required",
+                    required: t("auth.lastNameRequired"),
                   })}
                 />
                 {errors.last_name && (
@@ -215,13 +213,12 @@ useEffect(() => {
               </div>
 
               <div className="grid gap-3">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t("auth.email")}</Label>
                 <Input
                   id="email"
                   type="email"
-                  {...register("email", { required: "Email is required" })}
+                  {...register("email", { required: t("auth.emailRequired") })}
                   disabled={!!token}
-                  
                 />
                 {errors.email && (
                   <p className="text-sm text-red-500">{errors.email.message}</p>
@@ -229,15 +226,15 @@ useEffect(() => {
               </div>
 
               <div className="grid gap-3">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{t("auth.password")}</Label>
                 <Input
                   id="password"
                   type="password"
                   {...register("password", {
-                    required: "Password is required",
+                    required: t("auth.passwordRequired"),
                     minLength: {
                       value: 6,
-                      message: "Password must be at least 6 characters",
+                      message: t("auth.passwordMinLength"),
                     },
                   })}
                 />
@@ -249,14 +246,16 @@ useEffect(() => {
               </div>
 
               <div className="grid gap-3">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Label htmlFor="confirmPassword">
+                  {t("auth.confirmPassword")}
+                </Label>
                 <Input
                   id="confirmPassword"
                   type="password"
                   {...register("confirmPassword", {
-                    required: "Please confirm your password",
+                    required: t("auth.confirmPasswordRequired"),
                     validate: (value) =>
-                      value === password || "Passwords do not match",
+                      value === password || t("auth.dontMatch"),
                   })}
                 />
                 {errors.confirmPassword && (
@@ -285,7 +284,7 @@ useEffect(() => {
 
               {selectedRole === "architect" && (
                 <div className="grid gap-3">
-                  <Label htmlFor="entity_type">Entity Type</Label>
+                  <Label htmlFor="entity_type">{t("auth.entityType")}</Label>
                   <Input
                     id="entity_type"
                     type="text"
@@ -296,7 +295,7 @@ useEffect(() => {
 
               {selectedRole === "supplier" && (
                 <div className="grid gap-3">
-                  <Label htmlFor="company">Company</Label>
+                  <Label htmlFor="company">{t("auth.company")}</Label>
                   <Input id="company" type="text" {...register("company")} />
                 </div>
               )}
@@ -306,11 +305,11 @@ useEffect(() => {
               )} */}
 
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Creating account..." : "Sign Up"}
+                {loading ? t("auth.creating") : t("auth.signUp")}
               </Button>
 
               <div className="text-center text-sm">
-                Already have an account?{" "}
+                {t("auth.alreadyHaveAccount")}{" "}
                 <a
                   href="#"
                   onClick={(e) => {
@@ -319,7 +318,7 @@ useEffect(() => {
                   }}
                   className="hover:underline underline-offset-4 text-blue-600 hover:text-blue-800 cursor-pointer"
                 >
-                  Login
+                  {t("auth.login")}
                 </a>
               </div>
             </form>
@@ -327,15 +326,18 @@ useEffect(() => {
         </Card>
 
         <div className="text-muted-foreground text-center text-xs">
-          By signing up, you agree to our{" "}
-          <a href="#" className="underline underline-offset-4">
-            Terms of Service
-          </a>{" "}
-          and{" "}
-          <a href="#" className="underline underline-offset-4">
-            Privacy Policy
-          </a>
-          .
+          {t("auth.tosAgreement", {
+            terms: (
+              <a href="/terms" className="underline underline-offset-4">
+                {t("auth.termsOfService")}
+              </a>
+            ),
+            privacy: (
+              <a href="/privacy" className="underline underline-offset-4">
+                {t("auth.privacyPolicy")}
+              </a>
+            ),
+          })}
         </div>
       </div>
     </div>

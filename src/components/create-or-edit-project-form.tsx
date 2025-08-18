@@ -28,6 +28,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useTransition } from "react";
+import { useTranslation } from "react-i18next";
+import { Projects } from "@/pages/project";
 
 type ProjectFormInput = Omit<
   ProjectFormData,
@@ -53,6 +56,7 @@ export function CreateOrEditProjectForm({
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [step, setStep] = useState<1 | 2>(1);
+  const { t } = useTranslation();
 
   const [existingBim, setExistingBim] = useState<ExistingFile[]>(
     initialData?.existingBlueprints || []
@@ -145,7 +149,7 @@ export function CreateOrEditProjectForm({
 
           return true;
         } catch (error) {
-          console.error("Error agregando email:", error);
+          // console.error("Error agregando email:", error);
           return false;
         } finally {
           processing = false;
@@ -161,7 +165,7 @@ export function CreateOrEditProjectForm({
         );
         return res;
       } catch (error) {
-        console.error("Error buscando emails:", error);
+        //  console.error("Error buscando emails:", error);
         return [];
       }
     };
@@ -221,14 +225,14 @@ export function CreateOrEditProjectForm({
       }
       queryClient.invalidateQueries({ queryKey: ["projects"] });
 
-      toast.success("Project saved successfully");
+      toast.success(t("projects.projectSave"));
       reset();
       setStep(1);
       onOpenChange(false);
       onCreated?.();
       navigate("/projects");
     } catch (err) {
-      console.error("Error saving project", err);
+      //  console.error("Error saving project", err);
     }
   };
 
@@ -245,7 +249,7 @@ export function CreateOrEditProjectForm({
         currency: initialData.currency || "ars",
         estimated_budget: initialData.estimated_budget,
         location: initialData.location || "",
-        status: initialData.status || "idea",
+        status: initialData.status || "",
         description: initialData.description || "",
       });
 
@@ -303,11 +307,11 @@ export function CreateOrEditProjectForm({
         <DialogHeader>
           <DialogTitle>
             {isCreateOrEdit === "edit"
-              ? "Edit Project"
-              : "Create a New Project"}
+              ? t("projects.editProject")
+              : t("projects.createANew")}
           </DialogTitle>
           <DialogDescription>
-            Complete the basic project information.
+            {t("projects.completedBasicInfo")}
           </DialogDescription>
         </DialogHeader>
 
@@ -316,7 +320,7 @@ export function CreateOrEditProjectForm({
           className="space-y-6"
         >
           <FormField
-            label="Name"
+            label={t("projects.name")}
             id="name"
             error={errors.name?.message}
             required
@@ -324,19 +328,19 @@ export function CreateOrEditProjectForm({
             <Controller
               control={control}
               name="name"
-              rules={{ required: "Project name is required" }}
+              rules={{ required: t("projects.nameRequired") }}
               render={({ field }) => (
                 <Input
                   {...field}
                   id="name"
                   autoFocus
-                  placeholder="Example: The Oaks Family House"
+                  placeholder={t("projects.nameExample")}
                 />
               )}
             />
           </FormField>
           <FormField
-            label="Type"
+            label={t("projects.type")}
             id="project_type"
             error={errors.project_type?.message}
             required
@@ -344,26 +348,32 @@ export function CreateOrEditProjectForm({
             <Controller
               control={control}
               name="project_type"
-              rules={{ required: "Project type is required" }}
+              rules={{ required: t("projects.typeRequired") }}
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger id="project_type" className="w-full">
-                    <SelectValue placeholder="Select project type" />
+                    <SelectValue placeholder={t("projects.selectType")} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="single_family_home">
-                      Single Family Home
+                      {t("projects.singleFamily")}
                     </SelectItem>
                     <SelectItem value="residential_building">
-                      Residential Building
+                      {t("projects.residentialBuilding")}
                     </SelectItem>
                     <SelectItem value="commercial_building">
-                      Commercial Building
+                      {t("projects.commercialBuilding")}
                     </SelectItem>
-                    <SelectItem value="industrial">Industrial</SelectItem>
-                    <SelectItem value="renovation">Renovation</SelectItem>
-                    <SelectItem value="recreational">Recreational</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
+                    <SelectItem value="industrial">
+                      {t("projects.industrial")}
+                    </SelectItem>
+                    <SelectItem value="renovation">
+                      {t("projects.renovation")}
+                    </SelectItem>
+                    <SelectItem value="recreational">
+                      {t("projects.recreational")}
+                    </SelectItem>
+                    <SelectItem value="other">{t("projects.other")}</SelectItem>
                   </SelectContent>
                 </Select>
               )}
@@ -374,17 +384,23 @@ export function CreateOrEditProjectForm({
             <Controller
               control={control}
               name="status"
-              rules={{ required: "Status is required" }}
+              rules={{ required: t("projects.statusRequired") }}
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger id="status" className="w-full" size="default">
-                    <SelectValue placeholder="Select status" />
+                    <SelectValue placeholder={t("projects.selectStatus")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="idea">Idea</SelectItem>
-                    <SelectItem value="budgeting">Budgeting</SelectItem>
-                    <SelectItem value="in_progress">In Progress</SelectItem>
-                    <SelectItem value="finished">Finished</SelectItem>
+                    <SelectItem value="idea">{t("projects.idea")}</SelectItem>
+                    <SelectItem value="budgeting">
+                      {t("projects.budgeting")}
+                    </SelectItem>
+                    <SelectItem value="in_progress">
+                      {t("projects.inProgress")}
+                    </SelectItem>
+                    <SelectItem value="finished">
+                      {t("projects.finished")}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               )}
@@ -392,7 +408,11 @@ export function CreateOrEditProjectForm({
           </FormField>
 
           <div className="flex space-x-4">
-            <FormField label="Budget" id="estimated_budget" className="flex-1">
+            <FormField
+              label={t("projects.budget")}
+              id="estimated_budget"
+              className="flex-1"
+            >
               <Controller
                 control={control}
                 name="estimated_budget"
@@ -415,7 +435,11 @@ export function CreateOrEditProjectForm({
               />
             </FormField>
 
-            <FormField label="Currency" id="currency" className="w-32">
+            <FormField
+              label={t("projects.currency")}
+              id="currency"
+              className="w-32"
+            >
               <Controller
                 control={control}
                 name="currency"
@@ -426,7 +450,7 @@ export function CreateOrEditProjectForm({
                       className="w-full"
                       size="default"
                     >
-                      <SelectValue placeholder="Select status" />
+                      <SelectValue placeholder={t("projects.selectCurrency")} />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="ars">ARS</SelectItem>
@@ -440,7 +464,7 @@ export function CreateOrEditProjectForm({
           </div>
 
           <FormField
-            label="Location"
+            label={t("projects.location")}
             id="location"
             error={errors.location?.message}
             required
@@ -448,42 +472,31 @@ export function CreateOrEditProjectForm({
             <Controller
               control={control}
               name="location"
-              rules={{ required: "Location is required" }}
+              rules={{ required: t("projects.locationRequired") }}
               render={({ field }) => (
                 <Input
                   {...field}
                   id="location"
                   autoFocus
-                  placeholder="Example: Argentina"
+                  placeholder={t("projectExample")}
                 />
               )}
             />
           </FormField>
 
-          <FormField label="Additional Description" id="description">
+          <FormField
+            label={t("projects.additionalDescription")}
+            id="description"
+          >
             <Controller
               control={control}
               name="description"
               render={({ field }) => <Input {...field} id="description" />}
             />
           </FormField>
-          {/* 
-              <DialogFooter className="flex space-x-3">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={() => onOpenChange(false)}
-                  disabled={isCreating || isUpdating}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={isCreating || isUpdating}>
-                  Continue
-                </Button>
-              </DialogFooter> */}
 
           <FormField
-            label="BIM Models (IFC, RVT)"
+            label={t("projects.bimModels")}
             id="filesBimModels"
             error={errors.filesBimModels?.message}
           >
@@ -506,7 +519,7 @@ export function CreateOrEditProjectForm({
               onInvalidFiles={(invalid) => {
                 setError("filesBimModels", {
                   type: "manual",
-                  message: `Invalid bimModels file(s): ${invalid
+                  message: `{t("projects.invalidBimModels")} ${invalid
                     .map((f) => f.name)
                     .join(", ")}. Allowed: IFC, RVT`,
                 });
@@ -515,7 +528,7 @@ export function CreateOrEditProjectForm({
           </FormField>
 
           <FormField
-            label="Plans (PDF, JPG)"
+            label={t("projects.plans")}
             id="filesRenders"
             error={errors.filesRenders?.message}
           >
@@ -549,7 +562,7 @@ export function CreateOrEditProjectForm({
           </FormField>
 
           <FormField
-            label="Render Files (JPG, PNG, PDF)"
+            label={t("projects.renderFiles")}
             id="filesReports"
             error={errors.filesReports?.message}
           >
@@ -582,7 +595,7 @@ export function CreateOrEditProjectForm({
             />
           </FormField>
           <FormField
-            label="Architect Email"
+            label={t("projects.architectEmail")}
             id="architectEmail"
             error={errors.architectEmail?.message}
           >
@@ -606,7 +619,7 @@ export function CreateOrEditProjectForm({
                 <EmailSelector
                   value={field.value || []}
                   onChange={field.onChange}
-                  placeholder="Enter email and press Enter"
+                  placeholder={t("projects.enterEmail")}
                   role="architect"
                   onSearch={searchArchitect}
                   onEmailAdd={handleArchitectAdd}
@@ -617,7 +630,7 @@ export function CreateOrEditProjectForm({
           </FormField>
 
           <FormField
-            label="Customer Email"
+            label={t("projects.customerEmail")}
             id="customerEmail"
             error={errors.customerEmail?.message}
           >
@@ -641,7 +654,7 @@ export function CreateOrEditProjectForm({
                 <EmailSelector
                   value={field.value || []}
                   onChange={field.onChange}
-                  placeholder="Enter customer email and press Enter"
+                  placeholder={t("projects.enterEmail")}
                   role="customer"
                   onSearch={searchCustomer}
                   onEmailAdd={handleCustomerAdd}
@@ -651,7 +664,7 @@ export function CreateOrEditProjectForm({
             />
           </FormField>
           <FormField
-            label="Supplier Email"
+            label={t("projects.supplierEmail")}
             id="supplierEmail"
             error={errors.customerEmail?.message}
           >
@@ -675,7 +688,7 @@ export function CreateOrEditProjectForm({
                 <EmailSelector
                   value={field.value || []}
                   onChange={field.onChange}
-                  placeholder="Enter supplier email and press Enter"
+                  placeholder={t("projects.enterEmail")}
                   role="supplier"
                   onSearch={searchSupplier}
                   onEmailAdd={handleSupplierAdd}
@@ -694,15 +707,15 @@ export function CreateOrEditProjectForm({
               }}
               disabled={isCreating || isUpdating}
             >
-              Back
+              {t("common.back")}
             </Button>
 
             <Button type="submit" disabled={isCreating || isUpdating}>
               {isCreating || isUpdating
-                ? "Saving..."
+                ? t("common.saving")
                 : initialData
-                ? "Save Changes"
-                : "Create Project"}
+                ? t("common.saveChanges")
+                : t("projects.createProject")}
             </Button>
           </DialogFooter>
         </form>

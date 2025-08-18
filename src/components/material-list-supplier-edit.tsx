@@ -17,23 +17,25 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-export function MaterialListSupplierEdit() {
+type MaterialListSupplierEditProps = {
+  readOnly?: boolean; // 👈 nueva prop
+};
+
+export function MaterialListSupplierEdit({
+  readOnly = false,
+}: MaterialListSupplierEditProps) {
   const { id: projectId } = useParams<{ id: string }>();
   const { data: materialList, isLoading: isMaterialListLoading } =
     useMaterialListByProject(projectId);
   const { t } = useTranslation();
 
-  // Llamamos a React Query solo cuando tenemos el ID de la lista
   const { data: quotedItems, isLoading: isQuotedLoading } = useQuotedItems(
     materialList?.id ?? ""
   );
 
-  // Para actualizar
   const bulkUpdateMutation = useBulkUpdateQuotedItems(materialList?.id ?? "");
-
   const [rows, setRows] = useState<any[]>([]);
 
-  // Cuando cambia quotedItems, inicializamos los rows
   React.useEffect(() => {
     if (quotedItems) {
       setRows(quotedItems.map((item) => ({ ...item })));
@@ -65,7 +67,7 @@ export function MaterialListSupplierEdit() {
   };
 
   const handleSave = () => {
-    if (!materialList) return;
+    if (!materialList || readOnly) return;
 
     const itemsToSend = rows.map((item) => ({
       id: item.id,
@@ -103,14 +105,18 @@ export function MaterialListSupplierEdit() {
               <TableCell>{item.unity}</TableCell>
               <TableCell>{item.quantity}</TableCell>
               <TableCell>
-                <Input
-                  type="number"
-                  value={item.price ?? ""}
-                  min={0}
-                  step={0.01}
-                  onChange={(e) => handleChange(idx, "price", e.target.value)}
-                  className="w-24"
-                />
+                {readOnly ? (
+                  item.price ?? "-"
+                ) : (
+                  <Input
+                    type="number"
+                    value={item.price ?? ""}
+                    min={0}
+                    step={0.01}
+                    onChange={(e) => handleChange(idx, "price", e.target.value)}
+                    className="w-24"
+                  />
+                )}
               </TableCell>
               <TableCell>
                 {item.price !== undefined && item.price !== ""
@@ -118,27 +124,35 @@ export function MaterialListSupplierEdit() {
                   : "-"}
               </TableCell>
               <TableCell>
-                <Input
-                  value={item.comment ?? ""}
-                  onChange={(e) => handleChange(idx, "comment", e.target.value)}
-                  className="w-40"
-                />
+                {readOnly ? (
+                  item.comment ?? "-"
+                ) : (
+                  <Input
+                    value={item.comment ?? ""}
+                    onChange={(e) =>
+                      handleChange(idx, "comment", e.target.value)
+                    }
+                    className="w-40"
+                  />
+                )}
               </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
-      <div className="mt-4 flex justify-end">
-        <Button
-          onClick={handleSave}
-          className="bg-primary"
-          disabled={bulkUpdateMutation.isPending}
-        >
-          {bulkUpdateMutation.isPending
-            ? t("common.saving", "Guardando...")
-            : t("common.saveChanges", "Guardar Cambios")}
-        </Button>
-      </div>
+      {!readOnly && (
+        <div className="mt-4 flex justify-end">
+          <Button
+            onClick={handleSave}
+            className="bg-primary"
+            disabled={bulkUpdateMutation.isPending}
+          >
+            {bulkUpdateMutation.isPending
+              ? t("common.saving", "Guardando...")
+              : t("common.saveChanges", "Guardar Cambios")}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
