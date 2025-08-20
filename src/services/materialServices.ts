@@ -22,6 +22,8 @@ export type MaterialListItem = {
     status?: MaterialListItemStatus;
     unitPrice?: number;
     comment?: string;
+    supplier_id?: string;
+    supplier_name?: string;
 };
 
 export type MaterialList = {
@@ -46,7 +48,34 @@ export type CreateMaterialListInput = {
     supplier_emails: string[];
 };
 
+export type SupplierRequestOut = {
+    material_list_id: string;
+    project_id: string;
+    project_name?: string;
+    architect_name?: string;
+    supplier_name?: string;
+    supplier_id: string;
+    create_date?: string;
+};
 
+export type SupplierQuotedItemsOut = {
+    supplier_id: string;
+    supplier_name: string;
+    items: MaterialListItem[];
+};
+type SupplierGroup = {
+    name: string;
+    currency?: string;
+    supplier_emails?: string[];
+    items: MaterialListItem[];
+};
+
+export const quotedItemsService = {
+    async getQuotedItemsGroupedBySupplier(materialListId: string): Promise<SupplierQuotedItemsOut[]> {
+        const response = await api.get(`/material-list/${materialListId}/grouped`);
+        return response.data;
+    },
+};
 
 export type UpdateMaterialListInput = Partial<CreateMaterialListInput>;
 
@@ -80,5 +109,18 @@ export const materialListService = {
         const response = await api.get(`/material-lists/project/${projectId}`);
         return response.data;
     },
+    async getSupplierRequests(): Promise<SupplierRequestOut[]> {
+        const response = await api.get("/material-list-quoted-items/");
+        return response.data;
+    },
+    async getQuotedItemsBySupplier(
+        materialListId: string
+    ): Promise<SupplierQuotedItemsOut[]> {
+        const response = await api.get(
+            `/material-list-quoted-items/material-list/${materialListId}/by-supplier`
+        );
+        return response.data;
+    },
+
 
 };

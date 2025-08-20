@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useInvitations, useInviteAgendaUser } from "@/hooks/useInvite";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { CommandIcon, Plus } from "lucide-react";
 import { InviteModal } from "@/components/invite-modal";
 import { Agenda } from "@/components/agenda";
 import { useUser } from "@/hooks/useUser";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 type RoleName = "supplier" | "customer" | "architect";
 
@@ -45,6 +46,7 @@ function mapInvitations(
 
 export default function ArchitectAgenda() {
   const role = "architect";
+  const { t } = useTranslation();
 
   const {
     data: currentUser,
@@ -68,7 +70,7 @@ export default function ArchitectAgenda() {
     }: { onSuccess: (data: any) => void; onError: (error: any) => void }
   ) => {
     if (!currentUser) {
-      const err = new Error("Current user not loaded");
+      const err = new Error(t("errors.notLoaded"));
       toast.error(err.message);
       onError(err);
       return;
@@ -81,35 +83,34 @@ export default function ArchitectAgenda() {
       },
       {
         onSuccess: () => {
-          toast.success("Invitations sent!");
+          toast.success(t("common.invitationSent"));
           setOpenInviteModal(false);
         },
         onError: (err) => {
-          toast.error("Failed to send invitations.");
+          toast.error(t("errors.failedInvitation"));
           onError(err);
         },
       }
     );
   };
 
-  if (userLoading) return <p>Loading user...</p>;
-  if (userError) return <p>Error loading user.</p>;
+  if (userLoading) return <p>{t("common.loading")}</p>;
 
   return (
     <>
       <InviteModal
         open={openInviteModal}
         setOpen={setOpenInviteModal}
-        title="Invite Architect"
+        title={t("agenda.inviteArchitect")}
         placeholder="architect@email.com"
-        buttonText="Send Invitations"
+        buttonText={t("common.sendInvitations")}
         inviteFn={inviteFn}
         role={role}
       />
 
       <Agenda
-        title="Architect Agenda"
-        description="Manage your contacts and appointments with architects"
+        title={t("agenda.agendaArchitect")}
+        description={t("agenda.manageContacts")}
         invitations={data}
         isLoading={isLoading}
         isError={isError}
@@ -120,7 +121,7 @@ export default function ArchitectAgenda() {
             onClick={() => setOpenInviteModal(true)}
           >
             <Plus className="h-4 w-4 mr-2" />
-            New Architect
+            {t("agenda.newArchitect")}
           </Button>
         }
       />

@@ -12,12 +12,7 @@ export const materialsSchema = z.object({
     MaterialListItemStatus.NO_REQUESTED,
     MaterialListItemStatus.QUOTED,
   ]),
-  // category: z.string(),
-  // subcategory: z.string(),
-  // metricQuantity: z.number(),
-  // updatedQuantity: z.number(),
-  // finalUnit: z.string(),
-  // status: z.string(),
+
 });
 
 export type Material = z.infer<typeof materialsSchema>;

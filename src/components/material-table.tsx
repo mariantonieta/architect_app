@@ -92,22 +92,19 @@ export const unitOptions = [
 ];
 
 export const budgetFormSchema = z.object({
-  budgetName: z.string().min(1, "El nombre del presupuesto es requerido"),
+  budgetName: z.string().min(1),
   currency: z.enum(Object.values(Currency) as [Currency, ...Currency[]], {
-    required_error: "La moneda es requerida",
+    required_error: "",
   }),
   supplier_emails: z.array(z.string()).default([]),
   materials: z
     .array(
       z.object({
         id: z.number(),
-        item: z.string().min(1, "El nombre del material es requerido"),
+        item: z.string().min(1),
         description: z.string().default(""),
-        unit: z.string().min(1, "La unidad es requerida"),
-        quantity: z
-          .number()
-          .min(0, "La cantidad debe ser mayor a 0")
-          .default(0),
+        unit: z.string().min(1),
+        quantity: z.number().min(0).default(0),
         status: z
           .enum(
             Object.values(MaterialListItemStatus) as [
@@ -152,7 +149,6 @@ export function MaterialsTable() {
   });
   const [isAddingMaterial, setIsAddingMaterial] = useState(false);
 
-  // Hook form setup
   const form = useForm<BudgetFormData>({
     resolver: zodResolver(budgetFormSchema),
     mode: "onChange",
@@ -183,7 +179,6 @@ export function MaterialsTable() {
   } = form;
   const materials = watch("materials");
 
-  // Función para validar un material individual
   const validateMaterial = useCallback((material: Material) => {
     return {
       isValid: material.item?.trim() && material.unit && material.quantity > 0,
@@ -199,23 +194,15 @@ export function MaterialsTable() {
     (index: number, field: keyof Material, value: string | number) => {
       setValue(`materials.${index}.${field}` as any, value);
 
-      // Validar el material después de actualizar
       const updatedMaterials = [...materials];
       updatedMaterials[index] = { ...updatedMaterials[index], [field]: value };
       const validation = validateMaterial(updatedMaterials[index]);
 
       if (!validation.isValid) {
-        // Mostrar advertencias específicas sin bloquear la edición
         if (field === "item" && validation.errors.item) {
-          setTimeout(
-            () => toast.warning("El nombre del material es requerido"),
-            100
-          );
+          setTimeout(() => toast.warning(t("materials.materialRequired")), 100);
         } else if (field === "quantity" && validation.errors.quantity) {
-          setTimeout(
-            () => toast.warning("La cantidad debe ser mayor a 0"),
-            100
-          );
+          setTimeout(() => toast.warning(t("materials.quantityRequired")), 100);
         }
       }
     },
@@ -238,7 +225,7 @@ export function MaterialsTable() {
   const deleteMaterial = useCallback(
     (index: number) => {
       removeMaterial(index);
-      toast.success("Material eliminado");
+      toast.success(t("materials.materialDelete"));
     },
     [removeMaterial]
   );
@@ -271,7 +258,7 @@ export function MaterialsTable() {
     try {
       if (materialList) {
         await updateMaterialList({ projectId, data: payload });
-        toast.success("Lista de materiales actualizada correctamente");
+        toast.success(t("materials.listUpdate"));
       } else {
         const created = await createMaterialList({
           ...payload,
@@ -283,22 +270,19 @@ export function MaterialsTable() {
             status: MaterialListItemStatus.REQUESTED,
           })),
         });
-        toast.success("Lista de materiales creada correctamente");
+        toast.success(t("materials.listCreated"));
         setMaterialListId(created.id);
         console.log("Lista creada:", created);
       }
     } catch (error) {
-      toast.error("Error al crear o actualizar la lista");
+      toast.error(t("materials.listError"));
       console.error(error);
     }
   };
 
   useEffect(() => {
     if (materialList) {
-      console.log(
-        "Materiales cargados del proyecto:",
-        materialList.material_list_items
-      );
+      console.log("Materiales cargados", materialList.material_list_items);
 
       form.reset({
         budgetName: materialList.name,
@@ -363,7 +347,7 @@ export function MaterialsTable() {
     },
     {
       accessorKey: "item",
-      header: "Item",
+      header: t("materials.material"),
       cell: ({ row }) => {
         const index = materials.findIndex((m) => m.id === row.original.id);
         return (
@@ -371,7 +355,7 @@ export function MaterialsTable() {
             value={row.original.item}
             onSave={(value) => updateMaterial(index, "item", value)}
             className="font-semibold w-full"
-            placeholder="Nombre del material*"
+            placeholder={t("materials.materialName")}
             required={true}
           />
         );
@@ -381,7 +365,7 @@ export function MaterialsTable() {
     },
     {
       accessorKey: "description",
-      header: "Medida / Descripción",
+      header: t("materials.description"),
       cell: ({ row }) => {
         const index = materials.findIndex((m) => m.id === row.original.id);
         return (
@@ -391,7 +375,7 @@ export function MaterialsTable() {
               onSave={(value) => updateMaterial(index, "description", value)}
               type="textarea"
               className="w-full"
-              placeholder="Descripción del material"
+              placeholder={t("materials.descriptionPlaceholder")}
             />
           </div>
         );
@@ -400,7 +384,7 @@ export function MaterialsTable() {
     },
     {
       accessorKey: "unit",
-      header: "Unidad",
+      header: t("materials.unit"),
       cell: ({ row }) => {
         const index = materials.findIndex((m) => m.id === row.original.id);
         return (
@@ -418,7 +402,9 @@ export function MaterialsTable() {
     },
     {
       accessorKey: "quantity",
-      header: () => <div className="w-full text-right">Cantidad</div>,
+      header: () => (
+        <div className="w-full text-right">{t("materials.quantity")}</div>
+      ),
       cell: ({ row }) => {
         const index = materials.findIndex((m) => m.id === row.original.id);
         return (
@@ -439,7 +425,9 @@ export function MaterialsTable() {
     },
     {
       accessorKey: "status",
-      header: () => <div className="w-full text-center">Estado</div>,
+      header: () => (
+        <div className="w-full text-center">{t("materials.status")}</div>
+      ),
       cell: ({ row }) => {
         return (
           <div className="w-full h-8 flex justify-end items-center">
@@ -560,12 +548,10 @@ export function MaterialsTable() {
     }
   }
 
-  // Función para eliminar materiales seleccionados
   const deleteSelectedMaterials = useCallback(() => {
     const selectedRows = table.getFilteredSelectedRowModel().rows;
     const selectedIds = selectedRows.map((row) => row.original.id);
 
-    // Eliminar en orden inverso para no afectar los índices
     const indicesToDelete = selectedIds
       .map((id) => materials.findIndex((m) => m.id === id))
       .sort((a, b) => b - a);
@@ -597,13 +583,10 @@ export function MaterialsTable() {
       const formData = form.getValues();
       let materialsToValidate = formData.materials;
 
-      // Si se requiere usar solo seleccionados, filtrar
       if (useSelectedOnly) {
         const selectedRows = table.getFilteredSelectedRowModel().rows;
         if (selectedRows.length === 0) {
-          toast.error(
-            "Debe seleccionar al menos un material para solicitar presupuesto"
-          );
+          toast.error(t("materials.selectMaterial"));
           return false;
         }
         const selectedIds = selectedRows.map((row) => row.original.id);
@@ -616,21 +599,18 @@ export function MaterialsTable() {
       if (!materialsToValidate || materialsToValidate.length === 0) {
         toast.error(
           useSelectedOnly
-            ? "Debe seleccionar al menos un material para solicitar presupuesto"
-            : "Debe agregar al menos un material al presupuesto"
+            ? t("materials.selectMaterial")
+            : t("materials.addingMaterial")
         );
         return false;
       }
 
-      // Validar que todos los materiales están completos
       const invalidMaterials = materialsToValidate.filter(
         (material) => !validateMaterial(material).isValid
       );
 
       if (invalidMaterials.length > 0) {
-        toast.error(
-          "Todos los materiales deben tener nombre, unidad y cantidad mayor a 0"
-        );
+        toast.error(t("materials.invalidMaterials"));
         return false;
       }
 
@@ -652,7 +632,7 @@ export function MaterialsTable() {
                   value={field.value}
                   onSave={(value) => field.onChange(value)}
                   className="text-2xl font-bold tracking-tight"
-                  placeholder="Nombre del presupuesto*"
+                  placeholder={t("budget.budgetName")}
                   required={true}
                 />
               )}
@@ -668,7 +648,6 @@ export function MaterialsTable() {
                     <Select
                       value={field.value}
                       onValueChange={(value) => {
-                        // Solo permitir valores válidos
                         if (["ars", "usd", "eur"].includes(value)) {
                           field.onChange(value);
                         }
@@ -681,7 +660,7 @@ export function MaterialsTable() {
                         }`}
                         size="default"
                       >
-                        <SelectValue placeholder="Seleccionar moneda*" />
+                        <SelectValue placeholder={t("budget.selectCurrency")} />
                       </SelectTrigger>
                       <SelectContent>
                         {Object.entries(Currency).map(([key, value]) => (
@@ -702,9 +681,14 @@ export function MaterialsTable() {
               onClick={async () => {
                 const result = await validateAndSubmitWithSelection(true);
                 if (result && typeof result === "object" && result.isValid) {
-                  //</div> await onSubmit({
-                  // ...form.getValues(),
-                  //materials: result.materials,
+                  const updatedMaterials = materials.map((m) =>
+                    table
+                      .getFilteredSelectedRowModel()
+                      .rows.some((r) => r.original.id === m.id)
+                      ? { ...m, status: MaterialListItemStatus.REQUESTED }
+                      : m
+                  );
+                  setValue("materials", updatedMaterials);
                   setPendingRequest({
                     materials: result.materials,
                     all: false,
@@ -719,11 +703,12 @@ export function MaterialsTable() {
             >
               <Plus />
               <span className="hidden lg:inline">
-                Solicitar Presupuesto Seleccionados (
+                {t("budget.requestBudgetsSelect")} (
                 {table.getFilteredSelectedRowModel().rows.length})
               </span>
               <span className="lg:hidden">
-                Solicitar ({table.getFilteredSelectedRowModel().rows.length})
+                {t("budget.request")} (
+                {table.getFilteredSelectedRowModel().rows.length})
               </span>
             </Button>
             <Button
@@ -733,17 +718,19 @@ export function MaterialsTable() {
               onClick={async () => {
                 const result = await validateAndSubmitWithSelection(false);
                 if (result && typeof result === "object" && result.isValid) {
+                  const updatedMaterials = materials.map((m) => ({
+                    ...m,
+                    status: MaterialListItemStatus.REQUESTED,
+                  }));
+                  setValue("materials", updatedMaterials);
                   setPendingRequest({ materials: result.materials, all: true });
                   setInviteModalOpen(true);
-                  //</div>await onSubmit({
-                  //...form.getValues(),
-                  //materials: result.materials,
                 }
               }}
               disabled={isAddingMaterial || isCreating || isUpdating}
             >
               <Plus />
-              <span className="hidden lg:inline">Solicitar Todos</span>
+              <span className="hidden lg:inline">{t("budget.requestAll")}</span>
             </Button>
           </div>
         </div>
@@ -753,8 +740,10 @@ export function MaterialsTable() {
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
                 <Columns />
-                <span className="hidden lg:inline">Personalizar Columnas</span>
-                <span className="lg:hidden">Columnas</span>
+                <span className="hidden lg:inline">
+                  {t("materials.customizeColumns")}
+                </span>
+                <span className="lg:hidden">{t("materials.column")}</span>
                 <ChevronDown />
               </Button>
             </DropdownMenuTrigger>
@@ -791,11 +780,13 @@ export function MaterialsTable() {
               >
                 <Trash2 className="h-4 w-4 mr-2" />
                 <span className="hidden lg:inline">
-                  Eliminar {table.getFilteredSelectedRowModel().rows.length}{" "}
-                  seleccionados
+                  {t("common.delete")}
+                  {table.getFilteredSelectedRowModel().rows.length}{" "}
+                  {t("budget.selected")}
                 </span>
                 <span className="lg:hidden">
-                  Eliminar ({table.getFilteredSelectedRowModel().rows.length})
+                  {t("common.delete")} (
+                  {table.getFilteredSelectedRowModel().rows.length})
                 </span>
               </Button>
             )}
@@ -803,7 +794,7 @@ export function MaterialsTable() {
               (material) => !validateMaterial(material).isValid
             ) && (
               <span className="text-sm text-yellow-600 bg-yellow-100 px-2 py-1 rounded-md">
-                ⚠️ Hay materiales incompletos
+                {t("budget.incompleted")}
               </span>
             )}
             <Button
@@ -814,7 +805,9 @@ export function MaterialsTable() {
               disabled={isAddingMaterial}
             >
               <Plus />
-              <span className="hidden lg:inline">Agregar Material</span>
+              <span className="hidden lg:inline">
+                {t("materials.addMaterial")}
+              </span>
             </Button>
           </div>
         </div>
@@ -892,7 +885,7 @@ export function MaterialsTable() {
                         colSpan={materialsColumns.length}
                         className="h-24 text-center px-2 py-3"
                       >
-                        No hay materiales.
+                        {t("materials.noMaterials")}
                       </TableCell>
                     </TableRow>
                   )}
@@ -904,12 +897,13 @@ export function MaterialsTable() {
           <div className="flex items-center justify-between px-4">
             <div className="text-muted-foreground hidden flex-1 text-sm lg:flex">
               {table.getFilteredSelectedRowModel().rows.length} de{" "}
-              {table.getFilteredRowModel().rows.length} fila(s) seleccionadas.
+              {table.getFilteredRowModel().rows.length}{" "}
+              {t("materials.rowSelected")}
             </div>
             <div className="flex w-full items-center gap-8 lg:w-fit">
               <div className="hidden items-center gap-2 lg:flex">
                 <Label htmlFor="rows-per-page" className="text-sm font-medium">
-                  Filas por página
+                  {t("materials.rowPage")}
                 </Label>
                 <Select
                   value={`${table.getState().pagination.pageSize}`}
@@ -932,8 +926,8 @@ export function MaterialsTable() {
                 </Select>
               </div>
               <div className="flex w-fit items-center justify-center text-sm font-medium">
-                Página {table.getState().pagination.pageIndex + 1} de{" "}
-                {table.getPageCount()}
+                {t("common.page")} {table.getState().pagination.pageIndex + 1}{" "}
+                {t("common.of")} {table.getPageCount()}
               </div>
               <div className="ml-auto flex items-center gap-2 lg:ml-0">
                 <Button
@@ -942,7 +936,7 @@ export function MaterialsTable() {
                   onClick={() => table.setPageIndex(0)}
                   disabled={!table.getCanPreviousPage()}
                 >
-                  <span className="sr-only">Ir a la primera página</span>
+                  <span className="sr-only">{t("common.firstPage")}</span>
                   <ChevronsLeft />
                 </Button>
                 <Button
@@ -952,7 +946,7 @@ export function MaterialsTable() {
                   onClick={() => table.previousPage()}
                   disabled={!table.getCanPreviousPage()}
                 >
-                  <span className="sr-only">Ir a la página anterior</span>
+                  <span className="sr-only">{t("common.previousPage")}</span>
                   <ChevronLeft />
                 </Button>
                 <Button
@@ -962,7 +956,7 @@ export function MaterialsTable() {
                   onClick={() => table.nextPage()}
                   disabled={!table.getCanNextPage()}
                 >
-                  <span className="sr-only">Ir a la página siguiente</span>
+                  <span className="sr-only">{t("common.nextPage")}</span>
                   <ChevronRight />
                 </Button>
                 <Button
@@ -972,7 +966,7 @@ export function MaterialsTable() {
                   onClick={() => table.setPageIndex(table.getPageCount() - 1)}
                   disabled={!table.getCanNextPage()}
                 >
-                  <span className="sr-only">Ir a la última página</span>
+                  <span className="sr-only">{t("common.lastPage")}</span>
                   <ChevronsRight />
                 </Button>
               </div>
@@ -983,9 +977,9 @@ export function MaterialsTable() {
       <InviteModal
         open={inviteModalOpen}
         setOpen={setInviteModalOpen}
-        title="Agregar proveedores"
+        title={t("agenda.addSuppliers")}
         placeholder="proveedor@example.com"
-        buttonText="Solicitar presupuesto"
+        buttonText={t("budget.requestBudgets")}
         role="supplier"
         onSearch={handleSupplierSearch}
         inviteFn={(emails, { onSuccess, onError }) => {
@@ -999,7 +993,7 @@ export function MaterialsTable() {
             materials: pendingRequest.materials,
           })
             .then(() => {
-              onSuccess({ msg: "Solicitud enviada" });
+              onSuccess({ msg: t("budget.requestedSent") });
               setPendingRequest(null);
             })
             .catch((err) => {

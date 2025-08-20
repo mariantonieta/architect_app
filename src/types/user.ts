@@ -25,3 +25,4 @@ export function normalizeUser(userData: any): User {
         is_completed: userData.is_completed ?? false,
     };
 }
+

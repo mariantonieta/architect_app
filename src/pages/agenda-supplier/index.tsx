@@ -6,6 +6,7 @@ import { InviteModal } from "@/components/invite-modal";
 import { Agenda } from "@/components/agenda";
 import { useUser } from "@/hooks/useUser";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 type RoleName = "supplier" | "customer" | "architect";
 
@@ -45,6 +46,7 @@ function mapInvitations(
 
 export default function SupplierAgenda() {
   const role = "supplier";
+  const { t } = useTranslation();
 
   const { data: rawData, isLoading, isError } = useInvitations(role);
   const { mutate: inviteSupplier } = useInviteAgendaUser(role);
@@ -66,7 +68,7 @@ export default function SupplierAgenda() {
     }: { onSuccess: (data: any) => void; onError: (error: any) => void }
   ) => {
     if (!currentUser) {
-      const err = new Error("Current user not loaded");
+      const err = new Error(t("errors.notLoaded"));
       toast.error(err.message);
       onError(err);
       return;
@@ -79,36 +81,36 @@ export default function SupplierAgenda() {
       },
       {
         onSuccess: () => {
-          toast.success("Invitations sent!");
+          toast.success(t("common.invitationSent"));
           setOpenInviteModal(false);
           window.location.reload();
         },
         onError: (err) => {
-          toast.error("Failed to send invitations.");
+          toast.error(t("errors.failedInvitation"));
           onError(err);
         },
       }
     );
   };
 
-  if (userLoading) return <p>Loading user...</p>;
-  if (userError) return <p>Error loading user.</p>;
+  if (userLoading) return <p>{t("common.loading")}</p>;
+  if (userError) return <p>{t("errors.notLoaded")}</p>;
 
   return (
     <>
       <InviteModal
         open={openInviteModal}
         setOpen={setOpenInviteModal}
-        title="Invite Supplier"
+        title={t("agenda.inviteSupplier")}
         placeholder="supplier@email.com"
-        buttonText="Send Invitations"
+        buttonText={t("common.sendInvitation")}
         inviteFn={inviteFn}
         role={role}
       />
 
       <Agenda
-        title="Supplier Agenda"
-        description="Manage your contacts and appointments with suppliers"
+        title={t("agenda.agendaSupplier")}
+        description={t("agenda.manageContacts")}
         invitations={data}
         isLoading={isLoading}
         isError={isError}
@@ -119,7 +121,7 @@ export default function SupplierAgenda() {
             onClick={() => setOpenInviteModal(true)}
           >
             <Plus className="h-4 w-4 mr-2" />
-            New Supplier
+            {t("agenda.newSupplier")}
           </Button>
         }
       />

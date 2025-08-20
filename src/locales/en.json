@@ -12,6 +12,7 @@
     "filter": "Filter",
     "export": "Export",
     "import": "Import",
+    "date": "Date",
     "create": "Create",
     "update": "Update",
     "delete":"Delete",
@@ -28,7 +29,16 @@
     "updating": "Actualizando...",
     "deleting": "Eliminando...",
     "saving": "Saving...",
-    "saveChanges": "Save Changes"
+    "saveChanges": "Save Changes",
+    "invitationSent": "Invitation sent!",
+    "sendInvitation": "Send Invitation.",
+    "firstPage": "Go to the first Page",
+    "previousPage": "Go to the previous Page",
+    "nextPage": "Go to the next Page",
+    "lastPage": "Go to the last Page",
+      "page": "Page",
+    "of": "of"
+
 
   },
   "navigation": {
@@ -54,6 +64,7 @@
     "password": "Password",
     "passwordRequired": "Password is required",
     "passwordMinLength": "Password must be at least 6 characters",
+    "changePassword": "Change Password",
     "confirmPassword": "Confirm Password",
     "confirmPasswordRequired": "Please confirm your password",
     "forgotPassword": "Forgot Password?",
@@ -144,6 +155,18 @@
     "title": "Budget",
     "createBudget": "Create Budget",
     "budgetName": "Budget Name",
+    "noName": "Unnamed",
+    "newRequest": "New Request",
+    "unknown": "Unknown",
+    "professional": "Professional",
+    "selectCurrency": "Select Currency",
+    "requestBudgets": "Request Budget",
+    "requestBudgetsSelect": "Request Selected Budgets",
+    "request": "Request",
+    "requestAll": "Request All",
+    "selected": " Selected",
+    "requestedSent": "Request sent",
+    "incompleted": "There are incomplete materials",
     "amount": "Amount",
     "category": "Category",
     "noBudgets": "No budgets found",
@@ -152,7 +175,9 @@
     "remainingBudget": "Remaining Budget",
     "budgetCreated": "Budget created successfully",
     "budgetUpdated": "Budget updated successfully",
-    "budgetDeleted": "Budget deleted successfully"
+    "budgetDeleted": "Budget deleted successfully",
+    "budgetSupplier": "Supplier Budget:"
+    
   },
   "users": {
     "title": "Users",
@@ -178,12 +203,15 @@
   "errors": {
     "somethingWentWrong": "Something went wrong",
     "networkError": "Network error occurred",
+    "errorLoading": "Error loading data..",
     "unauthorized": "Unauthorized access",
     "forbidden": "Access forbidden",
     "notFound": "Resource not found",
     "validationError": "Validation error",
     "serverError": "Server error occurred",
-    "notAvailable": "Not available"
+    "notAvailable": "Not available",
+    "notLoaded": "Current user not loaded",
+    "failedInvitation": "Failed to send invitation"
   },
   "success": {
     "operationSuccessful": "Operation completed successfully",
@@ -239,8 +267,15 @@
     "addMaterial":"Add Material",
     "materialName": "Material Name",
     "materialType": "Material Type",
+    "material": "Material",
+    "description": "Description",
     "quantity": "Quantity",
     "unit": "Unit",
+    "status": "Status",
+    "price": "Price ",
+    "subtotal": "Subtotal",
+    "comment": "Comment",
+    "descriptionOfMaterial": "Description of Material",
     "noMaterials": "No materials found",
     "materialDetails": "Material Details",
     "editMaterial": "Edit Material",
@@ -256,7 +291,36 @@
     "materialCost": "Material Cost",
     "budgets": "Budgets",
     "notAssigned": "Not Assigned",
-    "teamSize": "Team Size"
+    "teamSize": "Team Size",
+      "materialRequired": "The name is required",
+    "quantityRequired": "The quantity must be greater than 0",
+    "materialDelete": "Material deleted",
+    "listUpdate": "Material list updated successfully",
+    "listCreated": "Material list created successfully",
+    "listError": "Error creating or updating the list",
+    "customizeColumns": "Customize columns",
+    "column": "Column",
+    "rowSelected": "Row(s) Selected",
+    "rowPage": "Row(s) on Page",
+    "page": "Page",
+    "of": "of"
+  },
+   "agenda": {
+    "inviteSupplier": "Send Supplier",
+    "agendaSupplier": "Agenda Supplier",
+    "newSupplier": "New Supplier",
+    "inviteCustomer": "Send Customer",
+    "agendaCustomer": "Agenda Customer",
+    "manageContacts": "Manage your contacts and appointments",
+    "newCustomer": "New Customer",
+    "inviteArchitect": "Send Architect",
+    "agendaArchitect": "Agenda Architect",
+    "newArchitect": "New Architect",
+    "deleteInvitation": "Delete Invitation",
+    "deleteDescription": "Are you sure you want to delete this invitation? This action cannot be undone.",
+    "addSuppliers": "Add Suppliers"
+
+
   }
 
 }

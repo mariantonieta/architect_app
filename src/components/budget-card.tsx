@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 interface Budget {
   id: string;
@@ -18,6 +19,7 @@ interface BudgetCardProps {
 }
 
 export function BudgetCard({ budget }: BudgetCardProps) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   return (
     <Card className="w-full">
@@ -33,14 +35,14 @@ export function BudgetCard({ budget }: BudgetCardProps) {
               </h3>
             </div>
             <p className="text-sm text-muted-foreground">
-              Profesional: {budget.professional}
+              {t("budget.professional")}: {budget.professional}
             </p>
           </div>
 
           <div className="flex items-center gap-6">
             <div className="text-right space-y-1">
               <p className="text-sm text-muted-foreground">
-                Fecha: {budget.date}
+                {t("common.date")}: {budget.date}
               </p>
             </div>
 
@@ -51,7 +53,7 @@ export function BudgetCard({ budget }: BudgetCardProps) {
                 navigate(`/material-list/project/${budget.projectId}`)
               }
             >
-              Ver detalle
+              {t("detailsProject.viewMore")}
             </Button>
           </div>
         </div>

@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 type MaterialListSupplierEditProps = {
-  readOnly?: boolean; // 👈 nueva prop
+  readOnly?: boolean;
 };
 
 export function MaterialListSupplierEdit({
@@ -44,13 +44,13 @@ export function MaterialListSupplierEdit({
 
   const columns = useMemo(
     () => [
-      { key: "item", label: t("material.item", "Material") },
-      { key: "description", label: t("material.description", "Descripción") },
-      { key: "unit", label: t("material.unit", "Unidad") },
-      { key: "quantity", label: t("material.quantity", "Cantidad") },
-      { key: "price", label: t("material.price", "Precio por unidad") },
-      { key: "subtotal", label: t("material.subtotal", "Subtotal") },
-      { key: "comment", label: t("material.comment", "Comentarios") },
+      { key: "item", label: t("materials.material") },
+      { key: "description", label: t("materials.description") },
+      { key: "unit", label: t("materials.unit") },
+      { key: "quantity", label: t("materials.quantity") },
+      { key: "price", label: t("materials.price") },
+      { key: "subtotal", label: t("materials.subtotal") },
+      { key: "comment", label: t("materials.comment") },
     ],
     [t]
   );

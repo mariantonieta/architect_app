@@ -6,6 +6,7 @@ import { InviteModal } from "@/components/invite-modal";
 import { Agenda } from "@/components/agenda";
 import { useUser } from "@/hooks/useUser";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 type RoleName = "supplier" | "customer" | "architect";
 
@@ -45,7 +46,7 @@ function mapInvitations(
 
 export default function CustomerAgenda() {
   const role = "customer";
-
+  const { t } = useTranslation();
   const { data: rawData, isLoading, isError } = useInvitations(role);
   const { mutate: inviteCustomer } = useInviteAgendaUser(role);
   const [openInviteModal, setOpenInviteModal] = useState(false);
@@ -78,36 +79,36 @@ export default function CustomerAgenda() {
       },
       {
         onSuccess: () => {
-          toast.success("Invitations sent!");
+          toast.success(t("common.invitationSent"));
           setOpenInviteModal(false);
           window.location.reload();
         },
         onError: (err) => {
-          toast.error("Failed to send invitations.");
+          toast.error(t("errors.failedInvitation"));
           onError(err);
         },
       }
     );
   };
 
-  if (userLoading) return <p>Loading user...</p>;
-  if (userError) return <p>Error loading user.</p>;
+  if (userLoading) return <p>{t("common.loading")}</p>;
+  if (userError) return <p>{t("errors.notLoaded")}</p>;
 
   return (
     <>
       <InviteModal
         open={openInviteModal}
         setOpen={setOpenInviteModal}
-        title="Invite Customer"
+        title={t("agenda.inviteCustomer")}
         placeholder="customer@email.com"
-        buttonText="Send Invitations"
+        buttonText={t("agenda.sendInvitations")}
         inviteFn={inviteFn}
         role={role}
       />
 
       <Agenda
-        title="Customer Agenda"
-        description="Manage your contacts and appointments with customers"
+        title={t("agenda.agendaCustomer")}
+        description={t("agenda.manageContacts")}
         invitations={data}
         isLoading={isLoading}
         isError={isError}
@@ -118,7 +119,7 @@ export default function CustomerAgenda() {
             onClick={() => setOpenInviteModal(true)}
           >
             <Plus className="h-4 w-4 mr-2" />
-            New Customer
+            {t("agenda.newCustomer")}
           </Button>
         }
       />

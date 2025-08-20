@@ -17,6 +17,7 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
+import { useTranslation } from "react-i18next";
 
 interface SupplierCardProps {
   id: string;
@@ -32,12 +33,12 @@ interface SupplierCardProps {
 export function InvitationsCard({
   id,
   name,
-  location, 
+  location,
   phone,
   email,
   status,
 }: SupplierCardProps) {
-
+  const { t } = useTranslation();
   const deleteMutation = useDeleteInvitation();
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
 
@@ -69,7 +70,6 @@ export function InvitationsCard({
           </div>
 
           <div className="space-y-3 mb-4">
-            
             {location && (
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 <MapPin className="h-4 w-4 shrink-0" />
@@ -77,7 +77,6 @@ export function InvitationsCard({
               </div>
             )}
 
-        
             {phone && (
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 <Phone className="h-4 w-4 shrink-0" />
@@ -92,39 +91,38 @@ export function InvitationsCard({
           </div>
 
           <div className="flex justify-end">
-           <AlertDialog>
-  <AlertDialogTrigger asChild>
-    <Button
-      variant="destructive"
-      size="sm"
-      disabled={deleteMutation.isPending}
-    >
-      <Trash2 className="h-4 w-4 mr-2" />
-      Delete
-    </Button>
-  </AlertDialogTrigger>
-  <AlertDialogContent>
-    <AlertDialogHeader>
-      <AlertDialogTitle>Delete Invitation</AlertDialogTitle>
-      <AlertDialogDescription>
-        Are you sure you want to delete this invitation? This action cannot be undone.
-      </AlertDialogDescription>
-    </AlertDialogHeader>
-    <AlertDialogFooter>
-      <AlertDialogCancel>
-        Cancel
-      </AlertDialogCancel>
-      <AlertDialogAction
-        onClick={() => deleteMutation.mutate(id)}
-        disabled={deleteMutation.isPending}
-        className="bg-red-600 text-white hover:bg-red-700"
-      >
-        {deleteMutation.isPending ? "Deleting..." : "Delete"}
-      </AlertDialogAction>
-    </AlertDialogFooter>
-  </AlertDialogContent>
-</AlertDialog>
-
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  disabled={deleteMutation.isPending}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  {t("common.delete")}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>
+                    {t("agenda.deleteInvitation")}
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    {t("agenda.deleteDescription")}
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => deleteMutation.mutate(id)}
+                    disabled={deleteMutation.isPending}
+                    className="bg-red-600 text-white hover:bg-red-700"
+                  >
+                    {deleteMutation.isPending ? "Deleting..." : "Delete"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </CardContent>
       </Card>

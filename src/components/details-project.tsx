@@ -35,7 +35,7 @@ import { useCreateProjectModal } from "@/hooks/useCreateOrEditProjectModal";
 
 import { MaterialsTable } from "./material-table";
 import { useTranslation } from "react-i18next";
-import { MaterialListSupplierEdit } from "./material-list-supplier-edit";
+import { MaterialListArchitectView } from "./material-list-architect-view";
 
 export function ProjectDetails() {
   const { t } = useTranslation();
@@ -448,7 +448,7 @@ export function ProjectDetails() {
           </TabsContent>
 
           <TabsContent value="budgets" className="mt-6">
-            <MaterialListSupplierEdit readOnly />
+            <MaterialListArchitectView />
           </TabsContent>
 
           <TabsContent value="roles" className="mt-6">
