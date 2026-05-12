@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>  
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Invitation</title>
+  </head>
+  <body style="font-family: sans-serif; padding: 2rem; background-color: #f9f9f9;">
+    {% if inviter_name %}
+      <h2>You have been invited to the architect <strong>{{ inviter_name }}</strong>'s schedule!</h2>
+      <p>You have been invited to join as <strong>{{ role }}</strong>.</p>
+      <p>Click the button below to sign up:</p>
+      <p>
+        <a
+          href="{{ invite_link }}"
+          style="
+            display: inline-block;
+            padding: 12px 20px;
+            background-color: #4f46e5;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: bold;"
+        >
+          Join the schedule
+        </a>
+      </p>
+      <p>This link will expire in 48 hours.</p>
+    {% else %}
+      <h2>You have been invited to <strong>{{ project_name }}</strong>!</h2>
+      <p>You have been invited to join as <strong>{{ role }}</strong>.</p>
+      <p>Click the button below to sign up:</p>
+      <p>
+        <a
+          href="{{ invite_link }}"
+          style="
+            display: inline-block;
+            padding: 12px 20px;
+            background-color: #4f46e5;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: bold;"
+        >
+          Join the project
+        </a>
+      </p>
+      <p>This link will expire in 48 hours.</p>
+    {% endif %}
+  </body>
+</html>

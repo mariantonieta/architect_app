@@ -1,0 +1,56 @@
+services:
+  architect_db:
+    image: postgres:15
+    container_name: architect_container
+    restart: always
+    environment:
+      POSTGRES_USER: architect_user
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: architect_db
+    ports:
+      - "5433:5432" 
+    volumes:
+      - architect_pgdata:/var/lib/postgresql/data
+  s3:
+    image: minio/minio:latest
+    container_name: minio_container
+    restart: always
+    environment:
+      MINIO_ROOT_USER: minio_user
+      MINIO_ROOT_PASSWORD: minio_password
+      MINIO_BROWSER_REDIRECT_URL: http://localhost:9000
+    ports:
+      - "9000:9000"
+      - "9099:9099"
+    command: server --address "0.0.0.0:9099" --console-address "0.0.0.0:9000" /data
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9099/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  minio-setup:
+    image: minio/mc:latest
+    container_name: minio_setup
+    depends_on:
+      s3:
+        condition: service_healthy
+    environment:
+      MINIO_ROOT_USER: minio_user
+      MINIO_ROOT_PASSWORD: minio_password
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set minio http://s3:9099 minio_user minio_password;
+      mc mb minio/public-bucket --ignore-existing;
+      mc mb minio/private-bucket --ignore-existing;
+      mc anonymous set public minio/public-bucket;
+      mc anonymous set none minio/private-bucket;
+      echo 'Buckets configurados correctamente';
+      exit 0;
+      "
+
+volumes:
+  architect_pgdata:
+  minio_data:

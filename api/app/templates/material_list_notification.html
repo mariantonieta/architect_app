@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Material List Notification</title>
+</head>
+<body>
+    <p>Hello,</p>
+    <p>You have a new material list to quote for the project <strong>{{ project_name or "unknown" }}</strong>.</p>
+      <p>
+        <a href="{{ list_link }}" style="
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 16px;
+            color: white;
+            background-color: #007BFF;
+            text-decoration: none;
+            border-radius: 5px;
+        ">Review the list</a>
+    </p>
+    <p>Thank you,</p>
+    <p>{{ project_name or "The team" }}</p>
+</body>
+</html>
